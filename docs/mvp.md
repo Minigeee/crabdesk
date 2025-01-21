@@ -31,8 +31,8 @@
 - [X] Create ticket status workflow management
 
 ### Agent Interface
-- [ ] Build ticket list view with filters and sorting
-- [ ] Create ticket detail view
+- [X] Build ticket list view with filters and sorting
+- [X] Create ticket detail view
 - [ ] Implement ticket creation form
 - [ ] Add basic ticket assignment functionality
 - [ ] Create conversation/reply interface
