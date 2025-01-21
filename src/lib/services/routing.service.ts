@@ -1,7 +1,7 @@
-import { createClient } from '@/lib/supabase/server';
-import { type SupabaseClient } from '@supabase/supabase-js';
 import { type Database } from '@/lib/supabase/database.types';
+import { createClient } from '@/lib/supabase/server';
 import { type Ticket } from '@/lib/types/ticket';
+import { type SupabaseClient } from '@supabase/supabase-js';
 
 interface AgentWorkload {
   id: string;
@@ -25,7 +25,9 @@ export class RoutingService {
     return new RoutingService(supabase);
   }
 
-  private async getAgentWorkloads(organizationId: string): Promise<AgentWorkload[]> {
+  private async getAgentWorkloads(
+    organizationId: string,
+  ): Promise<AgentWorkload[]> {
     // Get all agents in the organization
     const { data: agents, error: agentsError } = await this.supabase
       .from('users')
@@ -49,7 +51,7 @@ export class RoutingService {
           team_id: agent.team_id,
           activeTickets: count || 0,
         };
-      })
+      }),
     );
 
     return workloads;
@@ -57,17 +59,17 @@ export class RoutingService {
 
   private async findLeastLoadedAgent(
     workloads: AgentWorkload[],
-    teamId?: string | null
+    teamId?: string | null,
   ): Promise<string | null> {
     const eligibleAgents = teamId
-      ? workloads.filter(agent => agent.team_id === teamId)
+      ? workloads.filter((agent) => agent.team_id === teamId)
       : workloads;
 
     if (eligibleAgents.length === 0) return null;
 
     // Sort by number of active tickets
     const sortedAgents = [...eligibleAgents].sort(
-      (a, b) => a.activeTickets - b.activeTickets
+      (a, b) => a.activeTickets - b.activeTickets,
     );
 
     return sortedAgents[0].id;
@@ -81,7 +83,10 @@ export class RoutingService {
 
     // If ticket already has a team assigned, try to find agent from that team
     if (ticket.team_id) {
-      const teamAgent = await this.findLeastLoadedAgent(workloads, ticket.team_id);
+      const teamAgent = await this.findLeastLoadedAgent(
+        workloads,
+        ticket.team_id,
+      );
       if (teamAgent) return teamAgent;
     }
 
@@ -132,7 +137,7 @@ export class RoutingService {
     for (const ticket of tickets) {
       const assignedTo = await this.findLeastLoadedAgent(
         workloads,
-        ticket.team_id
+        ticket.team_id,
       );
 
       if (assignedTo) {
@@ -144,7 +149,7 @@ export class RoutingService {
         if (!updateError) {
           assignedCount++;
           // Update local workload tracking
-          const agentWorkload = workloads.find(w => w.id === assignedTo);
+          const agentWorkload = workloads.find((w) => w.id === assignedTo);
           if (agentWorkload) agentWorkload.activeTickets++;
         }
       }
@@ -152,4 +157,4 @@ export class RoutingService {
 
     return assignedCount;
   }
-} 
+}

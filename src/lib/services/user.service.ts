@@ -1,6 +1,6 @@
+import { type Database } from '@/lib/supabase/database.types';
 import { createClient } from '@/lib/supabase/server';
 import { type SupabaseClient } from '@supabase/supabase-js';
-import { type Database } from '@/lib/supabase/database.types';
 
 export class UserService {
   private supabase: SupabaseClient<Database>;
@@ -47,4 +47,4 @@ export class UserService {
     if (error) throw error;
     return data;
   }
-} 
+}

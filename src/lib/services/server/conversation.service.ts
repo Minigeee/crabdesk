@@ -1,7 +1,11 @@
-import { createClient } from '@/lib/supabase/server';
-import { type SupabaseClient } from '@supabase/supabase-js';
 import { type Database } from '@/lib/supabase/database.types';
-import { type NewConversation, type ConversationWithUser, type ThreadedConversation } from '@/lib/types/conversation';
+import { createClient } from '@/lib/supabase/server';
+import {
+  type ConversationWithUser,
+  type NewConversation,
+  type ThreadedConversation,
+} from '@/lib/types/conversation';
+import { type SupabaseClient } from '@supabase/supabase-js';
 
 export class ServerConversationService {
   private supabase: SupabaseClient<Database>;
@@ -19,11 +23,14 @@ export class ServerConversationService {
     return new ServerConversationService(supabase);
   }
 
-  async create(conversation: NewConversation): Promise<ConversationWithUser | null> {
+  async create(
+    conversation: NewConversation,
+  ): Promise<ConversationWithUser | null> {
     const { data, error } = await this.supabase
       .from('conversations')
       .insert(conversation)
-      .select(`
+      .select(
+        `
         *,
         user:users (
           id,
@@ -31,17 +38,21 @@ export class ServerConversationService {
           email,
           avatar_url
         )
-      `)
+      `,
+      )
       .single();
 
     if (error) throw error;
     return data;
   }
 
-  private async fetchReplies(parentId: string): Promise<ThreadedConversation[]> {
+  private async fetchReplies(
+    parentId: string,
+  ): Promise<ThreadedConversation[]> {
     const { data, error } = await this.supabase
       .from('conversations')
-      .select(`
+      .select(
+        `
         *,
         user:users (
           id,
@@ -49,7 +60,8 @@ export class ServerConversationService {
           email,
           avatar_url
         )
-      `)
+      `,
+      )
       .eq('parent_id', parentId)
       .order('created_at', { ascending: true });
 
@@ -59,18 +71,21 @@ export class ServerConversationService {
     const threaded = await Promise.all(
       (data || []).map(async (reply) => ({
         ...reply,
-        replies: await this.fetchReplies(reply.id)
-      }))
+        replies: await this.fetchReplies(reply.id),
+      })),
     );
 
     return threaded;
   }
 
-  async getTicketConversations(ticketId: string): Promise<ThreadedConversation[]> {
+  async getTicketConversations(
+    ticketId: string,
+  ): Promise<ThreadedConversation[]> {
     // Get root level conversations (no parent_id)
     const { data, error } = await this.supabase
       .from('conversations')
-      .select(`
+      .select(
+        `
         *,
         user:users (
           id,
@@ -78,7 +93,8 @@ export class ServerConversationService {
           email,
           avatar_url
         )
-      `)
+      `,
+      )
       .eq('ticket_id', ticketId)
       .is('parent_id', null)
       .order('created_at', { ascending: true });
@@ -89,10 +105,10 @@ export class ServerConversationService {
     const threaded = await Promise.all(
       (data || []).map(async (conversation) => ({
         ...conversation,
-        replies: await this.fetchReplies(conversation.id)
-      }))
+        replies: await this.fetchReplies(conversation.id),
+      })),
     );
 
     return threaded;
   }
-} 
+}

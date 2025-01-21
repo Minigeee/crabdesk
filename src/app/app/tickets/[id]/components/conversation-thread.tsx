@@ -24,8 +24,6 @@ function ConversationMessage({
   message: ThreadedConversation;
   isNested?: boolean;
 }) {
-  const { user } = useAuth();
-  const isCurrentUser = user?.id === message.user?.id;
   const isInternal = message.is_internal;
   const messageDate = dayjs(message.created_at);
 
@@ -152,7 +150,7 @@ export function ConversationThread({
 
   return (
     <div className='space-y-4'>
-      <div className='space-y-2 rounded-lg border p-4'>
+      <div className='space-y-2 p-4'>
         {messages.length > 0 ? (
           messages.map((message) => (
             <ConversationMessage key={message.id} message={message} />

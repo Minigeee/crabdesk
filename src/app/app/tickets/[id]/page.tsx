@@ -1,7 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ServerConversationService } from '@/lib/services/server/conversation.service';
 import { ConversationThread } from './components/conversation-thread';
 import { TicketHistory } from './components/ticket-history';
-import { ServerConversationService } from '@/lib/services/server/conversation.service';
 
 export default async function TicketDetailPage({
   params,
@@ -9,7 +9,9 @@ export default async function TicketDetailPage({
   params: { id: string };
 }) {
   const conversationService = await ServerConversationService.create();
-  const initialMessages = await conversationService.getTicketConversations(params.id);
+  const initialMessages = await conversationService.getTicketConversations(
+    params.id,
+  );
 
   return (
     <div className='p-6'>

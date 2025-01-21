@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { Database } from '@/lib/supabase/database.types';
+import { useEffect, useState } from 'react';
 
 type User = Database['public']['Tables']['users']['Row'];
 
@@ -21,7 +21,9 @@ export function useAuth() {
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         fetchUser(session.user.id);
       } else {
@@ -47,4 +49,4 @@ export function useAuth() {
   }, []);
 
   return { user, loading };
-} 
+}

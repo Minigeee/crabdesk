@@ -1,13 +1,13 @@
-import { createClient } from '@/lib/supabase/server';
-import { type SupabaseClient } from '@supabase/supabase-js';
 import { type Database } from '@/lib/supabase/database.types';
+import { createClient } from '@/lib/supabase/server';
 import { type Ticket } from '@/lib/types/ticket';
-import { 
+import {
+  type StatusMetadata,
+  type WorkflowConfig,
   type WorkflowTransition,
   type WorkflowValidationResult,
-  type StatusMetadata,
-  type WorkflowConfig
 } from '@/lib/types/workflow';
+import { type SupabaseClient } from '@supabase/supabase-js';
 
 export class WorkflowService {
   private supabase: SupabaseClient<Database>;
@@ -24,18 +24,18 @@ export class WorkflowService {
           {
             type: 'hasAssignee',
             check: (ticket: Ticket) => !!ticket.assigned_to,
-            message: 'Consider assigning the ticket before starting work'
-          }
-        ]
+            message: 'Consider assigning the ticket before starting work',
+          },
+        ],
       },
       actions: [
         {
           type: 'notify',
           execute: async (ticket: Ticket) => {
             console.log('Ticket started:', ticket.id);
-          }
-        }
-      ]
+          },
+        },
+      ],
     },
     {
       from: 'in_progress',
@@ -53,10 +53,10 @@ export class WorkflowService {
                 .eq('is_internal', false);
               return (count || 0) > 0;
             },
-            message: 'Consider adding a response before resolving'
-          }
-        ]
-      }
+            message: 'Consider adding a response before resolving',
+          },
+        ],
+      },
     },
     {
       from: 'resolved',
@@ -69,12 +69,15 @@ export class WorkflowService {
             check: async (ticket: Ticket) => {
               const resolvedDate = new Date(ticket.updated_at);
               const now = new Date();
-              return now.getTime() - resolvedDate.getTime() >= 24 * 60 * 60 * 1000;
+              return (
+                now.getTime() - resolvedDate.getTime() >= 24 * 60 * 60 * 1000
+              );
             },
-            message: 'Consider waiting 24 hours before closing to ensure customer satisfaction'
-          }
-        ]
-      }
+            message:
+              'Consider waiting 24 hours before closing to ensure customer satisfaction',
+          },
+        ],
+      },
     },
     // Allow reopening from any status to open
     {
@@ -85,9 +88,9 @@ export class WorkflowService {
           type: 'notify',
           execute: async (ticket: Ticket) => {
             console.log('Ticket reopened:', ticket.id);
-          }
-        }
-      ]
+          },
+        },
+      ],
     },
     {
       from: 'closed',
@@ -97,10 +100,10 @@ export class WorkflowService {
           type: 'notify',
           execute: async (ticket: Ticket) => {
             console.log('Ticket reopened:', ticket.id);
-          }
-        }
-      ]
-    }
+          },
+        },
+      ],
+    },
   ];
 
   // Define status metadata
@@ -110,32 +113,35 @@ export class WorkflowService {
       description: 'Ticket needs attention',
       color: 'red',
       icon: 'alert-circle',
-      order: 1
+      order: 1,
     },
     in_progress: {
       label: 'In Progress',
       description: 'Work has started',
       color: 'blue',
       icon: 'clock',
-      order: 2
+      order: 2,
     },
     resolved: {
       label: 'Resolved',
       description: 'Solution provided',
       color: 'green',
       icon: 'check-circle',
-      order: 3
+      order: 3,
     },
     closed: {
       label: 'Closed',
       description: 'No further action needed',
       color: 'gray',
       icon: 'archive',
-      order: 4
-    }
+      order: 4,
+    },
   };
 
-  constructor(supabase?: SupabaseClient<Database>, config?: Partial<WorkflowConfig>) {
+  constructor(
+    supabase?: SupabaseClient<Database>,
+    config?: Partial<WorkflowConfig>,
+  ) {
     if (!supabase) {
       throw new Error('Supabase client must be provided');
     }
@@ -148,14 +154,16 @@ export class WorkflowService {
       requireResponseForResolution: false,
       autoCloseAfterResolution: {
         enabled: false,
-        hours: 24
+        hours: 24,
       },
       allowCustomerToReopen: true,
-      ...config
+      ...config,
     };
   }
 
-  static async create(config?: Partial<WorkflowConfig>): Promise<WorkflowService> {
+  static async create(
+    config?: Partial<WorkflowConfig>,
+  ): Promise<WorkflowService> {
     const supabase = await createClient();
     return new WorkflowService(supabase, config);
   }
@@ -168,19 +176,19 @@ export class WorkflowService {
     if (this.config.allowFreeTransitions) {
       // Allow transitions to any status except current
       return Object.keys(this.statusMetadata).filter(
-        status => status !== currentStatus
+        (status) => status !== currentStatus,
       ) as Ticket['status'][];
     }
 
     // Return configured transitions
     return this.baseTransitions
-      .filter(t => t.from === currentStatus)
-      .map(t => t.to);
+      .filter((t) => t.from === currentStatus)
+      .map((t) => t.to);
   }
 
   private async validateTransition(
     ticket: Ticket,
-    newStatus: Ticket['status']
+    newStatus: Ticket['status'],
   ): Promise<WorkflowValidationResult> {
     // If free transitions are allowed and not explicitly forbidden by config
     if (this.config.allowFreeTransitions) {
@@ -188,41 +196,49 @@ export class WorkflowService {
       const recommended: string[] = [];
 
       // Apply organization-specific rules
-      if (newStatus === 'in_progress' && this.config.requireAssigneeForProgress) {
+      if (
+        newStatus === 'in_progress' &&
+        this.config.requireAssigneeForProgress
+      ) {
         if (!ticket.assigned_to) {
           required.push('Ticket must be assigned before starting work');
         }
       }
 
-      if (newStatus === 'resolved' && this.config.requireResponseForResolution) {
+      if (
+        newStatus === 'resolved' &&
+        this.config.requireResponseForResolution
+      ) {
         const { count } = await this.supabase
           .from('conversations')
           .select('*', { count: 'exact', head: true })
           .eq('ticket_id', ticket.id)
           .eq('is_internal', false);
-        
+
         if ((count || 0) === 0) {
-          required.push('Ticket must have at least one response before resolving');
+          required.push(
+            'Ticket must have at least one response before resolving',
+          );
         }
       }
 
       return {
         isValid: required.length === 0,
         required,
-        recommended
+        recommended,
       };
     }
 
     // Find configured transition
     const transition = this.baseTransitions.find(
-      t => t.from === ticket.status && t.to === newStatus
+      (t) => t.from === ticket.status && t.to === newStatus,
     );
 
     if (!transition) {
       return {
         isValid: false,
         required: [`Invalid transition from ${ticket.status} to ${newStatus}`],
-        recommended: []
+        recommended: [],
       };
     }
 
@@ -251,13 +267,13 @@ export class WorkflowService {
     return {
       isValid: required.length === 0,
       required,
-      recommended
+      recommended,
     };
   }
 
   async updateStatus(
     ticketId: string,
-    newStatus: Ticket['status']
+    newStatus: Ticket['status'],
   ): Promise<{ success: boolean; required: string[]; recommended: string[] }> {
     // Get current ticket
     const { data: ticket, error: ticketError } = await this.supabase
@@ -270,7 +286,7 @@ export class WorkflowService {
       return {
         success: false,
         required: ['Ticket not found'],
-        recommended: []
+        recommended: [],
       };
     }
 
@@ -280,13 +296,13 @@ export class WorkflowService {
       return {
         success: false,
         required: validation.required,
-        recommended: validation.recommended
+        recommended: validation.recommended,
       };
     }
 
     // Find transition for actions
     const transition = this.baseTransitions.find(
-      t => t.from === ticket.status && t.to === newStatus
+      (t) => t.from === ticket.status && t.to === newStatus,
     );
 
     // Update the status
@@ -294,7 +310,7 @@ export class WorkflowService {
       .from('tickets')
       .update({
         status: newStatus,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq('id', ticketId);
 
@@ -302,7 +318,7 @@ export class WorkflowService {
       return {
         success: false,
         required: ['Failed to update ticket status'],
-        recommended: []
+        recommended: [],
       };
     }
 
@@ -316,15 +332,17 @@ export class WorkflowService {
     return {
       success: true,
       required: [],
-      recommended: validation.recommended
+      recommended: validation.recommended,
     };
   }
 
-  async getStatusHistory(ticketId: string): Promise<{
-    status: Ticket['status'];
-    changed_at: string;
-    changed_by: string;
-  }[]> {
+  async getStatusHistory(ticketId: string): Promise<
+    {
+      status: Ticket['status'];
+      changed_at: string;
+      changed_by: string;
+    }[]
+  > {
     const { data, error } = await this.supabase
       .from('tickets')
       .select('status, updated_at, metadata->status_history')
@@ -339,4 +357,4 @@ export class WorkflowService {
       changed_by: string;
     }[];
   }
-} 
+}

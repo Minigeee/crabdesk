@@ -1,8 +1,10 @@
 import { Database } from '@/lib/supabase/database.types';
 
 export type Conversation = Database['public']['Tables']['conversations']['Row'];
-export type NewConversation = Database['public']['Tables']['conversations']['Insert'];
-export type ConversationUpdate = Database['public']['Tables']['conversations']['Update'];
+export type NewConversation =
+  Database['public']['Tables']['conversations']['Insert'];
+export type ConversationUpdate =
+  Database['public']['Tables']['conversations']['Update'];
 
 export type ConversationWithUser = Conversation & {
   user: {
@@ -29,4 +31,4 @@ export type Attachment = {
   size: number;
   type: string;
   uploaded_at: string;
-}; 
+};

@@ -20,7 +20,10 @@ type Agent = Pick<
   Database['public']['Tables']['users']['Row'],
   'id' | 'full_name'
 >;
-type Customer = Pick<Database['public']['Tables']['users']['Row'], 'id' | 'full_name' | 'email'>;
+type Customer = Pick<
+  Database['public']['Tables']['users']['Row'],
+  'id' | 'full_name' | 'email'
+>;
 
 export default async function NewTicketPage() {
   const user = await getUser();
@@ -81,7 +84,7 @@ export default async function NewTicketPage() {
           </CardHeader>
           <CardContent className='max-w-2xl'>
             {/* Form */}
-            <TicketForm 
+            <TicketForm
               userRole={user.role}
               teams={teams}
               agents={agents}

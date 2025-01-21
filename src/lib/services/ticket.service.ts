@@ -1,17 +1,31 @@
-import { createClient } from '@/lib/supabase/server';
-import { type SupabaseClient } from '@supabase/supabase-js';
 import { type Database } from '@/lib/supabase/database.types';
-import { type NewTicket, type TicketUpdate, type TicketFilters, type TicketSort, type TicketWithDetails } from '@/lib/types/ticket';
+import { createClient } from '@/lib/supabase/server';
+import {
+  type NewTicket,
+  type TicketFilters,
+  type TicketSort,
+  type TicketUpdate,
+  type TicketWithDetails,
+} from '@/lib/types/ticket';
+import { type SupabaseClient } from '@supabase/supabase-js';
 
 type TicketResponse = Database['public']['Tables']['tickets']['Row'] & {
-  customer: Pick<Database['public']['Tables']['users']['Row'], 'id' | 'full_name' | 'email'> | null;
-  assignee: Pick<Database['public']['Tables']['users']['Row'], 'id' | 'full_name' | 'email'> | null;
-  team: Pick<Database['public']['Tables']['teams']['Row'], 'id' | 'name'> | null;
-  organization: Pick<Database['public']['Tables']['organizations']['Row'], 'id' | 'name'> | null;
-};
-
-type TicketHistoryEntry = Database['public']['Tables']['ticket_history']['Row'] & {
-  user: Pick<Database['public']['Tables']['users']['Row'], 'id' | 'full_name' | 'email'>;
+  customer: Pick<
+    Database['public']['Tables']['users']['Row'],
+    'id' | 'full_name' | 'email'
+  > | null;
+  assignee: Pick<
+    Database['public']['Tables']['users']['Row'],
+    'id' | 'full_name' | 'email'
+  > | null;
+  team: Pick<
+    Database['public']['Tables']['teams']['Row'],
+    'id' | 'name'
+  > | null;
+  organization: Pick<
+    Database['public']['Tables']['organizations']['Row'],
+    'id' | 'name'
+  > | null;
 };
 
 export class TicketService {
@@ -41,7 +55,10 @@ export class TicketService {
     return data as unknown as TicketWithDetails;
   }
 
-  async update(id: string, updates: TicketUpdate): Promise<TicketWithDetails | null> {
+  async update(
+    id: string,
+    updates: TicketUpdate,
+  ): Promise<TicketWithDetails | null> {
     // First get the current ticket state
     const currentTicket = await this.getById(id);
     if (!currentTicket) throw new Error('Ticket not found');
@@ -66,10 +83,7 @@ export class TicketService {
   }
 
   async delete(id: string): Promise<void> {
-    const { error } = await this.supabase
-      .from('tickets')
-      .delete()
-      .eq('id', id);
+    const { error } = await this.supabase.from('tickets').delete().eq('id', id);
 
     if (error) throw error;
   }
@@ -89,11 +103,14 @@ export class TicketService {
     page = 1,
     pageSize = 10,
     filters?: TicketFilters,
-    sort?: TicketSort
+    sort?: TicketSort,
   ): Promise<{ data: TicketWithDetails[]; count: number }> {
     let query = this.supabase
       .from('tickets')
-      .select<string, TicketResponse>(this.ticketWithDetailsQuery(), { count: 'exact' });
+      .select<
+        string,
+        TicketResponse
+      >(this.ticketWithDetailsQuery(), { count: 'exact' });
 
     // Apply filters
     if (filters) {
@@ -114,7 +131,7 @@ export class TicketService {
       }
       if (filters.search) {
         query = query.or(
-          `title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`
+          `title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`,
         );
       }
     }
@@ -134,9 +151,9 @@ export class TicketService {
     const { data, error, count } = await query;
 
     if (error) throw error;
-    return { 
-      data: (data || []) as unknown as TicketWithDetails[], 
-      count: count || 0 
+    return {
+      data: (data || []) as unknown as TicketWithDetails[],
+      count: count || 0,
     };
   }
 
@@ -146,13 +163,13 @@ export class TicketService {
       change_type,
       previous_values,
       new_values,
-      metadata = {}
+      metadata = {},
     }: {
       change_type: string;
       previous_values?: any;
       new_values?: any;
       metadata?: any;
-    }
+    },
   ): Promise<void> {
     const {
       data: { user },
@@ -172,12 +189,15 @@ export class TicketService {
     if (error) throw error;
   }
 
-  private getChangedValues(currentTicket: TicketWithDetails, updates: TicketUpdate): Partial<TicketWithDetails> {
+  private getChangedValues(
+    currentTicket: TicketWithDetails,
+    updates: TicketUpdate,
+  ): Partial<TicketWithDetails> {
     const changedValues: Partial<TicketWithDetails> = {};
-    
+
     (Object.keys(updates) as Array<keyof TicketUpdate>).forEach((key) => {
       if (updates[key] !== currentTicket[key]) {
-        // @ts-ignore should be safe
+        // @ts-expect-error should be safe
         changedValues[key] = currentTicket[key];
       }
     });
@@ -208,4 +228,4 @@ export class TicketService {
       )
     `;
   }
-} 
+}

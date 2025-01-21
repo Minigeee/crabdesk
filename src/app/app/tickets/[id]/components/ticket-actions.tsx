@@ -1,14 +1,18 @@
 'use client';
 
+import {
+  AlertDialog,
+  AlertDialogContent,
+  StrictAlertDialog,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { toast } from '@/hooks/use-toast';
+import { type TicketWithDetails } from '@/lib/types/ticket';
 import { Pencil, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { deleteTicket } from '../actions';
-import { toast } from '@/hooks/use-toast';
-import { AlertDialog, AlertDialogContent, StrictAlertDialog } from '@/components/ui/alert-dialog';
-import { type TicketWithDetails } from '@/lib/types/ticket';
 
 interface TicketActionsProps {
   ticket: TicketWithDetails;
@@ -35,7 +39,8 @@ export function TicketActions({ ticket }: TicketActionsProps) {
       } catch (error) {
         toast({
           title: 'Error',
-          description: error instanceof Error ? error.message : 'Failed to delete ticket',
+          description:
+            error instanceof Error ? error.message : 'Failed to delete ticket',
           variant: 'destructive',
         });
       }
@@ -51,8 +56,8 @@ export function TicketActions({ ticket }: TicketActionsProps) {
             Edit Ticket
           </Link>
         </Button>
-        <Button 
-          variant='outline' 
+        <Button
+          variant='outline'
           size='sm'
           onClick={() => setShowDeleteDialog(true)}
           disabled={isPending}
@@ -67,21 +72,24 @@ export function TicketActions({ ticket }: TicketActionsProps) {
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <StrictAlertDialog
-            title="Delete Ticket"
+            title='Delete Ticket'
             content={
               <div className='space-y-2'>
-                <p>This action cannot be undone. This will permanently delete the ticket and all its associated data.</p>
+                <p>
+                  This action cannot be undone. This will permanently delete the
+                  ticket and all its associated data.
+                </p>
                 <p className='font-semibold'>{ticket.title}</p>
               </div>
             }
-            type="delete"
+            type='delete'
             onAction={handleDelete}
             onOpenChange={setShowDeleteDialog}
-            actionLabel="Delete Ticket"
-            actionVariant="destructive"
+            actionLabel='Delete Ticket'
+            actionVariant='destructive'
           />
         </AlertDialogContent>
       </AlertDialog>
     </>
   );
-} 
+}

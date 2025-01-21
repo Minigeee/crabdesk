@@ -44,7 +44,7 @@ export function TicketHistory({ ticketId }: TicketHistoryProps) {
           : 'Unassigned ticket';
       case 'update':
         const changes = [];
-        for (const [key, value] of Object.entries(new_values)) {
+        for (const [key] of Object.entries(new_values)) {
           if (key === 'title') changes.push('Updated title');
           if (key === 'description') changes.push('Updated description');
           if (key === 'tags') changes.push('Updated tags');

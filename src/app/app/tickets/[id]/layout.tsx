@@ -1,10 +1,10 @@
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { TicketService } from '@/lib/services/ticket.service';
+import { type TicketWithDetails } from '@/lib/types/ticket';
 import { notFound } from 'next/navigation';
 import { TicketActions } from './components/ticket-actions';
 import { TicketBreadcrumb } from './components/ticket-breadcrumb';
 import { TicketSidebar } from './components/ticket-sidebar';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { type TicketWithDetails } from '@/lib/types/ticket';
 
 interface LayoutProps {
   children: React.ReactNode;

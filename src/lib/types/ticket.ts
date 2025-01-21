@@ -42,9 +42,15 @@ export type TicketFilters = {
   organizationId?: string;
 };
 
-export type SortableTicketField = 'title' | 'created_at' | 'updated_at' | 'status' | 'priority' | 'due_date';
+export type SortableTicketField =
+  | 'title'
+  | 'created_at'
+  | 'updated_at'
+  | 'status'
+  | 'priority'
+  | 'due_date';
 
 export type TicketSort = {
   field: SortableTicketField;
   direction: 'asc' | 'desc';
-}; 
+};

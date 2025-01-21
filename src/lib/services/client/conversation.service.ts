@@ -1,5 +1,8 @@
 import { createClient } from '@/lib/supabase/client';
-import { type ThreadedConversation, type NewConversation } from '@/lib/types/conversation';
+import {
+  type NewConversation,
+  type ThreadedConversation,
+} from '@/lib/types/conversation';
 
 export class ClientConversationService {
   async create(conversation: NewConversation) {
@@ -7,7 +10,8 @@ export class ClientConversationService {
     const { data, error } = await supabase
       .from('conversations')
       .insert(conversation)
-      .select(`
+      .select(
+        `
         *,
         user:users (
           id,
@@ -15,7 +19,8 @@ export class ClientConversationService {
           email,
           avatar_url
         )
-      `)
+      `,
+      )
       .single();
 
     if (error) throw error;
@@ -26,10 +31,10 @@ export class ClientConversationService {
     ticketId: string,
     onNewMessage: (message: ThreadedConversation) => void,
     onUpdateMessage: (message: ThreadedConversation) => void,
-    onDeleteMessage: (id: string) => void
+    onDeleteMessage: (id: string) => void,
   ) {
     const supabase = createClient();
-    
+
     return supabase
       .channel(`ticket-${ticketId}-conversations`)
       .on(
@@ -38,14 +43,15 @@ export class ClientConversationService {
           event: 'INSERT',
           schema: 'public',
           table: 'conversations',
-          filter: `ticket_id=eq.${ticketId}`
+          filter: `ticket_id=eq.${ticketId}`,
         },
         async (payload) => {
           if (payload.new) {
             // Fetch the complete message with user details
             const { data } = await supabase
               .from('conversations')
-              .select(`
+              .select(
+                `
                 *,
                 user:users (
                   id,
@@ -53,7 +59,8 @@ export class ClientConversationService {
                   email,
                   avatar_url
                 )
-              `)
+              `,
+              )
               .eq('id', payload.new.id)
               .single();
 
@@ -61,7 +68,7 @@ export class ClientConversationService {
               onNewMessage(data as ThreadedConversation);
             }
           }
-        }
+        },
       )
       .on(
         'postgres_changes',
@@ -69,13 +76,14 @@ export class ClientConversationService {
           event: 'UPDATE',
           schema: 'public',
           table: 'conversations',
-          filter: `ticket_id=eq.${ticketId}`
+          filter: `ticket_id=eq.${ticketId}`,
         },
         async (payload) => {
           if (payload.new) {
             const { data } = await supabase
               .from('conversations')
-              .select(`
+              .select(
+                `
                 *,
                 user:users (
                   id,
@@ -83,7 +91,8 @@ export class ClientConversationService {
                   email,
                   avatar_url
                 )
-              `)
+              `,
+              )
               .eq('id', payload.new.id)
               .single();
 
@@ -91,7 +100,7 @@ export class ClientConversationService {
               onUpdateMessage(data as ThreadedConversation);
             }
           }
-        }
+        },
       )
       .on(
         'postgres_changes',
@@ -99,14 +108,14 @@ export class ClientConversationService {
           event: 'DELETE',
           schema: 'public',
           table: 'conversations',
-          filter: `ticket_id=eq.${ticketId}`
+          filter: `ticket_id=eq.${ticketId}`,
         },
         (payload) => {
           if (payload.old) {
             onDeleteMessage(payload.old.id);
           }
-        }
+        },
       )
       .subscribe();
   }
-} 
+}

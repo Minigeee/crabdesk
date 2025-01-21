@@ -1,6 +1,6 @@
+import { type Database } from '@/lib/supabase/database.types';
 import { createClient } from '@/lib/supabase/server';
 import { type SupabaseClient } from '@supabase/supabase-js';
-import { type Database } from '@/lib/supabase/database.types';
 
 export class TeamService {
   private supabase: SupabaseClient<Database>;
@@ -19,9 +19,7 @@ export class TeamService {
   }
 
   async list(organizationId?: string) {
-    let query = this.supabase
-      .from('teams')
-      .select('id, name, description');
+    let query = this.supabase.from('teams').select('id, name, description');
 
     if (organizationId) {
       query = query.eq('organization_id', organizationId);
@@ -31,4 +29,4 @@ export class TeamService {
     if (error) throw error;
     return data;
   }
-} 
+}

@@ -1,8 +1,8 @@
 'use client';
 
-import { useTransition } from 'react';
-import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useRouter } from 'next/navigation';
+import { useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 
@@ -17,7 +17,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -25,8 +24,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { createTicket } from '../actions';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
+import { createTicket } from '../actions';
 
 const customerTicketSchema = z.object({
   title: z.string().min(1, 'Title is required').max(255),
@@ -52,13 +52,18 @@ interface TicketFormProps {
   customers?: { id: string; full_name: string; email: string }[];
 }
 
-export function TicketForm({ userRole, teams = [], agents = [], customers = [] }: TicketFormProps) {
+export function TicketForm({
+  userRole,
+  teams = [],
+  agents = [],
+  customers = [],
+}: TicketFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  
+
   const isAgent = userRole === 'agent' || userRole === 'admin';
   const schema = isAgent ? agentTicketSchema : customerTicketSchema;
-  
+
   const form = useForm<CustomerTicketSchema | AgentTicketSchema>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -86,6 +91,7 @@ export function TicketForm({ userRole, teams = [], agents = [], customers = [] }
         router.push('/app/tickets');
         router.refresh();
       } catch (error) {
+        console.error(error);
         toast({
           title: 'Error',
           description: 'Failed to create ticket. Please try again.',
@@ -97,23 +103,26 @@ export function TicketForm({ userRole, teams = [], agents = [], customers = [] }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
         {isAgent && (
           <FormField
             control={form.control}
-            name="customer_id"
+            name='customer_id'
             render={({ field }) => (
-              <FormItem className="space-y-2">
+              <FormItem className='space-y-2'>
                 <div>
                   <FormLabel required>Customer</FormLabel>
                   <FormDescription>
                     Select the customer this ticket is for
                   </FormDescription>
                 </div>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a customer" />
+                      <SelectValue placeholder='Select a customer' />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -132,17 +141,18 @@ export function TicketForm({ userRole, teams = [], agents = [], customers = [] }
 
         <FormField
           control={form.control}
-          name="title"
+          name='title'
           render={({ field }) => (
-            <FormItem className="space-y-2">
+            <FormItem className='space-y-2'>
               <div>
                 <FormLabel required>Title</FormLabel>
                 <FormDescription>
-                  A clear and concise title helps us understand your issue quickly
+                  A clear and concise title helps us understand your issue
+                  quickly
                 </FormDescription>
               </div>
               <FormControl>
-                <Input placeholder="Brief summary of the issue" {...field} />
+                <Input placeholder='Brief summary of the issue' {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -151,19 +161,20 @@ export function TicketForm({ userRole, teams = [], agents = [], customers = [] }
 
         <FormField
           control={form.control}
-          name="description"
+          name='description'
           render={({ field }) => (
-            <FormItem className="space-y-2">
+            <FormItem className='space-y-2'>
               <div>
                 <FormLabel required>Description</FormLabel>
                 <FormDescription>
-                  Include any relevant details that could help resolve your issue
+                  Include any relevant details that could help resolve your
+                  issue
                 </FormDescription>
               </div>
               <FormControl>
                 <Textarea
-                  placeholder="Please provide detailed information about your issue"
-                  className="min-h-[150px] resize-y"
+                  placeholder='Please provide detailed information about your issue'
+                  className='min-h-[150px] resize-y'
                   {...field}
                 />
               </FormControl>
@@ -174,9 +185,9 @@ export function TicketForm({ userRole, teams = [], agents = [], customers = [] }
 
         <FormField
           control={form.control}
-          name="priority"
+          name='priority'
           render={({ field }) => (
-            <FormItem className="space-y-2">
+            <FormItem className='space-y-2'>
               <div>
                 <FormLabel required>Priority</FormLabel>
                 <FormDescription>
@@ -186,14 +197,14 @@ export function TicketForm({ userRole, teams = [], agents = [], customers = [] }
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select priority level" />
+                    <SelectValue placeholder='Select priority level' />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
+                  <SelectItem value='low'>Low</SelectItem>
+                  <SelectItem value='medium'>Medium</SelectItem>
+                  <SelectItem value='high'>High</SelectItem>
+                  <SelectItem value='urgent'>Urgent</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -202,22 +213,25 @@ export function TicketForm({ userRole, teams = [], agents = [], customers = [] }
         />
 
         {isAgent && (
-          <div className="space-y-8">
+          <div className='space-y-8'>
             <FormField
               control={form.control}
-              name="assigned_to"
+              name='assigned_to'
               render={({ field }) => (
-                <FormItem className="space-y-2">
+                <FormItem className='space-y-2'>
                   <div>
                     <FormLabel>Assign To</FormLabel>
                     <FormDescription>
                       Assign this ticket to a specific agent
                     </FormDescription>
                   </div>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select an agent" />
+                        <SelectValue placeholder='Select an agent' />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -235,19 +249,22 @@ export function TicketForm({ userRole, teams = [], agents = [], customers = [] }
 
             <FormField
               control={form.control}
-              name="team_id"
+              name='team_id'
               render={({ field }) => (
-                <FormItem className="space-y-2">
+                <FormItem className='space-y-2'>
                   <div>
                     <FormLabel>Team</FormLabel>
                     <FormDescription>
                       Assign this ticket to a team
                     </FormDescription>
                   </div>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a team" />
+                        <SelectValue placeholder='Select a team' />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -265,9 +282,9 @@ export function TicketForm({ userRole, teams = [], agents = [], customers = [] }
 
             <FormField
               control={form.control}
-              name="internal_notes"
+              name='internal_notes'
               render={({ field }) => (
-                <FormItem className="space-y-2">
+                <FormItem className='space-y-2'>
                   <div>
                     <FormLabel>Internal Notes</FormLabel>
                     <FormDescription>
@@ -276,8 +293,8 @@ export function TicketForm({ userRole, teams = [], agents = [], customers = [] }
                   </div>
                   <FormControl>
                     <Textarea
-                      placeholder="Add any internal notes or comments"
-                      className="min-h-[100px] resize-y"
+                      placeholder='Add any internal notes or comments'
+                      className='min-h-[100px] resize-y'
                       {...field}
                     />
                   </FormControl>
@@ -288,12 +305,16 @@ export function TicketForm({ userRole, teams = [], agents = [], customers = [] }
           </div>
         )}
 
-        <div className="pt-4">
-          <Button type="submit" className="w-full sm:w-auto" disabled={isPending}>
+        <div className='pt-4'>
+          <Button
+            type='submit'
+            className='w-full sm:w-auto'
+            disabled={isPending}
+          >
             {isPending ? 'Creating...' : 'Create Ticket'}
           </Button>
         </div>
       </form>
     </Form>
   );
-} 
+}

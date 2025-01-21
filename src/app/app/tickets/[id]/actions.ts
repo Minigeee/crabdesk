@@ -1,10 +1,15 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { getUser } from '@/lib/auth/utils';
 import { TicketService } from '@/lib/services/ticket.service';
 import { type TicketUpdate } from '@/lib/types/ticket';
-import { getUser } from '@/lib/auth/utils';
-import { notifyTicketUpdate, notifyTicketAssignment, notifyTicketStatusChange, notifyTicketPriorityChange } from '@/lib/utils/notifications';
+import {
+  notifyTicketAssignment,
+  notifyTicketPriorityChange,
+  notifyTicketStatusChange,
+  notifyTicketUpdate,
+} from '@/lib/utils/notifications';
+import { revalidatePath } from 'next/cache';
 
 export async function updateTicket(ticketId: string, updates: TicketUpdate) {
   try {
@@ -47,7 +52,10 @@ export async function updateTicket(ticketId: string, updates: TicketUpdate) {
     }
 
     // Track significant changes and send notifications
-    if (updates.assigned_to && updates.assigned_to !== currentTicket.assigned_to) {
+    if (
+      updates.assigned_to &&
+      updates.assigned_to !== currentTicket.assigned_to
+    ) {
       await notifyTicketAssignment(ticketId, updates.assigned_to, user.id);
     }
 
@@ -69,9 +77,9 @@ export async function updateTicket(ticketId: string, updates: TicketUpdate) {
     return { success: true, data: updatedTicket };
   } catch (error) {
     console.error('Error updating ticket:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to update ticket' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to update ticket',
     };
   }
 }
@@ -106,9 +114,9 @@ export async function deleteTicket(ticketId: string) {
     return { success: true };
   } catch (error) {
     console.error('Error deleting ticket:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to delete ticket' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to delete ticket',
     };
   }
-} 
+}

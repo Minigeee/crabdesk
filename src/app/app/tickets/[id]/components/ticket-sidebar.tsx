@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
 import { type TicketWithDetails } from '@/lib/types/ticket';
+import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 
 const PRIORITY_COLORS = {
@@ -35,9 +35,7 @@ export function TicketSidebar({ ticket }: TicketSidebarProps) {
         {/* Description */}
         <div className='space-y-2'>
           <Label>Description</Label>
-          <p className='whitespace-pre-wrap text-sm'>
-            {ticket.description}
-          </p>
+          <p className='whitespace-pre-wrap text-sm'>{ticket.description}</p>
         </div>
 
         {/* Status and Priority */}
@@ -158,4 +156,4 @@ export function TicketSidebar({ ticket }: TicketSidebarProps) {
       </div>
     </div>
   );
-} 
+}

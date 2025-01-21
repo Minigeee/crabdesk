@@ -4,7 +4,7 @@ export type WorkflowTransition = {
   from: Ticket['status'];
   to: Ticket['status'];
   validation?: {
-    required: WorkflowCondition[];    // Hard requirements (data integrity)
+    required: WorkflowCondition[]; // Hard requirements (data integrity)
     recommended: WorkflowCondition[]; // Soft guidelines (UI warnings)
   };
   actions?: WorkflowAction[];
@@ -23,7 +23,7 @@ export type WorkflowAction = {
 
 export type WorkflowValidationResult = {
   isValid: boolean;
-  required: string[];    // Required validation failures (block transition)
+  required: string[]; // Required validation failures (block transition)
   recommended: string[]; // Recommended validation failures (warnings)
 };
 
@@ -37,13 +37,14 @@ export type StatusMetadata = {
 
 // New types for organization-specific workflow configuration
 export type WorkflowConfig = {
-  allowFreeTransitions: boolean;           // Allow any status to transition to any other status
-  requireAssigneeForProgress: boolean;     // Require assignee for in_progress
-  requireResponseForResolution: boolean;   // Require response for resolved
-  autoCloseAfterResolution?: {            // Auto-close settings
+  allowFreeTransitions: boolean; // Allow any status to transition to any other status
+  requireAssigneeForProgress: boolean; // Require assignee for in_progress
+  requireResponseForResolution: boolean; // Require response for resolved
+  autoCloseAfterResolution?: {
+    // Auto-close settings
     enabled: boolean;
     hours: number;
   };
-  defaultAssigneeTeamId?: string;         // Default team for auto-assignment
-  allowCustomerToReopen: boolean;         // Allow customers to reopen closed tickets
-}; 
+  defaultAssigneeTeamId?: string; // Default team for auto-assignment
+  allowCustomerToReopen: boolean; // Allow customers to reopen closed tickets
+};
