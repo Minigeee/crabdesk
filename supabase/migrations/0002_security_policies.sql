@@ -31,28 +31,33 @@ create policy "Organizations can be updated by admins"
   );
 
 -- Users policies
-create policy "Users can view their own profile"
+create policy "Users can view public profiles"
   on users for select
-  using (auth.uid() = id);
-
-create policy "Users can view profiles in their organization"
-  on users for select
-  using (
-    organization_id in (
-      select organization_id from users where id = auth.uid()
-    )
-  );
+  using (true);
 
 create policy "Users can update their own profile"
   on users for update
   using (auth.uid() = id);
 
+create policy "Admins can update user profiles in their organization"
+  on users for update
+  using (
+    exists (
+      select 1 from users as u
+      where u.id = auth.uid()
+      and u.role = 'admin'
+      and u.organization_id = users.organization_id
+    )
+  );
+
 -- Teams policies
 create policy "Teams are viewable by organization members"
   on teams for select
   using (
-    organization_id in (
-      select organization_id from users where id = auth.uid()
+    exists (
+      select 1 from users
+      where users.id = auth.uid()
+      and users.organization_id = teams.organization_id
     )
   );
 
@@ -61,18 +66,25 @@ create policy "Teams can be created by admins"
   with check (
     exists (
       select 1 from users
-      where users.organization_id = organization_id
-      and users.id = auth.uid()
+      where users.id = auth.uid()
       and users.role = 'admin'
+      and users.organization_id = organization_id
     )
   );
 
 -- Tickets policies
-create policy "Tickets are viewable by organization members"
+create policy "Tickets are viewable by participants"
   on tickets for select
   using (
-    organization_id in (
-      select organization_id from users where id = auth.uid()
+    auth.uid() = customer_id
+    or auth.uid() = assigned_to
+    or exists (
+      select 1 from users
+      where users.id = auth.uid()
+      and (
+        users.team_id = tickets.team_id
+        or users.organization_id = tickets.organization_id
+      )
     )
   );
 
@@ -82,7 +94,7 @@ create policy "Customers can create tickets"
     auth.uid() = customer_id
   );
 
-create policy "Agents can update assigned tickets"
+create policy "Support staff can update tickets"
   on tickets for update
   using (
     exists (
@@ -95,6 +107,7 @@ create policy "Agents can update assigned tickets"
       and (
         tickets.assigned_to = users.id
         or tickets.team_id = users.team_id
+        or tickets.organization_id = users.organization_id
       )
     )
   );
@@ -109,8 +122,10 @@ create policy "Conversations are viewable by ticket participants"
       and (
         tickets.customer_id = auth.uid()
         or tickets.assigned_to = auth.uid()
-        or tickets.team_id in (
-          select team_id from users where id = auth.uid()
+        or exists (
+          select 1 from users
+          where users.id = auth.uid()
+          and users.team_id = tickets.team_id
         )
       )
     )
@@ -125,8 +140,10 @@ create policy "Users can create conversations in their tickets"
       and (
         tickets.customer_id = auth.uid()
         or tickets.assigned_to = auth.uid()
-        or tickets.team_id in (
-          select team_id from users where id = auth.uid()
+        or exists (
+          select 1 from users
+          where users.id = auth.uid()
+          and users.team_id = tickets.team_id
         )
       )
     )

@@ -1,4 +1,4 @@
-# AutoCRM MVP Roadmap
+# CrabDesk MVP Roadmap
 
 ## Project Overview
 - Tech Stack: Supabase, Next.js, TailwindCSS, Shadcn/UI

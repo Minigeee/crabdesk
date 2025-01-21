@@ -161,6 +161,9 @@ export default function Chat() {
 
 ## UI Development
 
+### Shadcn UI
+- Use `npx shadcn@latest add` to add components
+
 ### Styling
 - Use Tailwind CSS with a mobile-first approach
 - Implement Shadcn UI and Radix UI components

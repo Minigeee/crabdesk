@@ -1,4 +1,4 @@
-import { Database } from '@/lib/supabase/database.types';
+import { type Database } from '@/lib/supabase/database.types';
 
 export type Ticket = Database['public']['Tables']['tickets']['Row'];
 export type NewTicket = Database['public']['Tables']['tickets']['Insert'];
@@ -9,17 +9,17 @@ export type TicketWithDetails = Ticket & {
     id: string;
     full_name: string;
     email: string;
-  };
-  assignee?: {
+  } | null;
+  assignee: {
     id: string;
     full_name: string;
     email: string;
   } | null;
-  team?: {
+  team: {
     id: string;
     name: string;
   } | null;
-  organization?: {
+  organization: {
     id: string;
     name: string;
   } | null;
@@ -30,16 +30,21 @@ export type TicketListResponse = {
   count: number;
 };
 
+export type TicketStatus = Ticket['status'];
+export type TicketPriority = Ticket['priority'];
+
 export type TicketFilters = {
-  status?: Ticket['status'][];
-  priority?: Ticket['priority'][];
+  status?: TicketStatus[];
+  priority?: TicketPriority[];
+  search?: string;
   assignedTo?: string;
   teamId?: string;
   organizationId?: string;
-  search?: string;
 };
 
+export type SortableTicketField = 'title' | 'created_at' | 'updated_at' | 'status' | 'priority' | 'due_date';
+
 export type TicketSort = {
-  field: keyof Ticket;
+  field: SortableTicketField;
   direction: 'asc' | 'desc';
 }; 

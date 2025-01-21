@@ -1,4 +1,4 @@
-# AutoCRM Project Planning Document
+# CrabDesk Project Planning Document
 
 ## 1. Project Description/Summary
 A modern, AI-enhanced customer relationship management system designed to streamline support operations and enhance customer experience. The platform will serve as a centralized hub for managing customer interactions, support tickets, and knowledge base content.

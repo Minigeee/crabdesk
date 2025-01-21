@@ -3,6 +3,13 @@ import { type SupabaseClient } from '@supabase/supabase-js';
 import { type Database } from '@/lib/supabase/database.types';
 import { type NewTicket, type TicketUpdate, type TicketFilters, type TicketSort, type TicketWithDetails } from '@/lib/types/ticket';
 
+type TicketResponse = Database['public']['Tables']['tickets']['Row'] & {
+  customer: Pick<Database['public']['Tables']['users']['Row'], 'id' | 'full_name' | 'email'> | null;
+  assignee: Pick<Database['public']['Tables']['users']['Row'], 'id' | 'full_name' | 'email'> | null;
+  team: Pick<Database['public']['Tables']['teams']['Row'], 'id' | 'name'> | null;
+  organization: Pick<Database['public']['Tables']['organizations']['Row'], 'id' | 'name'> | null;
+};
+
 export class TicketService {
   private supabase: SupabaseClient<Database>;
 
@@ -23,31 +30,11 @@ export class TicketService {
     const { data, error } = await this.supabase
       .from('tickets')
       .insert(ticket)
-      .select(`
-        *,
-        customer:users!tickets_customer_id_fkey (
-          id,
-          full_name,
-          email
-        ),
-        assignee:users!tickets_assigned_to_fkey (
-          id,
-          full_name,
-          email
-        ),
-        team:teams (
-          id,
-          name
-        ),
-        organization:organizations (
-          id,
-          name
-        )
-      `)
+      .select<string, TicketResponse>(this.ticketWithDetailsQuery())
       .single();
 
     if (error) throw error;
-    return data;
+    return data as unknown as TicketWithDetails;
   }
 
   async update(id: string, updates: TicketUpdate): Promise<TicketWithDetails | null> {
@@ -55,31 +42,11 @@ export class TicketService {
       .from('tickets')
       .update(updates)
       .eq('id', id)
-      .select(`
-        *,
-        customer:users!tickets_customer_id_fkey (
-          id,
-          full_name,
-          email
-        ),
-        assignee:users!tickets_assigned_to_fkey (
-          id,
-          full_name,
-          email
-        ),
-        team:teams (
-          id,
-          name
-        ),
-        organization:organizations (
-          id,
-          name
-        )
-      `)
+      .select<string, TicketResponse>(this.ticketWithDetailsQuery())
       .single();
 
     if (error) throw error;
-    return data;
+    return data as unknown as TicketWithDetails;
   }
 
   async delete(id: string): Promise<void> {
@@ -94,32 +61,12 @@ export class TicketService {
   async getById(id: string): Promise<TicketWithDetails | null> {
     const { data, error } = await this.supabase
       .from('tickets')
-      .select(`
-        *,
-        customer:users!tickets_customer_id_fkey (
-          id,
-          full_name,
-          email
-        ),
-        assignee:users!tickets_assigned_to_fkey (
-          id,
-          full_name,
-          email
-        ),
-        team:teams (
-          id,
-          name
-        ),
-        organization:organizations (
-          id,
-          name
-        )
-      `)
+      .select<string, TicketResponse>(this.ticketWithDetailsQuery())
       .eq('id', id)
       .single();
 
     if (error) throw error;
-    return data;
+    return data as unknown as TicketWithDetails;
   }
 
   async list(
@@ -130,27 +77,7 @@ export class TicketService {
   ): Promise<{ data: TicketWithDetails[]; count: number }> {
     let query = this.supabase
       .from('tickets')
-      .select(`
-        *,
-        customer:users!tickets_customer_id_fkey (
-          id,
-          full_name,
-          email
-        ),
-        assignee:users!tickets_assigned_to_fkey (
-          id,
-          full_name,
-          email
-        ),
-        team:teams (
-          id,
-          name
-        ),
-        organization:organizations (
-          id,
-          name
-        )
-      `, { count: 'exact' });
+      .select<string, TicketResponse>(this.ticketWithDetailsQuery(), { count: 'exact' });
 
     // Apply filters
     if (filters) {
@@ -170,7 +97,9 @@ export class TicketService {
         query = query.eq('organization_id', filters.organizationId);
       }
       if (filters.search) {
-        query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
+        query = query.or(
+          `title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`
+        );
       }
     }
 
@@ -189,6 +118,33 @@ export class TicketService {
     const { data, error, count } = await query;
 
     if (error) throw error;
-    return { data: data || [], count: count || 0 };
+    return { 
+      data: (data || []) as unknown as TicketWithDetails[], 
+      count: count || 0 
+    };
+  }
+
+  private ticketWithDetailsQuery(): string {
+    return `
+      *,
+      customer:users!tickets_customer_id_fkey (
+        id,
+        full_name,
+        email
+      ),
+      assignee:users!tickets_assigned_to_fkey (
+        id,
+        full_name,
+        email
+      ),
+      team:teams (
+        id,
+        name
+      ),
+      organization:organizations (
+        id,
+        name
+      )
+    `;
   }
 } 
