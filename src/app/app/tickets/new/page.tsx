@@ -52,7 +52,7 @@ export default async function NewTicketPage() {
   }
 
   return (
-    <div className='flex min-h-full flex-col'>
+    <div className='relative pb-32'>
       {/* Header */}
       <header className='border-b bg-background/90 sticky top-0 z-10 backdrop-blur-sm'>
         <div className='flex h-14 items-center gap-4 px-4'>

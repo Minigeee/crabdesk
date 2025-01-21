@@ -43,14 +43,14 @@
   - Include internal notes section visible only to agents
   - Real-time updates for new messages and status changes
 
-- [ ] `/app/tickets/new` - Ticket creation
+- [X] `/app/tickets/new` - Ticket creation
   - Smart form with required fields based on user role
   - For customers: Simple form with title, description, priority
   - For agents: Additional fields for assignment, tags, internal notes
   - File attachment support with drag-and-drop (skip for now)
   - Template selection for common issues
 
-- [ ] `/app/tickets/[id]/edit` - Ticket editing
+- [X] `/app/tickets/[id]/edit` - Ticket editing
   - Allow agents to modify all ticket properties
   - Customers can only update title and description
   - Maintain edit history for auditing
