@@ -132,7 +132,7 @@ export function TicketList({ tickets, onRowClick }: TicketListProps) {
                 if (onRowClick) {
                   onRowClick(ticket);
                 } else {
-                  router.push(`/tickets/${ticket.id}`);
+                  router.push(`/app/tickets/${ticket.id}`);
                 }
               }}
               className='cursor-pointer'
@@ -172,7 +172,7 @@ export function TicketList({ tickets, onRowClick }: TicketListProps) {
                     <DropdownMenuItem
                       onClick={(e) => {
                         e.stopPropagation();
-                        router.push(`/tickets/${ticket.id}`);
+                        router.push(`/app/tickets/${ticket.id}`);
                       }}
                     >
                       View Details
@@ -180,7 +180,7 @@ export function TicketList({ tickets, onRowClick }: TicketListProps) {
                     <DropdownMenuItem
                       onClick={(e) => {
                         e.stopPropagation();
-                        router.push(`/tickets/${ticket.id}/edit`);
+                        router.push(`/app/tickets/${ticket.id}/edit`);
                       }}
                     >
                       Edit

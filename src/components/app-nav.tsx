@@ -19,37 +19,37 @@ import { Button } from './ui/button'
 const navItems = [
   {
     title: 'Dashboard',
-    href: '/dashboard',
+    href: '/app/dashboard',
     icon: LayoutDashboard,
   },
   {
     title: 'Tickets',
-    href: '/tickets',
+    href: '/app/tickets',
     icon: Ticket,
   },
   {
     title: 'Teams',
-    href: '/teams',
+    href: '/app/teams',
     icon: Users,
   },
   {
     title: 'Organizations',
-    href: '/organizations',
+    href: '/app/organizations',
     icon: Building2,
   },
   {
     title: 'Knowledge Base',
-    href: '/kb',
+    href: '/app/kb',
     icon: BookOpen,
   },
   {
     title: 'Analytics',
-    href: '/analytics',
+    href: '/app/analytics',
     icon: BarChart3,
   },
   {
     title: 'Settings',
-    href: '/settings',
+    href: '/app/settings',
     icon: Settings,
   },
 ]
@@ -68,7 +68,7 @@ export function AppNav() {
       {/* Logo & Toggle */}
       <div className="flex h-14 items-center border-b px-4">
         {!isCollapsed && (
-          <Link href="/" className="flex items-center gap-3">
+          <Link href="/app" className="flex items-center gap-3">
             <Ticket className="h-6 w-6" />
             <span className="font-semibold text-lg">CrabDesk</span>
           </Link>

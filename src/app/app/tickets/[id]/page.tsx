@@ -43,14 +43,14 @@ export default async function TicketDetailPage({ params }: PageProps) {
       <header className='border-b bg-background'>
         <div className='flex h-14 items-center gap-4 px-4'>
           <Button variant='ghost' size='icon' asChild>
-            <Link href='/tickets'>
+            <Link href='/app/tickets'>
               <ArrowLeft className='h-4 w-4' />
             </Link>
           </Button>
           <div className='flex flex-1 items-center justify-between'>
             <h1 className='text-lg font-semibold'>Ticket Details</h1>
             <Button variant='outline' size='sm' asChild>
-              <Link href={`/tickets/${ticket.id}/edit`}>
+              <Link href={`/app/tickets/${ticket.id}/edit`}>
                 <Pencil className='mr-2 h-4 w-4' />
                 Edit Ticket
               </Link>

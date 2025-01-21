@@ -65,7 +65,7 @@ export default async function TicketsPage({ searchParams }: PageProps) {
           <div className='flex flex-1 items-center justify-between'>
             <h1 className='text-lg font-semibold'>Tickets</h1>
             <Button asChild>
-              <Link href='/tickets/new'>
+              <Link href='/app/tickets/new'>
                 <Plus className='mr-2 h-4 w-4' />
                 New Ticket
               </Link>

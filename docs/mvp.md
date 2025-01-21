@@ -12,6 +12,13 @@
 - [X] Implement authentication system using Supabase Auth
 - [ ] Set up CI/CD pipeline with Amplify (skipped for now)
 
+### Authentication Routes
+- [X] Implement `/login` with Supabase Auth
+- [X] Create `/register` for organization signup
+- [X] Build `/forgot-password` flow
+- [X] Add `/reset-password` functionality
+- [X] Set up `/verify-email` process
+
 ### Database Schema
 - [X] Create initial schema for core tables:
   - tickets
@@ -23,73 +30,343 @@
 - [X] Create initial seed data for testing
 
 ## Phase 2: Core Ticket Management (Week 3-4)
-### Backend Infrastructure
-- [X] Implement ticket CRUD operations
-- [X] Create conversation threading system
-- [X] Set up real-time updates using Supabase realtime
-- [X] Develop basic ticket routing logic
-- [X] Create ticket status workflow management
+### Ticket Routes Implementation
+- [X] `/app/tickets` - List view with filters
+  - Implement role-based views (agents see all tickets, customers see only their tickets)
+  - Add filters for status, priority, assignee, and date range
+  - Include quick actions (assign, change status) in list view
+  - Show key metadata: status, priority, response time, SLA status
 
-### Agent Interface
-- [X] Build ticket list view with filters and sorting
-- [X] Create ticket detail view
-- [ ] Implement ticket creation form
-- [ ] Add basic ticket assignment functionality
-- [ ] Create conversation/reply interface
-- [ ] Add file attachment handling
+- [X] `/app/tickets/[id]` - Ticket detail view
+  - Display full conversation thread with proper formatting
+  - Show ticket metadata in sidebar (assignee, status, priority)
+  - Include internal notes section visible only to agents
+  - Real-time updates for new messages and status changes
+
+- [ ] `/app/tickets/new` - Ticket creation
+  - Smart form with required fields based on user role
+  - For customers: Simple form with title, description, priority
+  - For agents: Additional fields for assignment, tags, internal notes
+  - File attachment support with drag-and-drop (skip for now)
+  - Template selection for common issues
+
+- [ ] `/app/tickets/[id]/edit` - Ticket editing
+  - Allow agents to modify all ticket properties
+  - Customers can only update title and description
+  - Maintain edit history for auditing
+  - Trigger notifications for significant changes
+
+- [ ] `/app/tickets/[id]/history` - Ticket history
+  - Chronological log of all ticket changes
+  - Track status changes, assignments, and edits
+  - Show who made each change and when
+  - Filter history by change type
+
+### Ticket Features
+- [X] Implement ticket CRUD operations
+  - Create tickets via UI and API
+  - Update with proper validation and permissions
+  - Soft delete to maintain history
+  - Bulk operations for efficiency
+
+- [X] Create conversation threading system
+  - Support for HTML and markdown formatting
+  - Thread messages with proper hierarchy
+  - Handle email replies correctly
+  - Support internal notes
+
+- [X] Set up real-time updates using Supabase realtime
+  - Instant updates for new messages
+  - Live status and assignment changes
+  - Typing indicators for active conversations
+  - Presence indicators for viewing users
+
+- [ ] Implement file upload system for attachments
+  - Support common file types (images, docs, PDFs)
+  - Size limits and security scanning
+  - Preview for images and PDFs
+  - Organized storage with proper naming
+
+- [ ] Add ticket assignment functionality
+  - Manual assignment by agents
+  - Auto-assignment based on rules
+  - Load balancing across team
+  - Assignment notifications
+
+- [ ] Create basic priority and status management
+  - Define clear status workflow
+  - Set priority levels with SLA targets
+  - Allow status changes with comments
+  - Trigger appropriate notifications
+
+### Dashboard Routes
+- [ ] `/app/dashboard` - Basic agent dashboard
+  - Ticket queue display
+    * Show assigned and unassigned tickets
+    * Quick filters for urgent and overdue
+    * Team workload overview
+  - Basic performance metrics
+    * Response time averages
+    * Resolution rates
+    * SLA compliance
+  - Recent activity feed
+    * New tickets and updates
+    * Team member actions
+    * System notifications
 
 ## Phase 3: User Management & Access Control (Week 5)
-### Team Management
-- [ ] Implement user roles and permissions
-- [ ] Create team management interface
-- [ ] Add basic agent availability tracking
-- [ ] Set up ticket assignment rules
-- [ ] Implement basic workload distribution
+### User Routes
+- [ ] `/app/profile` - User profile management
+  - Personal information and preferences
+  - Notification settings
+  - Language and timezone
+  - Activity history and statistics
 
-### Customer Portal
-- [ ] Create customer registration flow
-- [ ] Build customer ticket submission form
-- [ ] Implement customer ticket list view
-- [ ] Add customer reply interface
-- [ ] Create organization management basics
+- [ ] `/app/profile/settings` - User preferences
+  - Email notification preferences
+  - UI customization options
+  - Default views and filters
+  - Working hours and availability
+
+- [ ] `/app/users` - Admin user listing (admin only)
+  - User management with roles
+  - Bulk actions for users
+  - Filter by role, team, status
+  - Performance metrics view
+
+- [ ] `/app/users/[id]` - User detail view
+  - Complete user information
+  - Access control settings
+  - Activity logs
+  - Performance statistics
+
+### Team Routes
+- [ ] `/app/teams` - Team listing
+  - Overview of all teams
+  - Team metrics and performance
+  - Member count and workload
+  - Quick access to team settings
+
+- [ ] `/app/teams/[id]` - Team details
+  - Member management
+  - Team performance metrics
+  - Ticket queue overview
+  - Team settings and rules
+
+- [ ] `/app/teams/[id]/schedule` - Basic scheduling
+  - Working hours setup
+  - Vacation planning
+  - Shift management
+  - Coverage analysis
+
+- [ ] Implement role-based access control
+  - Define role permissions
+  - Custom role creation
+  - Permission inheritance
+  - Access audit logs
+
+- [ ] Set up team assignment rules
+  - Round-robin assignment
+  - Skills-based routing
+  - Load balancing
+  - Business hours handling
+
+### Organization Routes
+- [ ] `/app/organization` - Basic org management
+  - Organization profile
+  - Subscription status
+  - Usage statistics
+  - Member overview
+
+- [ ] `/app/organization/settings` - Org settings
+  - Branding customization
+  - Default preferences
+  - Security settings
+  - Integration management
+
+- [ ] `/app/organization/members` - Member management
+  - Invite new members
+  - Role assignment
+  - Access control
+  - Activity monitoring
 
 ## Phase 4: Essential Features (Week 6-7)
-### Communication
-- [ ] Implement email notification system
-- [ ] Create in-app notification center
-- [ ] Add basic template system for responses
-- [ ] Set up email-to-ticket conversion
-- [ ] Implement basic SLA tracking
+### Communication System
+- [ ] Email notification integration
+  - Configurable email templates
+  - Smart notification batching
+  - HTML and plain text support
+  - Reply-to handling for conversations
 
-### Basic Analytics
-- [ ] Create basic dashboard for agents
-- [ ] Implement ticket volume metrics
-- [ ] Add response time tracking
-- [ ] Create basic performance reports
-- [ ] Set up basic logging system
+- [ ] `/app/admin/templates` - Basic response templates
+  - Template categories and tags
+  - Variable substitution support
+  - Markdown and HTML editing
+  - Template usage analytics
+
+- [ ] In-app notification center
+  - Real-time notifications
+  - Notification preferences
+  - Mark as read/unread
+  - Notification grouping
+
+- [ ] Email-to-ticket processing
+  - Automatic ticket creation from emails
+  - Smart threading and conversation matching
+  - Attachment handling
+  - Spam filtering
+
+- [ ] Basic SLA tracking implementation
+  - Response time tracking
+  - Resolution time monitoring
+  - SLA breach notifications
+  - Performance reporting
+
+### Analytics Routes
+- [ ] `/app/reports` - Basic reporting dashboard
+  - Key performance indicators
+  - Team and agent metrics
+  - Ticket volume trends
+  - Custom date ranges
+
+- [ ] `/app/reports/tickets` - Ticket metrics
+  - Resolution time analysis
+  - Volume by category/priority
+  - Customer satisfaction scores
+  - Response time tracking
+
+- [ ] `/app/reports/performance` - Agent performance
+  - Individual metrics
+  - Team comparisons
+  - Workload distribution
+  - Quality metrics
+
+- [ ] Implement basic data export functionality
+  - CSV and Excel exports
+  - Scheduled reports
+  - Custom field selection
+  - Filtered data exports
+
+### Knowledge Base Foundation
+- [ ] `/app/kb` - Basic knowledge base home
+  - Featured articles
+  - Popular topics
+  - Search functionality
+  - Category navigation
+
+- [ ] `/app/kb/articles` - Article listing
+  - Category filters
+  - Search and sort
+  - Article status indicators
+  - Quick edit access
+
+- [ ] `/app/kb/articles/[id]` - Article view
+  - Rich text content
+  - Related articles
+  - Feedback collection
+  - Version history
+
+- [ ] Basic article creation and editing
+  - Markdown/rich text editor
+  - Image and file embedding
+  - Article templates
+  - Preview functionality
 
 ## Phase 5: Polish & Launch Prep (Week 8)
 ### UI/UX Refinement
-- [ ] Implement responsive design fixes
-- [ ] Add loading states and error handling
-- [ ] Improve navigation and workflows
-- [ ] Enhance form validation and feedback
-- [ ] Implement basic search functionality
+- [ ] Implement responsive layouts for all routes
+  - Mobile-first approach
+  - Tablet optimization
+  - Desktop enhancements
+  - Touch-friendly interactions
+
+- [ ] Add loading states and error boundaries
+  - Skeleton loaders
+  - Error recovery options
+  - Offline indicators
+  - Progress feedback
+
+- [ ] Enhance navigation with breadcrumbs
+  - Context-aware navigation
+  - History tracking
+  - Quick navigation shortcuts
+  - Section indicators
+
+- [ ] Improve form validation and feedback
+  - Real-time validation
+  - Error messaging
+  - Success confirmations
+  - Field-level help
+
+- [ ] Implement global search functionality
+  - Cross-entity search
+  - Quick results preview
+  - Recent searches
+  - Advanced filters
+
+### Public Routes
+- [ ] `/` - Basic landing page
+  - Value proposition
+  - Key features
+  - Call-to-action
+  - Customer testimonials
+
+- [ ] `/docs` - Initial documentation
+  - Getting started guide
+  - API documentation
+  - Best practices
+  - Troubleshooting
+
+- [ ] `/contact` - Contact form
+  - Sales inquiries
+  - Support requests
+  - Partnership opportunities
+  - Location information
+
+- [ ] Error pages (404, 500)
+  - User-friendly messaging
+  - Navigation options
+  - Error reporting
+  - Support contact
 
 ### Launch Preparation
-- [ ] Perform security audit
-- [ ] Conduct performance optimization
-- [ ] Create basic user documentation
-- [ ] Set up monitoring and alerts
-- [ ] Prepare deployment checklist
+- [ ] Security audit of all routes
+  - Authentication checks
+  - Authorization rules
+  - Data validation
+  - XSS prevention
+
+- [ ] Performance optimization
+  - Code splitting
+  - Asset optimization
+  - Caching strategy
+  - Database indexing
+
+- [ ] Route-based analytics setup
+  - Page view tracking
+  - User journey analysis
+  - Error monitoring
+  - Performance metrics
+
+- [ ] Monitoring and alerting setup
+  - Error tracking
+  - Performance monitoring
+  - Usage alerts
+  - Security notifications
+
+- [ ] Deployment checklist and documentation
+  - Deployment process
+  - Rollback procedures
+  - Monitoring setup
+  - Maintenance guidelines
 
 ## MVP Success Criteria
 ### Functional Requirements
-- Agents can create, view, update, and resolve tickets
-- Customers can submit and track their tickets
-- Basic email notifications work reliably
-- Teams can collaborate on tickets
-- Basic reporting provides operational insights
+- Complete authentication flow works
+- Core ticket management routes functional
+- Basic user and team management operational
+- Essential reporting routes available
+- Public routes provide necessary information
 
 ### Performance Metrics
 - Page load times under 3 seconds
@@ -98,12 +375,20 @@
 - Support for up to 100 concurrent users
 
 ### User Experience
-- Intuitive navigation for both agents and customers
-- Clear ticket status and priority indicators
-- Responsive design works on all major devices
-- Basic search returns relevant results
+- Consistent navigation across all routes
+- Clear role-based access control
+- Responsive design on all routes
+- Efficient ticket management workflow
 
 ## Post-MVP Features (Backlog)
+### Enhanced Routes
+- `/app/admin/workflows` - Custom workflow builder
+- `/app/admin/automations` - Automation rules
+- `/app/kb/categories` - Knowledge base categories
+- `/app/reports/custom` - Custom report builder
+- `/app/admin/api` - API key management
+
+### Advanced Features
 - AI-powered ticket classification
 - Advanced analytics and reporting
 - Knowledge base integration
