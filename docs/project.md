@@ -36,10 +36,6 @@ Compliance Requirements:
 
 ## 4. Core Systems
 
-[Previous sections remain the same...]
-
-## 4. Core Systems
-
 ### 4.1 Ticket Management System (Primary)
 - Centralized ticket processing engine managing the complete lifecycle from creation to resolution
 - Intelligent routing system directing tickets to appropriate teams based on content, priority, and team capacity
@@ -176,8 +172,6 @@ Compliance Requirements:
 - Schedule settings: generation frequency, distribution lists
 - Format specifications: layouts, visualizations, export formats
 - Access controls: viewer permissions, sharing settings
-
-[Previous sections remain the same...]
 
 ## 6. Frontend Views
 

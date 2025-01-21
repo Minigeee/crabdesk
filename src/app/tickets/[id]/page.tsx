@@ -2,12 +2,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TicketService } from '@/lib/services/ticket.service';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { ArrowLeft, Pencil } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getTicket } from '../actions';
 
 const PRIORITY_COLORS = {
   low: 'bg-gray-500',
@@ -30,13 +30,12 @@ interface PageProps {
 }
 
 export default async function TicketDetailPage({ params }: PageProps) {
-  const result = await getTicket(params.id);
+  const ticketService = await TicketService.create();
+  const ticket = await ticketService.getById(params.id);
 
-  if (!result.data) {
+  if (!ticket) {
     notFound();
   }
-
-  const ticket = result.data;
 
   return (
     <div className='flex min-h-full flex-col'>
@@ -190,14 +189,14 @@ export default async function TicketDetailPage({ params }: PageProps) {
         </div>
 
         {/* Main Content */}
-        <div className='flex-1 p-2'>
+        <div className='flex-1 p-4'>
           <Tabs defaultValue='details' className='h-full'>
             <TabsList>
               <TabsTrigger value='details'>Details</TabsTrigger>
               <TabsTrigger value='conversations'>Conversations</TabsTrigger>
               <TabsTrigger value='activity'>Activity</TabsTrigger>
             </TabsList>
-            <div className='p-6'>
+            <div className='p-4'>
               <TabsContent value='details' className='mt-0'>
                 <div className='space-y-6'>
                   {/* Description */}

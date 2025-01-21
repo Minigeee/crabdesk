@@ -21,7 +21,7 @@ import {
   type TicketWithDetails,
 } from '@/lib/types/ticket';
 import { formatDistanceToNow } from 'date-fns';
-import { ArrowUpDown, MoreHorizontal } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, MoreHorizontal } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 const PRIORITY_COLORS = {
@@ -37,6 +37,16 @@ const STATUS_COLORS = {
   resolved: 'bg-gray-500',
   closed: 'bg-gray-700',
 } as const;
+
+function SortIndicator({ direction }: { direction?: 'asc' | 'desc' }) {
+  return !direction ? (
+    <ArrowUpDown className='ml-2 h-3 w-3' />
+  ) : direction === 'asc' ? (
+    <ArrowUp className='ml-2 h-3 w-3' />
+  ) : (
+    <ArrowDown className='ml-2 h-3 w-3' />
+  );
+}
 
 interface TicketListProps {
   tickets: TicketWithDetails[];
@@ -80,25 +90,33 @@ export function TicketList({ tickets, onRowClick }: TicketListProps) {
             <TableHead>
               <Button variant='ghost' onClick={() => handleSort('title')}>
                 Title
-                <ArrowUpDown className='ml-2 h-4 w-4' />
+                <SortIndicator
+                  direction={sort === 'title' ? direction : undefined}
+                />
               </Button>
             </TableHead>
             <TableHead>
               <Button variant='ghost' onClick={() => handleSort('status')}>
                 Status
-                <ArrowUpDown className='ml-2 h-4 w-4' />
+                <SortIndicator
+                  direction={sort === 'status' ? direction : undefined}
+                />
               </Button>
             </TableHead>
             <TableHead>
               <Button variant='ghost' onClick={() => handleSort('priority')}>
                 Priority
-                <ArrowUpDown className='ml-2 h-4 w-4' />
+                <SortIndicator
+                  direction={sort === 'priority' ? direction : undefined}
+                />
               </Button>
             </TableHead>
             <TableHead>
               <Button variant='ghost' onClick={() => handleSort('created_at')}>
                 Created
-                <ArrowUpDown className='ml-2 h-4 w-4' />
+                <SortIndicator
+                  direction={sort === 'created_at' ? direction : undefined}
+                />
               </Button>
             </TableHead>
             <TableHead>Customer</TableHead>
