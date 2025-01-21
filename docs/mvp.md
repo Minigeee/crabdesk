@@ -24,11 +24,11 @@
 
 ## Phase 2: Core Ticket Management (Week 3-4)
 ### Backend Infrastructure
-- [ ] Implement ticket CRUD operations
-- [ ] Create conversation threading system
-- [ ] Set up real-time updates using Supabase realtime
-- [ ] Develop basic ticket routing logic
-- [ ] Create ticket status workflow management
+- [X] Implement ticket CRUD operations
+- [X] Create conversation threading system
+- [X] Set up real-time updates using Supabase realtime
+- [X] Develop basic ticket routing logic
+- [X] Create ticket status workflow management
 
 ### Agent Interface
 - [ ] Build ticket list view with filters and sorting
