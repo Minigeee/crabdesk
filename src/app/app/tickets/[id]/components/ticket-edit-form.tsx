@@ -75,10 +75,10 @@ export function TicketEditForm({ ticket, userRole, teams = [], agents = [] }: Ti
       ...(isAgent && {
         status: ticket.status,
         priority: ticket.priority,
-        assigned_to: ticket.assigned_to,
-        team_id: ticket.team_id,
-        tags: ticket.tags || [],
-        internal_notes: (ticket.metadata as TicketMetadata)?.internal_notes || '',
+        assigned_to: ticket.assigned_to ?? undefined,
+        team_id: ticket.team_id ?? undefined,
+        tags: ticket.tags || undefined,
+        internal_notes: (ticket.metadata as TicketMetadata)?.internal_notes || undefined,
       }),
     },
   });
@@ -86,7 +86,17 @@ export function TicketEditForm({ ticket, userRole, teams = [], agents = [] }: Ti
   function onSubmit(data: CustomerTicketSchema | AgentTicketSchema) {
     startTransition(async () => {
       try {
-        const result = await updateTicket(ticket.id, data);
+        // Move internal_notes to metadata
+        const ticketData: any = {
+          ...data,
+          metadata: {
+            ...(ticket.metadata as TicketMetadata),
+            internal_notes: (data as AgentTicketSchema).internal_notes,
+          },
+        };
+        delete ticketData.internal_notes;
+
+        const result = await updateTicket(ticket.id, ticketData);
         if (!result.success) {
           throw new Error(result.error);
         }
@@ -222,9 +232,16 @@ export function TicketEditForm({ ticket, userRole, teams = [], agents = [] }: Ti
                       Assign this ticket to a specific agent
                     </FormDescription>
                   </div>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select 
+                    value={field.value ?? ""} 
+                    onValueChange={field.onChange}
+                  >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger 
+                        clearable 
+                        onClear={() => field.onChange("")}
+                        value={field.value}
+                      >
                         <SelectValue placeholder="Select an agent" />
                       </SelectTrigger>
                     </FormControl>
@@ -252,9 +269,16 @@ export function TicketEditForm({ ticket, userRole, teams = [], agents = [] }: Ti
                       Assign this ticket to a team
                     </FormDescription>
                   </div>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select 
+                    value={field.value ?? ""} 
+                    onValueChange={field.onChange}
+                  >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger 
+                        clearable 
+                        onClear={() => field.onChange("")}
+                        value={field.value}
+                      >
                         <SelectValue placeholder="Select a team" />
                       </SelectTrigger>
                     </FormControl>

@@ -65,6 +65,22 @@ create table tickets (
   metadata jsonb default '{}'::jsonb
 );
 
+-- Ticket history table
+create table ticket_history (
+  id uuid primary key default uuid_generate_v4(),
+  created_at timestamp with time zone default now(),
+  ticket_id uuid not null references tickets(id),
+  user_id uuid not null references users(id),
+  change_type text not null,
+  previous_values jsonb,
+  new_values jsonb,
+  metadata jsonb default '{}'::jsonb
+);
+
+-- Create index for ticket history
+create index idx_ticket_history_ticket_id on ticket_history(ticket_id);
+create index idx_ticket_history_user_id on ticket_history(user_id);
+
 -- Conversations table
 create table conversations (
   id uuid primary key default uuid_generate_v4(),

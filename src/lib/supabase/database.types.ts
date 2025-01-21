@@ -32,6 +32,38 @@ export type Database = {
           metadata?: Json
         }
       }
+      ticket_history: {
+        Row: {
+          id: string
+          created_at: string
+          ticket_id: string
+          user_id: string
+          change_type: string
+          previous_values: Json
+          new_values: Json
+          metadata: Json
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          ticket_id: string
+          user_id: string
+          change_type: string
+          previous_values?: Json
+          new_values?: Json
+          metadata?: Json
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          ticket_id?: string
+          user_id?: string
+          change_type?: string
+          previous_values?: Json
+          new_values?: Json
+          metadata?: Json
+        }
+      }
       teams: {
         Row: {
           id: string

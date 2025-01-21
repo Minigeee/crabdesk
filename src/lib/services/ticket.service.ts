@@ -10,6 +10,10 @@ type TicketResponse = Database['public']['Tables']['tickets']['Row'] & {
   organization: Pick<Database['public']['Tables']['organizations']['Row'], 'id' | 'name'> | null;
 };
 
+type TicketHistoryEntry = Database['public']['Tables']['ticket_history']['Row'] & {
+  user: Pick<Database['public']['Tables']['users']['Row'], 'id' | 'full_name' | 'email'>;
+};
+
 export class TicketService {
   private supabase: SupabaseClient<Database>;
 
@@ -38,6 +42,10 @@ export class TicketService {
   }
 
   async update(id: string, updates: TicketUpdate): Promise<TicketWithDetails | null> {
+    // First get the current ticket state
+    const currentTicket = await this.getById(id);
+    if (!currentTicket) throw new Error('Ticket not found');
+
     const { data, error } = await this.supabase
       .from('tickets')
       .update(updates)
@@ -46,6 +54,14 @@ export class TicketService {
       .single();
 
     if (error) throw error;
+
+    // Record the history
+    await this.recordHistory(id, {
+      change_type: 'update',
+      previous_values: this.getChangedValues(currentTicket, updates),
+      new_values: updates,
+    });
+
     return data as unknown as TicketWithDetails;
   }
 
@@ -122,6 +138,51 @@ export class TicketService {
       data: (data || []) as unknown as TicketWithDetails[], 
       count: count || 0 
     };
+  }
+
+  private async recordHistory(
+    ticketId: string,
+    {
+      change_type,
+      previous_values,
+      new_values,
+      metadata = {}
+    }: {
+      change_type: string;
+      previous_values?: any;
+      new_values?: any;
+      metadata?: any;
+    }
+  ): Promise<void> {
+    const {
+      data: { user },
+    } = await this.supabase.auth.getUser();
+
+    if (!user) throw new Error('User not authenticated');
+
+    const { error } = await this.supabase.from('ticket_history').insert({
+      ticket_id: ticketId,
+      user_id: user.id,
+      change_type,
+      previous_values,
+      new_values,
+      metadata,
+    });
+
+    if (error) throw error;
+  }
+
+  private getChangedValues(currentTicket: TicketWithDetails, updates: TicketUpdate): Partial<TicketWithDetails> {
+    const changedValues: Partial<TicketWithDetails> = {};
+    
+    (Object.keys(updates) as Array<keyof TicketUpdate>).forEach((key) => {
+      if (updates[key] !== currentTicket[key]) {
+        // @ts-ignore should be safe
+        changedValues[key] = currentTicket[key];
+      }
+    });
+
+    return changedValues;
   }
 
   private ticketWithDetailsQuery(): string {

@@ -1,26 +1,29 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import { Toaster } from "@/components/ui/toaster";
-import { cn } from "@/lib/utils";
+import { Toaster } from '@/components/ui/toaster';
+import { cn } from '@/lib/utils';
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import './globals.css';
+import Providers from './providers';
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: "CrabDesk",
-  description: "Modern customer support platform",
+  title: 'CrabDesk',
+  description: 'Modern customer support platform',
 };
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-full">
-      <body className={cn(inter.className, "h-full")}>
-        {children}
-        <Toaster />
+    <html lang='en' className='h-full'>
+      <body className={cn(inter.className, 'h-full')}>
+        <Providers>
+          {children}
+          <Toaster />
+        </Providers>
       </body>
     </html>
   );
