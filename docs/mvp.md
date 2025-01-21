@@ -13,14 +13,14 @@
 - [ ] Set up CI/CD pipeline with Amplify (skipped for now)
 
 ### Database Schema
-- [ ] Create initial schema for core tables:
+- [X] Create initial schema for core tables:
   - tickets
   - users
   - organizations
   - conversations
   - teams
-- [ ] Set up database triggers and RLS policies
-- [ ] Create initial seed data for testing
+- [X] Set up database triggers and RLS policies
+- [X] Create initial seed data for testing
 
 ## Phase 2: Core Ticket Management (Week 3-4)
 ### Backend Infrastructure
