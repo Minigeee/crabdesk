@@ -170,10 +170,15 @@ This is the view that will be the focus of the next steps
 
 #### Step 4: Split into actionable tasks
 
-Ask an AI to split the implementation of the view into an actionable road map with actionable tasks. Start by describing each task in one or two short sentences
+- Ask an AI to split the implementation of the view into an actionable road map with actionable tasks
+- Start by describing each task in one or two short sentences
+- Since we are building a product from the ground up, we should focus only on the most important features and systems first
+- Order the tasks so that the most foundational features and systems are implemented first. If a feature is dependent on another feature, it should be implemented after the feature it depends on
+- Add annotations on which route a feature belongs to, if applicable
 
 #### Step 5: Add more details
 
+- This should build on the previous step
 - Add more details to each task, and add/remove tasks as needed. Each task should now be detailed enough for the coder agent that will be implementing it to understand everything we determined in the previous App Structure phase:
   - Feature requirements
   - Why the task/feature is needed
