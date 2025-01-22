@@ -261,6 +261,7 @@ Compliance Requirements:
 - Next.js
 - TailwindCSS
 - Shadcn/UI
+- React Query
 
 ### Backend
 - Supabase
