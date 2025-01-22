@@ -1,107 +1,131 @@
-# CrabDesk Route Structure
-
-## Authentication Routes
-- `/login` - Login page
-- `/register` - Registration page for new organizations
-- `/forgot-password` - Password recovery
-- `/reset-password` - Password reset
-- `/verify-email` - Email verification
+# Route Structure
 
 ## Public Routes
 - `/` - Landing page
-- `/pricing` - Pricing information
-- `/docs` - Public documentation
-- `/contact` - Contact form
-- `/blog` - Company blog and updates
+- `/auth/login` - Login page
+- `/auth/signup` - Signup page
+- `/auth/forgot-password` - Password reset
+- `/help` - Public help center
+  - `/help/articles/[slug]` - Public article view
+  - `/help/categories/[slug]` - Category listing
+  - `/help/search` - Search results
 
-## Application Routes (`/app/*)
+## App Routes
+All authenticated routes are under `/app` with shared layout
 
-### Dashboard Routes
-- `/app/dashboard` - Role-based dashboard (different views for admin/agent/customer)
-  - Admin: System overview, team performance, organization metrics
-  - Agent: Ticket queue, personal performance, team status
-  - Customer: Active tickets, knowledge base suggestions
+### Support Agent Workspace
+- `/app/dashboard` - Agent dashboard
+- `/app/tickets` - Ticket queue
+  - `/app/tickets/new` - Create ticket
+  - `/app/tickets/[id]` - View ticket
+    - `/app/tickets/[id]/edit` - Edit ticket
+    - `/app/tickets/[id]/history` - Ticket history
+  - `/app/tickets/saved` - Saved ticket views
+  - `/app/tickets/assigned` - Assigned tickets
+  - `/app/tickets/unassigned` - Unassigned queue
 
-### Ticket Management
-- `/app/tickets` - Ticket listing with filters and search
-- `/app/tickets/new` - Create new ticket
-- `/app/tickets/[id]` - Ticket details and conversation
-- `/app/tickets/[id]/edit` - Edit ticket details
-- `/app/tickets/[id]/history` - Ticket history and audit log
-- `/app/tickets/drafts` - Saved ticket drafts
+### Knowledge Base Management
+- `/app/kb` - Knowledge base dashboard
+  - `/app/kb/articles` - Article listing
+    - `/app/kb/articles/new` - Create article
+    - `/app/kb/articles/[id]` - Edit article
+    - `/app/kb/articles/[id]/history` - Article history
+  - `/app/kb/categories` - Category management
+  - `/app/kb/drafts` - Draft articles
+  - `/app/kb/analytics` - Content analytics
 
-### Knowledge Base
-- `/app/kb` - Knowledge base home
-- `/app/kb/articles` - Article listing
-- `/app/kb/articles/[id]` - Article view
-- `/app/kb/articles/new` - Create new article (admin/agent only)
-- `/app/kb/articles/[id]/edit` - Edit article (admin/agent only)
-- `/app/kb/categories` - Category management (admin only)
-- `/app/kb/search` - Advanced knowledge base search
+### Customer Portal (for logged-in customers)
+- `/app/portal` - Customer portal home
+  - `/app/portal/tickets` - Customer's tickets
+    - `/app/portal/tickets/new` - Submit ticket
+    - `/app/portal/tickets/[id]` - View ticket
+  - `/app/portal/organizations` - Organization management
+    - `/app/portal/organizations/[id]` - Organization details
+    - `/app/portal/organizations/[id]/members` - Member management
 
-### Team Management (Admin/Agent)
-- `/app/teams` - Team listing
-- `/app/teams/[id]` - Team details and members
-- `/app/teams/[id]/schedule` - Team schedule management
-- `/app/teams/[id]/performance` - Team performance metrics
+### Management Interface
+- `/app/manage` - Management dashboard
+  - `/app/manage/team` - Team overview
+    - `/app/manage/team/members` - Team member management
+    - `/app/manage/team/roles` - Role management
+    - `/app/manage/team/schedules` - Schedule management
+  - `/app/manage/analytics` - Analytics center
+    - `/app/manage/analytics/reports` - Report builder
+    - `/app/manage/analytics/dashboards` - Dashboard builder
+    - `/app/manage/analytics/saved` - Saved reports
+  - `/app/manage/automation` - Automation rules
+    - `/app/manage/automation/workflows` - Workflow builder
+    - `/app/manage/automation/macros` - Macro management
 
-### User Management
-- `/app/users` - User listing (admin only)
-- `/app/users/[id]` - User profile
-- `/app/users/[id]/edit` - Edit user (admin only)
-- `/app/profile` - Current user profile
-- `/app/profile/settings` - User settings and preferences
+### Settings Routes
+- `/app/settings` - Personal settings
+  - `/app/settings/profile` - Profile settings
+  - `/app/settings/preferences` - Workspace preferences
+  - `/app/settings/notifications` - Notification settings
+  - `/app/settings/tooling` - Personal tools
 
-### Organization Management (Admin)
-- `/app/organization` - Organization overview
-- `/app/organization/settings` - Organization settings
-- `/app/organization/billing` - Billing and subscription
-- `/app/organization/audit-log` - Security and activity logs
-- `/app/organization/integrations` - Third-party integrations
+- `/app/admin` - Organization settings (admin only)
+  - `/app/admin/organization` - Organization profile
+  - `/app/admin/security` - Security settings
+  - `/app/admin/integrations` - Integration management
+  - `/app/admin/billing` - Billing & subscription
+  - `/app/admin/audit` - Audit logs
 
-### Reports and Analytics (Admin/Agent)
-- `/app/reports` - Reports dashboard
-- `/app/reports/tickets` - Ticket analytics
-- `/app/reports/performance` - Performance metrics
-- `/app/reports/satisfaction` - Customer satisfaction
-- `/app/reports/custom` - Custom report builder
-- `/app/reports/export` - Data export tools
+## API Routes
+- `/api/v1` - API root
+  - `/api/v1/tickets/*` - Ticket operations
+  - `/api/v1/kb/*` - Knowledge base operations
+  - `/api/v1/users/*` - User operations
+  - `/api/v1/organizations/*` - Organization operations
+  - `/api/v1/analytics/*` - Analytics operations
 
-### System Administration (Admin)
-- `/app/admin/settings` - System settings
-- `/app/admin/roles` - Role management
-- `/app/admin/workflows` - Workflow configuration
-- `/app/admin/templates` - Response templates
-- `/app/admin/automations` - Automation rules
-- `/app/admin/api` - API keys and documentation
+## Layout Structure
+```tsx
+// Root layout (app/layout.tsx)
+- RootLayout
+  - AuthProvider
+  - ThemeProvider
+  - ToastProvider
 
-## Access Control
+// App layout (app/app/layout.tsx)
+- AppLayout
+  - AuthGuard
+  - SideNav
+  - Header
+  - NotificationCenter
 
-### Admin Access
-- Full access to all routes
-- System configuration and management
-- Organization-wide settings and reports
+// Portal layout (app/app/portal/layout.tsx)
+- PortalLayout
+  - CustomerGuard
+  - CustomerNav
 
-### Agent Access
-- Limited to operational routes:
-  - Dashboard
-  - Ticket management
-  - Knowledge base (read/write)
-  - Team management (view only)
-  - Reports (operational level)
-  - Personal profile and settings
+// Management layout (app/app/manage/layout.tsx)
+- ManagementLayout
+  - AdminGuard
+  - AdminNav
 
-### Customer Access
-- Limited to customer-facing routes:
-  - Dashboard (customer view)
-  - Ticket creation and management
-  - Knowledge base (read only)
-  - Personal profile and settings
+// Settings layout (app/app/settings/layout.tsx)
+- SettingsLayout
+  - SettingsNav
 
-## Route Metadata
-Each route should include:
-- Required authentication
-- Role-based access control
-- Breadcrumb information
-- Default layout
-- SEO metadata 
+// Admin layout (app/app/admin/layout.tsx)
+- AdminLayout
+  - AdminGuard
+  - AdminNav
+```
+
+## Route Guards and Access Control
+- Public routes: No authentication required
+- `/app/*`: Requires authentication
+- `/app/manage/*`: Requires manager role
+- `/app/admin/*`: Requires admin role
+- `/app/kb/articles/new`: Requires kb_editor role
+- `/app/portal/*`: Requires customer role
+
+## Shared Components
+Each layout can access:
+- Global navigation
+- Search functionality
+- Notification system
+- User menu
+- Help widget 
