@@ -56,7 +56,7 @@
   - Maintain edit history for auditing
   - Trigger notifications for significant changes
 
-- [ ] `/app/tickets/[id]/history` - Ticket history
+- [X] `/app/tickets/[id]/history` - Ticket history
   - Chronological log of all ticket changes
   - Track status changes, assignments, and edits
   - Show who made each change and when
@@ -93,7 +93,7 @@
   - Load balancing across team
   - Assignment notifications
 
-- [ ] Create basic priority and status management
+- [X] Create basic priority and status management
   - Define clear status workflow
   - Set priority levels with SLA targets
   - Allow status changes with comments
@@ -101,6 +101,7 @@
 
 ### Dashboard Routes
 - [ ] `/app/dashboard` - Basic agent dashboard
+  - Consider each user's role and permissions
   - Ticket queue display
     * Show assigned and unassigned tickets
     * Quick filters for urgent and overdue

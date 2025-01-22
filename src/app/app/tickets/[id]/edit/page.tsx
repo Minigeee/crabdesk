@@ -10,11 +10,16 @@ export default async function EditTicketPage({
 }: {
   params: { id: string };
 }) {
-  const [user, ticket, teams, agents] = await Promise.all([
-    getUser(),
+  const user = await getUser();
+
+  const [ticket, teams, agents] = await Promise.all([
     TicketService.create().then((service) => service.getById(params.id)),
-    TeamService.create().then((service) => service.list()),
-    UserService.create().then((service) => service.listAgents()),
+    TeamService.create().then((service) =>
+      service.list(user.organization_id ?? undefined),
+    ),
+    UserService.create().then((service) =>
+      service.listAgents(user.organization_id ?? undefined),
+    ),
   ]);
 
   if (!user || !ticket) {

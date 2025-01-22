@@ -71,11 +71,11 @@ export function TicketForm({
       description: '',
       priority: 'medium',
       ...(isAgent && {
-        customer_id: '',
-        assigned_to: '',
-        team_id: '',
-        tags: [],
-        internal_notes: '',
+        customer_id: undefined,
+        assigned_to: undefined,
+        team_id: undefined,
+        tags: undefined,
+        internal_notes: undefined,
       }),
     },
   });

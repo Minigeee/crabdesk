@@ -8,6 +8,8 @@ import {
   type TicketWithDetails,
 } from '@/lib/types/ticket';
 import { type SupabaseClient } from '@supabase/supabase-js';
+import { omit, pick } from 'lodash';
+import { diff } from '../utils/diff';
 
 type TicketResponse = Database['public']['Tables']['tickets']['Row'] & {
   customer: Pick<
@@ -73,11 +75,20 @@ export class TicketService {
     if (error) throw error;
 
     // Record the history
-    await this.recordHistory(id, {
-      change_type: 'update',
-      previous_values: this.getChangedValues(currentTicket, updates),
-      new_values: updates,
-    });
+    {
+      const newValues = omit(diff(currentTicket, data), [
+        'id',
+        'created_at',
+        'updated_at',
+      ]);
+      const changedFields = Object.keys(newValues);
+
+      await this.recordHistory(id, {
+        change_type: 'update',
+        previous_values: pick(currentTicket, changedFields),
+        new_values: newValues,
+      });
+    }
 
     return data as unknown as TicketWithDetails;
   }
@@ -187,22 +198,6 @@ export class TicketService {
     });
 
     if (error) throw error;
-  }
-
-  private getChangedValues(
-    currentTicket: TicketWithDetails,
-    updates: TicketUpdate,
-  ): Partial<TicketWithDetails> {
-    const changedValues: Partial<TicketWithDetails> = {};
-
-    (Object.keys(updates) as Array<keyof TicketUpdate>).forEach((key) => {
-      if (updates[key] !== currentTicket[key]) {
-        // @ts-expect-error should be safe
-        changedValues[key] = currentTicket[key];
-      }
-    });
-
-    return changedValues;
   }
 
   private ticketWithDetailsQuery(): string {

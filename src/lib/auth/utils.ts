@@ -1,9 +1,10 @@
 import { type Database } from '@/lib/supabase/database.types';
 import { createClient } from '@/lib/supabase/server';
+import { cache } from 'react';
 
 export type User = Database['public']['Tables']['users']['Row'];
 
-export async function getUser() {
+export const getUser = cache(async () => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -18,4 +19,4 @@ export async function getUser() {
     .single();
 
   return data;
-}
+});
