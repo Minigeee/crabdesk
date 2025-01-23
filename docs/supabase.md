@@ -206,6 +206,7 @@ Add these to your `package.json`:
 ```json
 {
   "scripts": {
+    "db:status": "supabase status",
     "db:start": "supabase start",
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",

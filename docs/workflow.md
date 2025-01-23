@@ -43,27 +43,21 @@ This document will set the vision and the direction for the project
 
 #### 4. Core Features and Systems
 
+- Given the project requirements, think step by step about what systems and features will be needed to implement the project
 - Define major systems and features
   - Example for CRM app: ticket system, customer communication system (real-time, email), user dashboard, role-based access system, automation systems, organizations, analytics, etc.
   - This will be used to lay out a roadmap for the project
   - Describe how these systems interact and support the app's goals
+  - IMPORTANT: This should not be a list of specific features, but rather a list of macro level systems and features that will be needed to implement the project. Do not get caught in the weeds
 
-#### 5. Data Model
-
-- Define the data entities and their relationships:
-  - Key data types (e.g., user profiles, transactions)
-  - Data flow between systems
-  - Storage and retrieval needs
-  - This will be used to lay out the requirements for the database schema - the data should serve the needs of the project requirements and core features
-
-#### 6. Success Criteria
+#### 5. Success Criteria
 
 - Define the success criteria for the project:
   - Key performance indicators (KPIs)
   - User acceptance criteria
   - Compliance benchmarks
 
-#### 7. Tech Stack
+#### 6. Tech Stack
 
 - Describe the tech stack that will be used in the project:
   - Frameworks
@@ -75,7 +69,7 @@ This document will set the vision and the direction for the project
   - Authentication providers
   - Analytics and reporting tools
 
-#### 8. Deployment and Operations
+#### 7. Deployment and Operations
 
 - Describe the QA and deployment process:
   - Hosting platform and infrastructure
@@ -110,7 +104,43 @@ This section will describe how data will be fetched and mutated. Often times, it
 - When using server side fetching procedures, use React cache() to avoid double fetches
 - Use layouts paired with provider components to provide server-side data fetches to client components (nested)
 
-### Part 3: App Structure
+### Part 3: Data Model
+
+The next step is to create a mostly complete data model that will be used to implement the project.
+Data is the core behind any application, and it is important to design the model well to prevent future issues and slowdowns.
+
+#### 1. Brainstorm the data model
+
+- First, analyze the preliminary data model needs from the project document, specifically the Core Features and Systems section
+- Think step by step about what data entities will be needed to implement the project
+- Propose a list of data entities that will be needed to implement the project, and describe how each will be used and how they will relate to each other
+
+#### 2. Create a first draft of the data model
+
+- Create a list of data entities that will be needed to implement the project
+- For each data entity, answer the following questions:
+  - What is the purpose of the data entity?
+  - What are the key attributes of the data entity?
+  - What relationships does the data entity have with other data entities?
+  - How will the user interact with the data entity?
+  - What are the constraints on the data entity?
+  - What are the indexes that should be created for the data entity?
+- After creating the first draft, ask yourself if you have a full understanding of how the data model works and how it will be used
+- IMPORTANT: This is a macro level outline, it should not include any specifics yet
+
+#### 3. Create the data model
+
+- This step builds on the previous step, the goal is to have a complete data schema description
+- Using the data model outline created in the previous step, create a more fully fleshed out data model
+- After fleshing out the data model, it should be descriptive enough to be used to create a database schema
+- IMPORTANT: During the initial build up stage, try to limit feature sprawl
+
+#### 4. Create the database schema
+
+- Using the data model, create a database schema that will be used to implement the project
+- This should be a complete database schema that will be used to implement the project
+
+### Part 4: App Structure
 
 - Create a document that outlines app structure
 - Apps are large, so it is better to outline how all the core systems and features will fit together, and how they will consume the data model to display to the user before starting development
@@ -145,7 +175,7 @@ For each part of the vague outline, drill into the details a little more
 - Using the detailed outline, create a directory like structure of your app
 - For web projects, this should be the route structure of your web app
 
-### Part 4: Actionable Steps
+### Part 5: Actionable Steps
 
 - The first three parts were mostly planning. This part will be about implementation and execution
 - This part will last throughout the rest of the project, it is an iterative step, along with the following parts
@@ -175,6 +205,7 @@ This is the view that will be the focus of the next steps
 - Since we are building a product from the ground up, we should focus only on the most important features and systems first
 - Order the tasks so that the most foundational features and systems are implemented first. If a feature is dependent on another feature, it should be implemented after the feature it depends on
 - Add annotations on which route a feature belongs to, if applicable
+- Afterwards, analyze these broad tasks and create a list of which data model entities will be needed to implement them
 
 #### Step 5: Add more details
 
@@ -185,6 +216,7 @@ This is the view that will be the focus of the next steps
   - How it fits into the overall product
   - Which user types will have access to or use the feature
   - The user experience the feature should provide
+- IMPORTANT: During the initial build up stage, try to limit feature sprawl
 
 #### Step 6: Feed the tasks to the model and repeat until done
 
