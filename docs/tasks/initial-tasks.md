@@ -244,7 +244,7 @@
     - Action confirmation
 
 [ ] 5. Create ticket search system
-    - Full-text search
+    - Subject field search
 
 [X] 6. Implement pagination
     - Cursor-based pagination

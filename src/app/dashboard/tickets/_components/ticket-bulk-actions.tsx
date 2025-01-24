@@ -15,20 +15,26 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import type { Enums } from '@/lib/database.types';
 import { useTicketActions } from '@/lib/tickets/use-tickets';
+import assert from 'assert';
 import { useState } from 'react';
 import { useTicketQueue } from './ticket-queue-provider';
 
-type BulkAction = {
-  label: string;
-  description: string;
-  action: () => Promise<void>;
-  requireConfirmation?: boolean;
-  destructive?: boolean;
-};
+type BulkAction =
+  | {
+      label: string;
+      description: string;
+      action: () => Promise<void>;
+      requireConfirmation?: boolean;
+      destructive?: boolean;
+      separator?: false;
+    }
+  | {
+      separator: true;
+    };
 
 export function TicketBulkActions() {
   const { selectedTickets, setSelectedTickets } = useTicketQueue();
@@ -64,6 +70,7 @@ export function TicketBulkActions() {
       },
       requireConfirmation: true,
     },
+    { separator: true },
 
     // Priority updates
     {
@@ -82,6 +89,7 @@ export function TicketBulkActions() {
         setSelectedTickets([]);
       },
     },
+    { separator: true },
 
     // Assignment
     {
@@ -96,6 +104,7 @@ export function TicketBulkActions() {
   ];
 
   const handleActionClick = (action: BulkAction) => {
+    if (action.separator) return;
     if (action.requireConfirmation) {
       setConfirmAction(action);
     } else {
@@ -107,24 +116,30 @@ export function TicketBulkActions() {
     return null;
   }
 
+  assert(!confirmAction?.separator);
+
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant='outline' size='sm'>
+          <Button variant='outline'>
             Bulk Actions ({selectedTickets.length})
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align='end' className='w-[200px]'>
-          {bulkActions.map((action, index) => (
-            <DropdownMenuItem
-              key={action.label}
-              onClick={() => handleActionClick(action)}
-              className={action.destructive ? 'text-destructive' : undefined}
-            >
-              {action.label}
-            </DropdownMenuItem>
-          ))}
+          {bulkActions.map((action, index) =>
+            action.separator ? (
+              <DropdownMenuSeparator key={index} />
+            ) : (
+              <DropdownMenuItem
+                key={action.label}
+                onClick={() => handleActionClick(action)}
+                className={action.destructive ? 'text-destructive' : undefined}
+              >
+                {action.label}
+              </DropdownMenuItem>
+            )
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 

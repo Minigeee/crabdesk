@@ -2,12 +2,12 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { SearchBar } from '@/components/ui/search-bar';
 import { Separator } from '@/components/ui/separator';
 import type { Enums } from '@/lib/database.types';
 import { cn } from '@/lib/utils';
@@ -67,28 +67,6 @@ export function TicketFilters() {
     }));
   };
 
-  const handleDateRangeSelect = (date: Date) => {
-    if (!localFilters.dateRange?.start) {
-      setLocalFilters((prev) => ({
-        ...prev,
-        dateRange: { start: date, end: date },
-      }));
-    } else if (!localFilters.dateRange?.end) {
-      setLocalFilters((prev) => ({
-        ...prev,
-        dateRange: {
-          start: prev.dateRange?.start || date,
-          end: date,
-        },
-      }));
-    } else {
-      setLocalFilters((prev) => ({
-        ...prev,
-        dateRange: { start: date, end: date },
-      }));
-    }
-  };
-
   const handleApply = () => {
     setFilters(localFilters);
     setIsOpen(false);
@@ -107,41 +85,53 @@ export function TicketFilters() {
     setIsOpen(false);
   };
 
+  const handleSearch = (value: string) => {
+    setFilters({
+      ...filters,
+      search: value || undefined,
+    });
+  };
+
   return (
-    <div className="flex items-center space-x-2">
+    <div className='flex items-center gap-4'>
+      <SearchBar
+        value={filters.search || ''}
+        onChange={handleSearch}
+        placeholder='Search tickets...'
+        className='w-[300px]'
+      />
+
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <Button
-            variant="outline"
-            size="sm"
+            variant='outline'
             className={cn(
-              'h-8 border-dashed',
+              'border-dashed',
               activeFilterCount > 0 && 'border-primary'
             )}
           >
-            <FilterIcon className="mr-2 h-4 w-4" />
+            <FilterIcon className='mr-2 h-4 w-4' />
             Filters
             {activeFilterCount > 0 && (
               <Badge
-                variant="secondary"
-                className="ml-2 rounded-sm px-1 font-normal"
+                variant='secondary'
+                className='ml-2 rounded-sm px-1 font-normal'
               >
                 {activeFilterCount}
               </Badge>
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[340px] p-4" align="start">
-          <div className="space-y-4">
+        <PopoverContent className='w-[340px] p-4' align='start'>
+          <div className='space-y-4'>
             {/* Status filters */}
-            <div className="space-y-2">
-              <h4 className="font-medium text-sm">Status</h4>
-              <div className="flex flex-wrap gap-2">
+            <div className='space-y-2'>
+              <h4 className='text-sm font-medium'>Status</h4>
+              <div className='flex flex-wrap gap-2'>
                 {STATUS_OPTIONS.map((status) => (
                   <Button
                     key={status.value}
-                    variant="outline"
-                    size="sm"
+                    variant='outline'
                     className={cn(
                       'justify-start',
                       localFilters.status?.includes(status.value) &&
@@ -150,7 +140,7 @@ export function TicketFilters() {
                     onClick={() => handleStatusToggle(status.value)}
                   >
                     {localFilters.status?.includes(status.value) && (
-                      <CheckIcon className="mr-2 h-4 w-4" />
+                      <CheckIcon className='mr-2 h-4 w-4' />
                     )}
                     {status.label}
                   </Button>
@@ -161,14 +151,13 @@ export function TicketFilters() {
             <Separator />
 
             {/* Priority filters */}
-            <div className="space-y-2">
-              <h4 className="font-medium text-sm">Priority</h4>
-              <div className="flex flex-wrap gap-2">
+            <div className='space-y-2'>
+              <h4 className='text-sm font-medium'>Priority</h4>
+              <div className='flex flex-wrap gap-2'>
                 {PRIORITY_OPTIONS.map((priority) => (
                   <Button
                     key={priority.value}
-                    variant="outline"
-                    size="sm"
+                    variant='outline'
                     className={cn(
                       'justify-start',
                       localFilters.priority?.includes(priority.value) &&
@@ -177,7 +166,7 @@ export function TicketFilters() {
                     onClick={() => handlePriorityToggle(priority.value)}
                   >
                     {localFilters.priority?.includes(priority.value) && (
-                      <CheckIcon className="mr-2 h-4 w-4" />
+                      <CheckIcon className='mr-2 h-4 w-4' />
                     )}
                     {priority.label}
                   </Button>
@@ -186,16 +175,15 @@ export function TicketFilters() {
             </div>
 
             {/* Action buttons */}
-            <div className="flex items-center justify-between pt-4">
+            <div className='flex items-center justify-between pt-4'>
               <Button
-                variant="ghost"
-                size="sm"
+                variant='ghost'
                 onClick={handleReset}
-                className="text-muted-foreground"
+                className='text-muted-foreground'
               >
                 Reset filters
               </Button>
-              <Button size="sm" onClick={handleApply}>
+              <Button onClick={handleApply}>
                 Apply filters
               </Button>
             </div>
@@ -205,12 +193,12 @@ export function TicketFilters() {
 
       {activeFilterCount > 0 && (
         <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 px-2 text-muted-foreground hover:text-foreground"
+          variant='ghost'
+          size='sm'
+          className='h-8 px-2 text-muted-foreground hover:text-foreground'
           onClick={handleReset}
         >
-          <XCircle className="h-4 w-4" />
+          <XCircle className='h-4 w-4' />
         </Button>
       )}
     </div>

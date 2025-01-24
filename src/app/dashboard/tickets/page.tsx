@@ -32,7 +32,6 @@ export default function TicketsPage() {
             <div className='flex items-center justify-between border-b p-4'>
               <h1 className='text-2xl font-bold tracking-tight'>Tickets</h1>
               <div className='flex items-center gap-2'>
-                <TicketBulkActions />
                 <CreateTicketDialog
                   trigger={
                     <Button>
@@ -45,10 +44,11 @@ export default function TicketsPage() {
             </div>
 
             {/* Filters */}
-            <div className='border-b p-4'>
+            <div className='flex items-center justify-between border-b p-4'>
               <Suspense fallback={<Skeleton className='h-10 w-full' />}>
                 <TicketFilters />
               </Suspense>
+              <TicketBulkActions />
             </div>
 
             {/* Table with Scroll */}

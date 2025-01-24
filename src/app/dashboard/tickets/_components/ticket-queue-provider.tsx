@@ -18,6 +18,7 @@ type TicketFilters = {
   priority?: Enums<'ticket_priority'>[];
   assignee_id?: string;
   team_id?: string;
+  search?: string;
   dateRange?: {
     start: Date;
     end: Date;
@@ -74,6 +75,7 @@ export function TicketQueueProvider({
   const priority = searchParams.getAll('priority') as Enums<'ticket_priority'>[];
   const assignee = searchParams.get('assignee') || undefined;
   const team = searchParams.get('team') || undefined;
+  const search = searchParams.get('search') || undefined;
   const sortColumn = searchParams.get('sort') as keyof Tables<'tickets'> || 'created_at';
   const sortAsc = searchParams.get('asc') === 'true';
 
@@ -84,8 +86,9 @@ export function TicketQueueProvider({
       priority: priority.length > 0 ? priority : undefined,
       assignee_id: assignee,
       team_id: team,
+      search,
     }),
-    [status, priority, assignee, team]
+    [status, priority, assignee, team, search]
   );
 
   // Fetch tickets with current filters
@@ -120,6 +123,7 @@ export function TicketQueueProvider({
   const setFilters = useCallback(
     (newFilters: TicketFilters) => {
       updateSearchParams({
+        search: newFilters.search || null,
         status: newFilters.status || null,
         priority: newFilters.priority || null,
         assignee: newFilters.assignee_id || null,
