@@ -38,16 +38,15 @@ type TicketForm = Partial<TablesInsert<'tickets'>>;
 ```tsx
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { getCurrentUser } from '@/lib/auth/session';
 
 export default async function PrivatePage() {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data?.user) {
+  const userData = await getCurrentUser();
+  if (!userData) {
     redirect('/login');
   }
 
-  return <p>Hello {data.user.email}</p>;
+  return <p>Hello {userData.user.name}</p>;
 }
 ```
 
@@ -80,7 +79,7 @@ export function ProfileButton() {
     return <button>Sign In</button>
   }
 
-  return <div>Welcome, {user.email}</div>
+  return <div>Welcome, {user.name}</div>
 }
 ```
 
@@ -91,10 +90,11 @@ import { useOrganization } from '@/components/providers/organization-provider'
 
 export function OrgSwitcher() {
   const { organization, organizations, switchOrganization } = useOrganization();
+  if (!organization) return null;
   
   return (
     <select 
-      value={organization?.id}
+      value={organization.id}
       onChange={(e) => switchOrganization(e.target.value)}
     >
       {organizations.map(org => (
@@ -127,23 +127,23 @@ function TicketManager() {
 }
 ```
 
-### Server-Side Session
+### Server-Side Auth
 ```tsx
-import { getCurrentUser, getSessionWithOrganization } from '@/lib/auth/session'
+import { getCurrentUser, getUserWithOrganization } from '@/lib/auth/session'
 
-// Get user and session data
+// Get user data
 export default async function ProfilePage() {
-  const data = await getCurrentUser()
-  if (!data) return null
-  const { user, session } = data
+  const userData = await getCurrentUser()
+  if (!userData) return null
+  const { user, authUser } = userData
   return <div>Welcome {user.name}</div>
 }
 
 // Get organization context
 export default async function OrgDashboard() {
-  const data = await getSessionWithOrganization()
-  if (!data) return null
-  const { organization, user } = data
+  const userData = await getUserWithOrganization()
+  if (!userData) return null
+  const { user, organization } = userData
   return <div>Dashboard for {organization.name}</div>
 }
 ```
@@ -201,10 +201,16 @@ function NewTicketForm() {
 ```tsx
 import { TicketService } from '@/lib/tickets/ticket-service'
 import { createClient } from '@/lib/supabase/server'
+import { getUserWithOrganization } from '@/lib/auth/session'
 
 export async function GET(request: Request) {
+  const userData = await getUserWithOrganization()
+  if (!userData) {
+    return new Response('Unauthorized', { status: 401 })
+  }
+
   const supabase = await createClient()
-  const ticketService = new TicketService(supabase, 'org_id')
+  const ticketService = new TicketService(supabase, userData.organization.id)
 
   const { data, count } = await ticketService.getTickets({
     filters: { status: ['open'] },
@@ -212,5 +218,23 @@ export async function GET(request: Request) {
   })
 
   return Response.json({ data, count })
+}
+```
+
+## Shared Components
+
+### Status and Priority Badges
+```tsx
+import { StatusBadge } from '@/components/tickets/status-badge'
+import { PriorityBadge } from '@/components/tickets/priority-badge'
+
+// Status badge with automatic styling
+function TicketHeader({ status, priority }: { status: Enums<'ticket_status'>, priority: Enums<'ticket_priority'> }) {
+  return (
+    <div className="flex gap-2">
+      <StatusBadge status={status} />
+      <PriorityBadge priority={priority} />
+    </div>
+  )
 }
 ```

@@ -126,7 +126,7 @@ export class TicketService {
     query = this.buildQuery(query, options);
 
     const { data, error, count } = await query;
-    console.log('query', options, data, error, count);
+    // console.log('query', options, data, error, count);
 
     if (error) throw error;
 
@@ -154,6 +154,34 @@ export class TicketService {
       )
       .eq('org_id', this.orgId)
       .eq('id', id)
+      .single();
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+    if (!data) throw new Error('Ticket not found');
+
+    return data as unknown as Rels extends true ? TicketWithRelations : Ticket;
+  }
+
+  async getTicketByNumber<Rels extends boolean = false>(
+    number: number,
+    includeRelations: Rels
+  ): Promise<Rels extends true ? TicketWithRelations : Ticket> {
+    let query = this.supabase
+      .from('tickets')
+      .select(
+        includeRelations
+          ? `
+        *,
+        contact:contacts(*),
+        assignee:internal_users(*),
+        team:teams(*)
+      `
+          : '*'
+      )
+      .eq('org_id', this.orgId)
+      .eq('number', number)
       .single();
 
     const { data, error } = await query;
@@ -202,13 +230,11 @@ export class TicketService {
     const supabase = this.supabase;
 
     // Create the ticket first
-    console.log('createTicket', ticket, attachments);
     const { data: newTicket, error: ticketError } = await supabase
       .from('tickets')
       .insert({ ...ticket, org_id: this.orgId })
       .select()
       .single();
-    console.log('newTicket', newTicket);
 
     if (ticketError) throw ticketError;
     if (!newTicket) throw new Error('Failed to create ticket');

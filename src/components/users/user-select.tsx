@@ -1,3 +1,5 @@
+'use client';
+
 import { Button } from '@/components/ui/button';
 import {
   Popover,
@@ -6,19 +8,21 @@ import {
 } from '@/components/ui/popover';
 import { SearchBar } from '@/components/ui/search-bar';
 import { useInternalUsers } from '@/lib/users/use-internal-users';
-import { XIcon } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { PenIcon } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { Avatar, AvatarFallback } from '../ui/avatar';
+import { UserAvatar } from './user-avatar';
 
 interface UserSelectProps {
   value?: string;
-  onChange: (value: string) => void;
+  onChange: (value: string | undefined) => void;
 }
 
 export function UserSelect({ value, onChange }: UserSelectProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [autofocus, setAutofocus] = useState(false);
+  const [choosing, setChoosing] = useState(false);
   const { data: users = [] } = useInternalUsers(search);
 
   const selectedUser = useMemo(
@@ -34,9 +38,18 @@ export function UserSelect({ value, onChange }: UserSelectProps) {
       .toUpperCase();
   }, [selectedUser]);
 
+  useEffect(() => {
+    if (!open) {
+      setChoosing(false);
+      if (choosing) {
+        onChange(undefined);
+      }
+    }
+  }, [open]);
+
   return (
     <div className='space-y-2'>
-      {!selectedUser && (
+      {(!selectedUser || choosing) && (
         <Popover open={open} onOpenChange={setOpen}>
           <div className='relative'>
             <SearchBar
@@ -73,6 +86,7 @@ export function UserSelect({ value, onChange }: UserSelectProps) {
                     onClick={() => {
                       onChange(user.id);
                       setOpen(false);
+                      setChoosing(false);
                     }}
                   >
                     <div className='flex items-center gap-3'>
@@ -109,20 +123,9 @@ export function UserSelect({ value, onChange }: UserSelectProps) {
         </Popover>
       )}
 
-      {selectedUser && (
+      {!choosing && selectedUser && (
         <div className='flex items-center gap-3 rounded-md border p-3'>
-          <Avatar className='h-10 w-10'>
-            {selectedUser.avatar_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={selectedUser.avatar_url}
-                alt={selectedUser.name}
-                className='h-full w-full object-cover'
-              />
-            ) : (
-              <AvatarFallback>{initials}</AvatarFallback>
-            )}
-          </Avatar>
+          <UserAvatar user={selectedUser} className='h-10 w-10' />
 
           <div className='flex flex-1 flex-col'>
             <h3 className='text-sm font-medium'>{selectedUser.name}</h3>
@@ -135,14 +138,14 @@ export function UserSelect({ value, onChange }: UserSelectProps) {
             variant='ghost'
             size='icon'
             onClick={() => {
-              onChange('');
+              setChoosing(true);
               setAutofocus(true);
             }}
           >
-            <XIcon className='h-4 w-4' />
+            <PenIcon className='h-4 w-4' />
           </Button>
         </div>
       )}
     </div>
   );
-} 
+}

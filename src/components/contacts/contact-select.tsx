@@ -6,7 +6,7 @@ import {
 } from '@/components/ui/popover';
 import { SearchBar } from '@/components/ui/search-bar';
 import { useContacts } from '@/lib/contacts/use-contacts';
-import { XIcon } from 'lucide-react';
+import { PenIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 
@@ -110,7 +110,7 @@ export function ContactSelect({ value, onChange }: ContactSelectProps) {
               setAutofocus(true);
             }}
           >
-            <XIcon className='h-4 w-4' />
+            <PenIcon className='h-4 w-4' />
           </Button>
         </div>
       )}

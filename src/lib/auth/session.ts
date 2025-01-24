@@ -2,58 +2,62 @@ import type { Tables } from '@/lib/database.types';
 import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { cache } from 'react';
 
 type InternalUser = Tables<'internal_users'>;
 
 /**
- * Get the current session and user data
+ * Get the current authenticated user
  * Use this in server components and API routes
+ * This is the safe way to get user data as it validates the token with Supabase Auth server
  */
-export async function getSession() {
-  const supabase = await createClient();
-  const {
-    data: { session },
-    error,
-  } = await supabase.auth.getSession();
+export const getCurrentUser = cache(
+  async (): Promise<{
+    user: InternalUser;
+    authUser: NonNullable<Awaited<ReturnType<typeof getAuthUser>>>['user'];
+  } | null> => {
+    const authUser = await getAuthUser();
+    if (!authUser) return null;
 
-  if (error) {
-    console.error('Error getting session:', error.message);
-    return null;
+    const supabase = await createClient();
+
+    // Get internal user data
+    const { data: internalUser, error } = await supabase
+      .from('internal_users')
+      .select('*')
+      .eq('auth_user_id', authUser.user.id)
+      .single();
+
+    if (error || !internalUser) {
+      console.error('Error getting internal user:', error?.message);
+      return null;
+    }
+
+    return {
+      user: internalUser,
+      authUser: authUser.user,
+    };
   }
-
-  return session;
-}
+);
 
 /**
- * Get the current authenticated user with internal user data
- * Use this in server components and API routes
+ * Get the current authenticated user from Supabase Auth
+ * This is the safe way to get user data as it validates the token with Supabase Auth server
  */
-export async function getCurrentUser(): Promise<{
-  user: InternalUser;
-  session: NonNullable<Awaited<ReturnType<typeof getSession>>>;
-} | null> {
-  const session = await getSession();
-  if (!session) return null;
-
+const getAuthUser = cache(async () => {
   const supabase = await createClient();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
 
-  // Get internal user data
-  const { data: internalUser, error } = await supabase
-    .from('internal_users')
-    .select('*')
-    .eq('auth_user_id', session.user.id)
-    .single();
-
-  if (error || !internalUser) {
-    console.error('Error getting internal user:', error?.message);
+  if (error || !user) {
+    console.error('Error getting auth user:', error?.message);
     return null;
   }
 
-  return {
-    user: internalUser,
-    session,
-  };
-}
+  return { user };
+});
 
 /**
  * Require organization access for a route
@@ -90,14 +94,15 @@ export async function clearSession() {
 }
 
 /**
- * Get session data with organization context
- * Use this when you need both session and org data
+ * Get user data with organization context
+ * Use this when you need both user and org data
+ * This is the safe way to get user data as it validates the token with Supabase Auth server
  */
-export async function getSessionWithOrganization() {
+export const getUserWithOrganization = cache(async () => {
   const userData = await getCurrentUser();
   if (!userData) return null;
 
-  const { user, session } = userData;
+  const { user, authUser } = userData;
   const supabase = await createClient();
 
   // Get organization data
@@ -114,7 +119,7 @@ export async function getSessionWithOrganization() {
 
   return {
     user,
-    session,
+    authUser,
     organization,
   };
-}
+});

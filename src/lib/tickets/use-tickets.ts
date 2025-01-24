@@ -10,12 +10,12 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { createClient } from '../supabase/client';
 import {
   TicketService,
+  type FileAttachment,
   type Ticket,
   type TicketInsert,
   type TicketQueryOptions,
   type TicketUpdate,
   type TicketWithRelations,
-  type FileAttachment,
 } from './ticket-service';
 
 // Query keys
@@ -86,7 +86,9 @@ export function useTickets(
 export function useTicket<Rels extends boolean = false>(
   id: string,
   includeRelations: Rels,
-  queryOptions?: UseQueryOptions<Rels extends true ? TicketWithRelations : Ticket>
+  queryOptions?: Partial<
+    UseQueryOptions<Rels extends true ? TicketWithRelations : Ticket>
+  >
 ) {
   const ticketService = useTicketService();
   const queryClient = useQueryClient();
@@ -98,15 +100,12 @@ export function useTicket<Rels extends boolean = false>(
     let unsubscribe: (() => void) | undefined;
 
     const setupSubscription = async () => {
-      unsubscribe = await ticketService.subscribeToTicket(
-        id,
-        async (payload) => {
-          // Invalidate the specific ticket query
-          await queryClient.invalidateQueries({
-            queryKey: ticketKeys.detail(id),
-          });
-        }
-      );
+      unsubscribe = await ticketService.subscribeToTicket(id, async () => {
+        // Invalidate the specific ticket query
+        await queryClient.invalidateQueries({
+          queryKey: ticketKeys.detail(id),
+        });
+      });
     };
 
     void setupSubscription();
@@ -125,7 +124,7 @@ export function useTicket<Rels extends boolean = false>(
       return ticketService.getTicketById(id, includeRelations);
     },
     ...queryOptions,
-    enabled: !!ticketService && queryOptions?.enabled,
+    enabled: !!ticketService && !!id && queryOptions?.enabled,
   });
 }
 
@@ -166,7 +165,12 @@ export function useUpdateTicket() {
       // Update queries with new data
       queryClient.setQueryData(
         ticketKeys.detail(updatedTicket.id),
-        updatedTicket
+        (oldData: Ticket | TicketWithRelations) => {
+          return {
+            ...oldData,
+            ...updatedTicket,
+          };
+        }
       );
       queryClient.invalidateQueries({ queryKey: ticketKeys.lists() });
     },
@@ -191,8 +195,27 @@ export function useDeleteTicket() {
   });
 }
 
+type SingleTicketActions = {
+  updateStatus: (status: Ticket['status']) => Promise<void>;
+  updatePriority: (priority: Ticket['priority']) => Promise<void>;
+  updateAssignee: (assignee_id: string | null) => Promise<void>;
+  updateTeam: (team_id: string | null) => Promise<void>;
+};
+
+type BulkTicketActions = {
+  updateStatus: (status: Ticket['status'], ids: string[]) => Promise<void>;
+  updatePriority: (
+    priority: Ticket['priority'],
+    ids: string[]
+  ) => Promise<void>;
+  updateAssignee: (assignee_id: string | null, ids: string[]) => Promise<void>;
+  updateTeam: (team_id: string | null, ids: string[]) => Promise<void>;
+};
+
 // Hook for ticket actions with optimistic updates
-export function useTicketActions(id?: string) {
+export function useTicketActions<T extends string | undefined>(
+  id?: T
+): T extends string ? SingleTicketActions : BulkTicketActions {
   const updateTicket = useUpdateTicket();
   const queryClient = useQueryClient();
 
@@ -236,7 +259,7 @@ export function useTicketActions(id?: string) {
         bulkUpdate({ assignee_id }, ids),
       updateTeam: (team_id: string | null, ids: string[]) =>
         bulkUpdate({ team_id }, ids),
-    };
+    } as any;
   }
 
   // If ID is provided, return single ticket operations
@@ -248,5 +271,5 @@ export function useTicketActions(id?: string) {
     updateAssignee: (assignee_id: string | null) =>
       optimisticUpdate({ assignee_id }, id),
     updateTeam: (team_id: string | null) => optimisticUpdate({ team_id }, id),
-  };
+  } as any;
 }

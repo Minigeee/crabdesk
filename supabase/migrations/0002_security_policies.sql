@@ -674,7 +674,7 @@ CREATE POLICY attachments_delete
 -------------------------------------------------------------------------------
 -- 13) audit_logs
 -- Security Policies:
---   READ: Organization admins can read audit logs
+--   READ: Organization members can read audit logs
 --   INSERT: System automatically creates audit logs
 --   UPDATE: No updates allowed
 --   DELETE: No deletion allowed
@@ -686,7 +686,6 @@ CREATE POLICY audit_logs_read
   TO authenticated
   USING (
     org_id = public.current_org_id()
-    AND public.is_org_admin()
   );
 
 -- INSERT (often done by a server function or system user)

@@ -14,6 +14,9 @@
 ### Article Related
 - **article_status**: 'draft', 'published', 'archived'
 
+### Audit Log Related
+- **audit_log_action**: 'insert', 'update', 'delete', 'restore'
+
 ## Core Entities
 
 ### Organizations
@@ -351,19 +354,19 @@
 - action: varchar(50) NOT NULL
 - entity_type: varchar(50) NOT NULL
 - entity_id: uuid NOT NULL
-- actor_id: uuid NOT NULL
+- actor_id: uuid
 - changes: jsonb NOT NULL
 - created_at: timestamptz NOT NULL DEFAULT now()
 **Relationships**: 
 - FOREIGN KEY (org_id) REFERENCES organizations(id)
 - FOREIGN KEY (actor_id) REFERENCES internal_users(id)
 **Constraints**: 
-- CHECK (action IN ('create', 'update', 'delete', 'restore'))
+- CHECK (action IN ('insert', 'update', 'delete', 'restore'))
 **Indexes**: 
 - INDEX audit_org_idx ON audit_logs(org_id, created_at)
 - INDEX audit_entity_idx ON audit_logs(entity_type, entity_id)
 **Security Policies**:
-- READ: Organization admins can read audit logs
+- READ: Organization members can read audit logs
 - INSERT: System automatically creates audit logs
 - UPDATE: No updates allowed
 - DELETE: No deletion allowed

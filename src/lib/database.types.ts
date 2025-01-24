@@ -154,7 +154,7 @@ export type Database = {
       audit_logs: {
         Row: {
           action: string
-          actor_id: string
+          actor_id: string | null
           changes: Json
           created_at: string
           entity_id: string
@@ -164,7 +164,7 @@ export type Database = {
         }
         Insert: {
           action: string
-          actor_id: string
+          actor_id?: string | null
           changes: Json
           created_at?: string
           entity_id: string
@@ -174,7 +174,7 @@ export type Database = {
         }
         Update: {
           action?: string
-          actor_id?: string
+          actor_id?: string | null
           changes?: Json
           created_at?: string
           entity_id?: string
@@ -671,6 +671,7 @@ export type Database = {
     }
     Enums: {
       article_status: "draft" | "published" | "archived"
+      audit_log_action: "insert" | "update" | "delete" | "restore"
       message_content_type: "text" | "html" | "markdown"
       message_sender_type: "contact" | "internal_user" | "system"
       ticket_priority: "low" | "normal" | "high" | "urgent"

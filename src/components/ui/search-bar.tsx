@@ -1,3 +1,5 @@
+'use client';
+
 import { Loader2, Search, X } from 'lucide-react';
 import { forwardRef, useEffect, useState } from 'react';
 import { useDebounce } from 'use-debounce';

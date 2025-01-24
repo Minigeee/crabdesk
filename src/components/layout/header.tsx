@@ -7,7 +7,7 @@ import { UserNav } from '@/components/layout/user-nav';
 export function Header() {
   return (
     <header className='flex h-14 items-center justify-between border-b px-4'>
-        <Breadcrumbs />
+      <Breadcrumbs />
       <div className='flex items-center gap-4'>
         <OrganizationSwitcher />
         <UserNav />

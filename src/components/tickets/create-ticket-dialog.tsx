@@ -31,6 +31,7 @@ export function CreateTicketDialog({ trigger }: CreateTicketDialogProps) {
         ...data,
         org_id: organization.id,
         source: 'portal' as 'portal', // Since this is from the dashboard
+        assignee_id: data.assignee_id || undefined,
         metadata: {
           description: data.description,
         },

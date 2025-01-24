@@ -31,6 +31,9 @@ CREATE TYPE message_content_type AS ENUM ('text', 'html', 'markdown');
 -- Article Status
 CREATE TYPE article_status AS ENUM ('draft', 'published', 'archived');
 
+-- Audit Log Action
+CREATE TYPE audit_log_action AS ENUM ('insert', 'update', 'delete', 'restore');
+
 --------------------------------------------------------------------------------
 -- Helper Function: current_org_id()
 -- Returns the "org_id" from the user's JWT app_metadata.
@@ -553,7 +556,7 @@ CREATE TABLE public.audit_logs (
   action      varchar(50)   NOT NULL,
   entity_type varchar(50)   NOT NULL,
   entity_id   uuid          NOT NULL,
-  actor_id    uuid          NOT NULL,
+  actor_id    uuid,
   changes     jsonb         NOT NULL,
   created_at  timestamptz   NOT NULL DEFAULT now(),
   CONSTRAINT audit_org_fkey
@@ -561,7 +564,7 @@ CREATE TABLE public.audit_logs (
   CONSTRAINT audit_actor_fkey
     FOREIGN KEY (actor_id) REFERENCES public.internal_users (id),
   CONSTRAINT audit_action_check
-    CHECK (action IN ('create','update','delete','restore'))
+    CHECK (action IN ('insert','update','delete','restore'))
 );
 
 -- Indexes
