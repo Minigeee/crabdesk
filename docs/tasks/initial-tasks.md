@@ -180,14 +180,14 @@
     - Permission checks for sensitive data
 
 ## Ticket System - Core
-[ ] 1. Set up ticket data fetching utilities
+[X] 1. Set up ticket data fetching utilities
     - Create base ticket service
     - Implement caching strategy
     - Add real-time subscription setup
     - Error handling and retries
     - Type-safe query builders
 
-[ ] 2. Create ticket state management
+[X] 2. Create ticket state management
     - Define ticket store structure
     - Implement optimistic updates
     - Handle concurrent modifications
@@ -201,7 +201,7 @@
     - File attachment handling
     - Initial assignment rules
 
-[ ] 4. Set up real-time ticket updates
+[X] 4. Set up real-time ticket updates
     - Configure Supabase realtime
     - Handle presence indicators
     - Implement update merging
@@ -216,28 +216,27 @@
     - Assignment notifications
 
 ## Ticket Queue View
-[ ] 1. Create tickets page layout
+[X] 1. Create tickets page layout
     - Server-side pagination
-    - List/grid view toggle
     - Quick preview panel
     - Responsive design
     - Loading states
 
-[ ] 2. Implement ticket filters component
+[X] 2. Implement ticket filters component
     - Status filter
     - Priority filter
     - Assignment filter
     - Date range picker
     - Save filter presets
 
-[ ] 3. Build ticket table with sorting
+[X] 3. Build ticket table with sorting
     - Custom table columns
     - Sort by multiple fields
     - Column resizing
     - Row expansion
     - Keyboard navigation
 
-[ ] 4. Add bulk actions functionality
+[X] 4. Add bulk actions functionality
     - Multi-select interface
     - Batch status updates
     - Mass assignment
@@ -246,12 +245,8 @@
 
 [ ] 5. Create ticket search system
     - Full-text search
-    - Advanced filters
-    - Recent searches
-    - Search suggestions
-    - Results highlighting
 
-[ ] 6. Implement pagination
+[X] 6. Implement pagination
     - Cursor-based pagination
     - Page size options
     - Total count display

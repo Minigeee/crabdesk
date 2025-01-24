@@ -147,3 +147,70 @@ export default async function OrgDashboard() {
   return <div>Dashboard for {organization.name}</div>
 }
 ```
+
+## Ticket System
+
+### Using Ticket Hooks
+```tsx
+// Fetch and display ticket list with filters
+function TicketList() {
+  const { data, isLoading } = useTickets({
+    filters: { status: ['open', 'pending'] },
+    orderBy: [{ column: 'created_at', ascending: false }],
+    includeRelations: true,
+    limit: 10,
+  })
+
+  if (isLoading) return <div>Loading...</div>
+  return <DataTable data={data.data} count={data.count} />
+}
+
+// Single ticket view with real-time updates
+function TicketDetails({ id }: { id: string }) {
+  const { data: ticket } = useTicket(id, true)
+  const { updateStatus, updateAssignee } = useTicketActions(id)
+
+  return (
+    <div>
+      <StatusSelect
+        value={ticket?.status}
+        onChange={(status) => updateStatus(status)}
+      />
+      <AssigneeSelect
+        value={ticket?.assignee_id}
+        onChange={(id) => updateAssignee(id)}
+      />
+    </div>
+  )
+}
+
+// Create new ticket
+function NewTicketForm() {
+  const createTicket = useCreateTicket()
+  
+  const onSubmit = async (data: TicketInsert) => {
+    await createTicket.mutateAsync(data)
+    // Handle success
+  }
+
+  return <Form onSubmit={onSubmit} />
+}
+```
+
+### Direct Service Usage (Server-Side)
+```tsx
+import { TicketService } from '@/lib/tickets/ticket-service'
+import { createClient } from '@/lib/supabase/server'
+
+export async function GET(request: Request) {
+  const supabase = await createClient()
+  const ticketService = new TicketService(supabase, 'org_id')
+
+  const { data, count } = await ticketService.getTickets({
+    filters: { status: ['open'] },
+    includeRelations: true,
+  })
+
+  return Response.json({ data, count })
+}
+```

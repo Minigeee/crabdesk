@@ -1,24 +1,23 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import { AuthProvider } from "@/components/providers/auth-provider";
-import Providers from "./providers";
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import './globals.css';
+import Providers from './providers';
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: "CrabDesk",
-  description: "Modern help desk software",
+  title: 'CrabDesk',
+  description: 'Modern help desk software',
 };
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+    <html lang='en' suppressHydrationWarning>
+      <body className={`${inter.className} antialiased`}>
         <Providers>{children}</Providers>
       </body>
     </html>
