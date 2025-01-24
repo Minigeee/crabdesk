@@ -45,7 +45,7 @@ export type Database = {
           published_at: string | null
           seo_metadata: Json
           slug: string
-          status: string
+          status: Database["public"]["Enums"]["article_status"]
           title: string
           updated_at: string
           version: number
@@ -60,7 +60,7 @@ export type Database = {
           published_at?: string | null
           seo_metadata?: Json
           slug: string
-          status?: string
+          status?: Database["public"]["Enums"]["article_status"]
           title: string
           updated_at?: string
           version?: number
@@ -75,7 +75,7 @@ export type Database = {
           published_at?: string | null
           seo_metadata?: Json
           slug?: string
-          status?: string
+          status?: Database["public"]["Enums"]["article_status"]
           title?: string
           updated_at?: string
           version?: number
@@ -290,35 +290,35 @@ export type Database = {
       messages: {
         Row: {
           content: string
-          content_type: string
+          content_type: Database["public"]["Enums"]["message_content_type"]
           created_at: string
           id: string
           is_private: boolean | null
           metadata: Json
           sender_id: string
-          sender_type: string
+          sender_type: Database["public"]["Enums"]["message_sender_type"]
           ticket_id: string
         }
         Insert: {
           content: string
-          content_type?: string
+          content_type?: Database["public"]["Enums"]["message_content_type"]
           created_at?: string
           id?: string
           is_private?: boolean | null
           metadata?: Json
           sender_id: string
-          sender_type: string
+          sender_type: Database["public"]["Enums"]["message_sender_type"]
           ticket_id: string
         }
         Update: {
           content?: string
-          content_type?: string
+          content_type?: Database["public"]["Enums"]["message_content_type"]
           created_at?: string
           id?: string
           is_private?: boolean | null
           metadata?: Json
           sender_id?: string
-          sender_type?: string
+          sender_type?: Database["public"]["Enums"]["message_sender_type"]
           ticket_id?: string
         }
         Relationships: [
@@ -558,10 +558,10 @@ export type Database = {
           metadata: Json
           number: number
           org_id: string
-          priority: string
+          priority: Database["public"]["Enums"]["ticket_priority"]
           resolved_at: string | null
-          source: string
-          status: string
+          source: Database["public"]["Enums"]["ticket_source"]
+          status: Database["public"]["Enums"]["ticket_status"]
           subject: string
           team_id: string | null
           updated_at: string
@@ -574,10 +574,10 @@ export type Database = {
           metadata?: Json
           number?: never
           org_id: string
-          priority?: string
+          priority?: Database["public"]["Enums"]["ticket_priority"]
           resolved_at?: string | null
-          source: string
-          status?: string
+          source: Database["public"]["Enums"]["ticket_source"]
+          status?: Database["public"]["Enums"]["ticket_status"]
           subject: string
           team_id?: string | null
           updated_at?: string
@@ -590,10 +590,10 @@ export type Database = {
           metadata?: Json
           number?: never
           org_id?: string
-          priority?: string
+          priority?: Database["public"]["Enums"]["ticket_priority"]
           resolved_at?: string | null
-          source?: string
-          status?: string
+          source?: Database["public"]["Enums"]["ticket_source"]
+          status?: Database["public"]["Enums"]["ticket_status"]
           subject?: string
           team_id?: string | null
           updated_at?: string
@@ -652,7 +652,12 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      article_status: "draft" | "published" | "archived"
+      message_content_type: "text" | "html" | "markdown"
+      message_sender_type: "contact" | "internal_user" | "system"
+      ticket_priority: "low" | "normal" | "high" | "urgent"
+      ticket_source: "email" | "chat" | "portal" | "api"
+      ticket_status: "open" | "pending" | "resolved" | "closed"
     }
     CompositeTypes: {
       [_ in never]: never

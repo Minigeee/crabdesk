@@ -36,7 +36,7 @@ INSERT INTO auth.users (
   current_timestamp,
   current_timestamp,
   current_timestamp,
-  '{"provider":"email","providers":["email"]}',
+  '{"provider":"email","providers":["email"],"org_id":"11111111-1111-1111-1111-111111111111"}',
   '{}',
   current_timestamp,
   current_timestamp,
@@ -235,9 +235,9 @@ INSERT INTO public.tickets (
   '99999999-9999-9999-9999-999999999999',
   '11111111-1111-1111-1111-111111111111',
   'Need help with login',
-  'open',
-  'normal',
-  'email',
+  'open'::ticket_status,
+  'normal'::ticket_priority,
+  'email'::ticket_source,
   '66666666-6666-6666-6666-666666666666',
   '33333333-3333-3333-3333-333333333333',
   '55555555-5555-5555-5555-555555555555',
@@ -251,28 +251,28 @@ INSERT INTO public.messages (
 -- Customer message
 (
   '99999999-9999-9999-9999-999999999999',
-  'contact',
+  'contact'::message_sender_type,
   '66666666-6666-6666-6666-666666666666',
   'Hi, I cannot log into my account. It says my password is incorrect but I am sure it is right.',
-  'text',
+  'text'::message_content_type,
   false
 ),
 -- Internal note
 (
   '99999999-9999-9999-9999-999999999999',
-  'internal_user',
+  'internal_user'::message_sender_type,
   '33333333-3333-3333-3333-333333333333',
   'Checked auth logs - no failed attempts found. Might be using wrong email.',
-  'text',
+  'text'::message_content_type,
   true
 ),
 -- Agent response
 (
   '99999999-9999-9999-9999-999999999999',
-  'internal_user',
+  'internal_user'::message_sender_type,
   '33333333-3333-3333-3333-333333333333',
   'Hello Bob, I''d be happy to help. Could you confirm which email address you''re using to log in?',
-  'text',
+  'text'::message_content_type,
   false
 );
 
@@ -284,9 +284,9 @@ INSERT INTO public.tickets (
   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
   '11111111-1111-1111-1111-111111111111',
   'Feature request: Dark mode',
-  'pending',
-  'low',
-  'portal',
+  'pending'::ticket_status,
+  'low'::ticket_priority,
+  'portal'::ticket_source,
   '77777777-7777-7777-7777-777777777777',
   '44444444-4444-4444-4444-444444444444',
   '55555555-5555-5555-5555-555555555555',
@@ -303,28 +303,28 @@ INSERT INTO public.messages (
 -- Portal user message
 (
   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-  'contact',
+  'contact'::message_sender_type,
   '77777777-7777-7777-7777-777777777777',
   'Would it be possible to add a dark mode to the dashboard? It would be easier on the eyes when working late.',
-  'text',
+  'text'::message_content_type,
   false
 ),
 -- Internal note
 (
   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-  'internal_user',
+  'internal_user'::message_sender_type,
   '44444444-4444-4444-4444-444444444444',
   'This is already on our roadmap for Q2. Will update the customer.',
-  'text',
+  'text'::message_content_type,
   true
 ),
 -- Agent response
 (
   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-  'internal_user',
+  'internal_user'::message_sender_type,
   '44444444-4444-4444-4444-444444444444',
   'Hi Alice, thanks for the suggestion! We''re actually already working on a dark mode feature. We expect to release it in the next few months. I''ll update this ticket when we have more specific timing.',
-  'text',
+  'text'::message_content_type,
   false
 );
 
@@ -340,7 +340,7 @@ INSERT INTO public.articles (
   'Getting Started Guide',
   'getting-started',
   '# Getting Started\n\nWelcome to our platform! This guide will help you get up and running quickly...',
-  'published',
+  'published'::article_status,
   '22222222-2222-2222-2222-222222222222',
   now()
 );

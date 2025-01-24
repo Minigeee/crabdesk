@@ -1,418 +1,193 @@
-# App Structure Document
+# App Structure
 
-## User Roles
-- Support Agent: Primary users handling tickets and customer interactions
-- Support Manager: Oversees team performance and operations
-- Knowledge Base Editor: Manages help content and documentation
-- Customer: End users seeking support
-- Organization Admin: Manages organization-level settings and access
+## Core Layout Components
 
-## Core Views Structure
+### Root Layout (`/app/layout.tsx`)
+- **Purpose**: Provides global app configuration and providers
+- **Components**:
+  - `AuthProvider`: Manages authentication state
+  - `ThemeProvider`: Manages color scheme
+  - `ToastProvider`: Global notifications
+- **Data Dependencies**: None
+- **User Flow**: Wraps all routes, handles auth redirects
 
-### 1. Authentication Views
-**Purpose**: Handle user authentication and access control
-- Sign In / Sign Up
-  - Why: Secure access to platform
-  - Purpose: Identity verification and role assignment
-  - Users: All users
-  - Flow: Entry point for all authenticated features
+### Dashboard Layout (`/app/dashboard/layout.tsx`)
+- **Purpose**: Main authenticated app layout
+- **Components**:
+  - `MainNav`: Primary navigation
+  - `UserNav`: Profile, settings, logout
+  - `CommandMenu`: Global command palette
+  - `OrganizationSwitcher`: For users in multiple orgs
+- **Data Dependencies**: 
+  - Current user
+  - Organization details
+- **Layout**: 
+  - Fixed sidebar with nav
+  - Top header with actions
+  - Main content area
 
-### 2. Support Agent Workspace
-**Purpose**: Primary workspace for handling customer support
+## Main Views
 
-#### Main Dashboard
-- Layout:
-  - Fixed global header with quick actions
-  - Collapsible left sidebar for navigation
-  - Main content area with grid layout
-  - Right sidebar for notifications/updates
+### Dashboard (`/app/dashboard/page.tsx`)
+- **Purpose**: Role-based overview and quick actions
+- **Components**:
+  - `TicketMetrics`: Key ticket statistics
+  - `RecentActivity`: Latest updates
+  - `QuickActions`: Common tasks
+- **Data Dependencies**:
+  - Recent tickets
+  - User's assignments
+  - Team metrics
+- **Interactions**:
+  - Click to view full tickets
+  - Quick status updates
+  - Direct to relevant sections
 
-- Components:
-  - Performance Stats Cards
-    - Today's metrics (tickets resolved, response time)
-    - Interactive charts showing trends
-    - Click expands to detailed view
-  
-  - Active Queue Overview
-    - Mini table of urgent/assigned tickets
-    - Click routes to full queue view
-    - Status indicators and priority flags
-  
-  - Team Status Panel
-    - Online team members
-    - Current workload distribution
-    - Click opens team collaboration modal
-  
-  - Quick Action Toolbar
-    - New ticket button (opens creation modal)
-    - Search tickets field
-    - Filter presets dropdown
+### Ticket Queue (`/app/dashboard/tickets/page.tsx`)
+- **Purpose**: Main ticket management interface
+- **Components**:
+  - `TicketFilters`: Status, priority, assignment filters
+  - `TicketTable`: Main ticket list
+  - `BulkActions`: Multi-ticket operations
+- **Data Dependencies**:
+  - Filtered tickets
+  - Team assignments
+  - Contact basic info
+- **Interactions**:
+  - Sort columns
+  - Filter results
+  - Select for bulk actions
+  - Click to open ticket
 
-#### Ticket Queue
-- Layout:
-  - Full-width data table as main focus
-  - Collapsible filters sidebar
-  - Action toolbar at top
-  - Pagination/view options at bottom
+### Active Ticket (`/app/dashboard/tickets/[id]/page.tsx`)
+- **Purpose**: Single ticket management
+- **Components**:
+  - `MessageThread`: Conversation history
+  - `TicketActions`: Status, assignment changes
+  - `ContactSidebar`: Customer information
+  - `InternalNotes`: Private team notes
+- **Data Dependencies**:
+  - Full ticket details
+  - Message history
+  - Contact details
+  - Team member list
+- **Interactions**:
+  - Real-time messaging
+  - Status updates
+  - Assignment changes
+  - Add internal notes
 
-- Components:
-  - Advanced Filter Panel
-    - Status, priority, date filters
-    - Saved filter presets
-    - Custom field filters
-    - Apply/clear buttons
-  
-  - Ticket Table
-    - Sortable columns (priority, status, date)
-    - Bulk action checkboxes
-    - Quick action hover menu
-    - Click row expands preview
-    - Double-click opens full view
-  
-  - Bulk Actions Toolbar
-    - Assign to agent/team
-    - Update status/priority
-    - Apply tags
-    - Merge tickets
-  
-  - View Controls
-    - List/kanban view toggle
-    - Items per page
-    - Column visibility options
+### Contact Management (`/app/dashboard/contacts/page.tsx`)
+- **Purpose**: Customer contact management
+- **Components**:
+  - `ContactTable`: List of contacts
+  - `ContactFilters`: Search and filter options
+  - `ContactMetrics`: Activity overview
+- **Data Dependencies**:
+  - Contact list
+  - Recent interactions
+  - Ticket history
+- **Interactions**:
+  - Search contacts
+  - View contact details
+  - Update contact info
 
-#### Active Ticket View
-- Layout:
-  - Split view with ticket details left, conversation right
-  - Collapsible customer info sidebar
-  - Sticky action toolbar at top
+### Contact Details (`/app/dashboard/contacts/[id]/page.tsx`)
+- **Purpose**: Detailed contact view
+- **Components**:
+  - `ContactProfile`: Basic information
+  - `TicketHistory`: Past interactions
+  - `ContactNotes`: Internal notes
+  - `ContactActions`: Quick actions
+- **Data Dependencies**:
+  - Full contact details
+  - Historical tickets
+  - Contact preferences
+- **Interactions**:
+  - Edit contact info
+  - View ticket history
+  - Add notes
+  - Create new ticket
 
-- Components:
-  - Ticket Details Panel
-    - Status/priority controls
-    - Assignment dropdown
-    - Tags management
-    - Custom fields
-    - Related tickets list
-  
-  - Conversation Thread
-    - Rich text reply composer
-    - Message type toggles (public/private)
-    - Template/macro selector
-    - File attachment dropzone
-    - Real-time updates
-  
-  - Customer Context Sidebar
-    - Contact information
-    - Organization details
-    - Previous tickets
-    - Activity timeline
-  
-  - Action Toolbar
-    - Save draft
-    - Close ticket
-    - Merge/split options
-    - Share/transfer controls
+### Team Management (`/app/dashboard/teams/page.tsx`)
+- **Purpose**: Team organization and metrics
+- **Components**:
+  - `TeamList`: Overview of teams
+  - `TeamMetrics`: Performance data
+  - `MemberManagement`: Team composition
+- **Data Dependencies**:
+  - Team details
+  - Member list
+  - Performance stats
+- **Interactions**:
+  - Manage team members
+  - View team metrics
+  - Update team settings
 
-### 3. Knowledge Base Management
-**Purpose**: Content management for self-service support
+## Shared Components
 
-#### Article Editor
-- Layout:
-  - Full-screen editor interface
-  - Preview pane toggle
-  - Fixed toolbar at top
-  - Right sidebar for metadata
+### Data Display
+- `DataTable`: Reusable table with sorting/filtering
+- `StatusBadge`: Visual status indicators
+- `TimeAgo`: Relative time display
+- `UserAvatar`: User profile pictures
+- `Pagination`: Page navigation
 
-- Components:
-  - Rich Text Editor
-    - WYSIWYG controls
-    - Markdown support toggle
-    - Code block formatting
-    - Image handling with drag-drop
-    - Version history access
-  
-  - Metadata Panel
-    - Category selection
-    - Tags management
-    - SEO fields
-    - Visibility settings
-    - Related articles linking
-  
-  - Version Controls
-    - Auto-save indicator
-    - Version comparison view
-    - Restore version option
-    - Collaboration status
-  
-  - Publishing Controls
-    - Save as draft
-    - Preview in new tab
-    - Schedule publication
-    - Approval workflow status
+### Forms and Inputs
+- `ComboBox`: Enhanced select with search
+- `TagInput`: Multiple tag selection
+- `RichTextEditor`: Enhanced text input
+- `SearchInput`: Global search component
 
-#### Content Organization
-- Layout:
-  - Tree view navigation left
-  - Content grid/list right
-  - Bulk actions toolbar top
-  - Search and filters bar
+### Dialogs and Modals
+- `ConfirmDialog`: Action confirmation
+- `FormDialog`: Reusable form modal
+- `SlideOver`: Side panel for details
 
-- Components:
-  - Category Manager
-    - Drag-drop hierarchy editor
-    - Quick add/edit categories
-    - Bulk move functionality
-    - Usage statistics
-  
-  - Article Browser
-    - Grid/list view toggle
-    - Sort by status/date/author
-    - Bulk selection tools
-    - Quick edit hover actions
-  
-  - Search and Filters
-    - Full-text search
-    - Status filters (draft/published)
-    - Date range selector
-    - Author/category filters
-  
-  - Analytics Overview
-    - Popular articles
-    - Low-performing content
-    - Outdated content alerts
-    - Search term insights
+### Loading States
+- `LoadingSpinner`: Loading indicator
+- `SkeletonLoader`: Content placeholder
+- `LoadingButton`: Action button states
 
-### 4. Customer Portal
-**Purpose**: Self-service support access for customers
+## Customer Portal Components
 
-#### Help Center
-- Layout:
-  - Hero search section at top
-  - Category grid below
-  - Popular articles sidebar
-  - Breadcrumb navigation
+### Portal Layout (`/app/(portal)/layout.tsx`)
+- **Purpose**: Customer-facing interface
+- **Components**:
+  - `PortalNav`: Simplified navigation
+  - `PortalHeader`: Branding and user menu
+- **Data Dependencies**:
+  - Portal user details
+  - Organization branding
+- **Layout**:
+  - Minimal navigation
+  - Focus on self-service
 
-- Components:
-  - Smart Search
-    - Auto-complete suggestions
-    - Recent searches
-    - Popular topics
-    - Results preview cards
-  
-  - Category Browser
-    - Visual category cards
-    - Article count badges
-    - Last updated indicators
-    - Click expands to article list
-  
-  - Article Preview Cards
-    - Title and excerpt
-    - Helpfulness rating
-    - View count
-    - Last updated date
-  
-  - Quick Links
-    - Contact support button
-    - View tickets
-    - Popular topics
-    - Community forum
+### Ticket Management (`/app/(portal)/tickets/page.tsx`)
+- **Purpose**: Customer ticket interface
+- **Components**:
+  - `TicketList`: Customer's tickets
+  - `NewTicketForm`: Create ticket
+  - `TicketDetails`: View conversation
+- **Data Dependencies**:
+  - User's tickets
+  - Support responses
+- **Interactions**:
+  - Create new tickets
+  - View ticket status
+  - Reply to support
 
-#### Ticket Management
-- Layout:
-  - List/detail split view
-  - Status filter tabs at top
-  - Create ticket button prominent
+## Initial Build Focus
+For the MVP, we will focus on:
+1. Core authentication and layout
+2. Basic ticket management
+3. Essential contact handling
+4. Simple team organization
+5. Fundamental portal features
 
-- Components:
-  - Ticket Creation Form
-    - Smart category selector
-    - Dynamic field validation
-    - File attachment support
-    - Preview/submit controls
-  
-  - Ticket List
-    - Status indicators
-    - Last update timestamps
-    - Priority badges
-    - Click expands conversation
-  
-  - Conversation View
-    - Message thread
-    - Simple reply composer
-    - File attachment support
-    - Satisfaction survey
-  
-  - Status Updates
-    - Progress indicators
-    - SLA information
-    - Next step guidance
-    - Resolution confirmation
-
-### 5. Management Interface
-**Purpose**: Operational oversight and administration
-
-#### Team Dashboard
-- Layout:
-  - KPI cards at top
-  - Team performance grid
-  - Activity feed sidebar
-  - Quick action floating button
-
-- Components:
-  - Performance Metrics
-    - Real-time stats cards
-    - Trend indicators
-    - Goal progress bars
-    - Alert indicators
-  
-  - Team Overview
-    - Agent status grid
-    - Workload distribution chart
-    - SLA compliance indicators
-    - Shift coverage view
-  
-  - Queue Health
-    - Ticket volume trends
-    - Response time metrics
-    - Backlog analysis
-    - Priority distribution
-  
-  - Resource Management
-    - Capacity planning tools
-    - Skill matrix display
-    - Training needs indicators
-    - Schedule conflicts
-
-#### Analytics Center
-- Layout:
-  - Report builder sidebar
-  - Main visualization area
-  - Saved reports library
-  - Export/share toolbar
-
-- Components:
-  - Report Builder
-    - Metric selector
-    - Dimension builder
-    - Date range picker
-    - Filter configuration
-    - Visualization options
-  
-  - Dashboard Designer
-    - Drag-drop widget layout
-    - Widget library
-    - Layout templates
-    - Auto-refresh controls
-  
-  - Data Explorer
-    - Custom query builder
-    - Saved queries library
-    - Export options
-    - Schedule reports
-  
-  - Performance Insights
-    - AI-powered analysis
-    - Anomaly detection
-    - Trend predictions
-    - Recommendation engine
-
-### 6. Settings & Configuration
-**Purpose**: System and user preferences management
-
-#### Personal Settings
-- Layout:
-  - Settings categories sidebar
-  - Main configuration area
-  - Save/reset controls at bottom
-  - Preview panel where applicable
-
-- Components:
-  - Profile Management
-    - Avatar upload/edit
-    - Contact information form
-    - Password/2FA settings
-    - Linked accounts
-    - Session management
-  
-  - Workspace Preferences
-    - Theme selection (light/dark)
-    - Layout density options
-    - Default views config
-    - Keyboard shortcuts
-    - Language preferences
-  
-  - Notification Settings
-    - Channel preferences (email/in-app)
-    - Notification types toggles
-    - Quiet hours configuration
-    - Digest frequency options
-  
-  - Personal Tooling
-    - Saved responses library
-    - Custom filters management
-    - Quick action customization
-    - Dashboard widget preferences
-
-#### Organization Settings
-- Layout:
-  - Admin navigation tabs
-  - Configuration forms
-  - Audit log sidebar
-  - Multi-step wizards for complex setups
-
-- Components:
-  - Team Management
-    - User roles/permissions editor
-    - Department structure
-    - Shift patterns setup
-    - Access control matrix
-    - Bulk user operations
-  
-  - Workflow Configuration
-    - Ticket status customization
-    - SLA policy builder
-    - Automation rules editor
-    - Custom fields manager
-    - Tag system configuration
-  
-  - Integration Hub
-    - API key management
-    - Webhook configuration
-    - Third-party integrations
-    - SSO setup
-    - Email domain settings
-  
-  - Compliance & Security
-    - Data retention policies
-    - Audit log viewer
-    - Security policy editor
-    - GDPR/Privacy settings
-    - Backup configuration
-
-  - Billing & Subscription
-    - Plan management
-    - Usage analytics
-    - Payment methods
-    - Invoice history
-    - Feature toggles
-
-## Global Elements
-
-### Navigation
-- Global Header
-  - Quick search
-  - User menu
-  - Notifications
-  - Navigation menu
-
-### Common Components
-- Search Interface
-- Notification Center
-- User Profile
-- Help Widget
-
-## Access Patterns
-- Public Routes: Authentication, Help Center
-- Agent Routes: Workspace, Ticket Management
-- Admin Routes: Settings, Analytics
-- Customer Routes: Support Portal, Ticket Submission 
+Later iterations will add:
+- Advanced filtering and search
+- Automation features
+- Analytics and reporting
+- Knowledge base integration
+- API access management 

@@ -133,6 +133,7 @@ Data is the core behind any application, and it is important to design the model
 - This step builds on the previous step, the goal is to have a complete data schema description
 - Using the data model outline created in the previous step, create a more fully fleshed out data model
 - After fleshing out the data model, it should be descriptive enough to be used to create a database schema
+- Decide on permission and access rules for each data entity. Describe the access policy in words as creating these policies are often complicated
 - IMPORTANT: During the initial build up stage, try to limit feature sprawl
 
 #### 4. Create the database schema
@@ -146,7 +147,7 @@ Data is the core behind any application, and it is important to design the model
 - Apps are large, so it is better to outline how all the core systems and features will fit together, and how they will consume the data model to display to the user before starting development
 - This document should consider the project requirements, core features & systems, and the desired user experience into account when designing the structure
 
-#### Step 1
+#### Step 1: Brainstorm the app structure
 
 Start by creating a vague outline of the front-end views the user will be exposed to. Think about which views each user role (if using roles such as admin, client, etc.) will be exposed to, and how each view changes based on who is viewing it.
 
@@ -157,7 +158,7 @@ Start by creating a vague outline of the front-end views the user will be expose
   - Who will be using this view?
   - What is the user flow expected to be like? How does a user access it?
 
-#### Step 2
+#### Step 2: Drill into the details
 
 For each part of the vague outline, drill into the details a little more
 
@@ -165,11 +166,11 @@ For each part of the vague outline, drill into the details a little more
   - What components will be needed to achieve the purpose of the front-end view?
   - What will interactions with the key components do? Will it bring up a dialog with a form? Will I need to confirm a certain action? Does it sort this table? Does it link to another page?
   - What will the general layout of the view look like? Will there be a sidebar for info or nav? Will there be a header there? Should we include a breadcrumb component?
-
 - The purpose is to establish the functionality of each view and its components
 - Iterate over each of these components as you go
+- IMPORTANT: During the initial build up stage, try to limit feature sprawl. Focus on functionality first before adding bells and whistles
 
-#### Step 3
+#### Step 3: Create the app structure
 
 - Create the app structure
 - Using the detailed outline, create a directory like structure of your app

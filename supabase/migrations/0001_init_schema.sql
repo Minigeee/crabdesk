@@ -11,14 +11,35 @@ BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 --------------------------------------------------------------------------------
+-- Custom Enum Types
+--------------------------------------------------------------------------------
+-- Ticket Status
+CREATE TYPE ticket_status AS ENUM ('open', 'pending', 'resolved', 'closed');
+
+-- Ticket Priority
+CREATE TYPE ticket_priority AS ENUM ('low', 'normal', 'high', 'urgent');
+
+-- Ticket Source
+CREATE TYPE ticket_source AS ENUM ('email', 'chat', 'portal', 'api');
+
+-- Message Sender Type
+CREATE TYPE message_sender_type AS ENUM ('contact', 'internal_user', 'system');
+
+-- Message Content Type
+CREATE TYPE message_content_type AS ENUM ('text', 'html', 'markdown');
+
+-- Article Status
+CREATE TYPE article_status AS ENUM ('draft', 'published', 'archived');
+
+--------------------------------------------------------------------------------
 -- Helper Function: current_org_id()
--- Returns the "org_id" from the user's JWT, stored in request.jwt.claims.
+-- Returns the "org_id" from the user's JWT app_metadata.
 --------------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.current_org_id()
   RETURNS uuid
   LANGUAGE sql STABLE
 AS $$
-  SELECT ((current_setting('request.jwt.claims')::jsonb)->>'org_id')::uuid
+  SELECT (auth.jwt() -> 'app_metadata' ->> 'org_id')::uuid
 $$;
 
 --------------------------------------------------------------------------------
@@ -267,9 +288,9 @@ CREATE TABLE public.tickets (
   org_id      uuid NOT NULL,
   number      bigint GENERATED ALWAYS AS IDENTITY,
   subject     varchar(255) NOT NULL,
-  status      varchar(50) NOT NULL DEFAULT 'open',
-  priority    varchar(50) NOT NULL DEFAULT 'normal',
-  source      varchar(50) NOT NULL,
+  status      ticket_status NOT NULL DEFAULT 'open',
+  priority    ticket_priority NOT NULL DEFAULT 'normal',
+  source      ticket_source NOT NULL,
   contact_id  uuid NOT NULL,
   assignee_id uuid,
   team_id     uuid,
@@ -285,13 +306,7 @@ CREATE TABLE public.tickets (
     FOREIGN KEY (assignee_id) REFERENCES public.internal_users (id),
   CONSTRAINT tickets_team_fkey
     FOREIGN KEY (team_id) REFERENCES public.teams (id),
-  CONSTRAINT tickets_number_unique UNIQUE (org_id, number),
-  CONSTRAINT ticket_status_check
-    CHECK (status IN ('open','pending','resolved','closed')),
-  CONSTRAINT ticket_priority_check
-    CHECK (priority IN ('low','normal','high','urgent')),
-  CONSTRAINT ticket_source_check
-    CHECK (source IN ('email','chat','portal','api'))
+  CONSTRAINT tickets_number_unique UNIQUE (org_id, number)
 );
 
 -- Indexes
@@ -334,10 +349,10 @@ CREATE POLICY tickets_mod
 CREATE TABLE public.messages (
   id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   ticket_id    uuid NOT NULL,
-  sender_type  varchar(20) NOT NULL,
+  sender_type  message_sender_type NOT NULL,
   sender_id    uuid NOT NULL,
   content      text NOT NULL,
-  content_type varchar(50) NOT NULL DEFAULT 'text',
+  content_type message_content_type NOT NULL DEFAULT 'text',
   is_private   boolean DEFAULT false,
   metadata     jsonb        NOT NULL DEFAULT '{}',
   created_at   timestamptz  NOT NULL DEFAULT now(),
@@ -383,7 +398,7 @@ CREATE TABLE public.articles (
   title        varchar(255) NOT NULL,
   slug         varchar(255) NOT NULL,
   content      text NOT NULL,
-  status       varchar(50) NOT NULL DEFAULT 'draft',
+  status       article_status NOT NULL DEFAULT 'draft',
   version      integer NOT NULL DEFAULT 1,
   locale       varchar(10) NOT NULL DEFAULT 'en',
   seo_metadata jsonb        NOT NULL DEFAULT '{}',
@@ -396,8 +411,6 @@ CREATE TABLE public.articles (
   CONSTRAINT articles_author_fkey
     FOREIGN KEY (author_id) REFERENCES public.internal_users (id),
   CONSTRAINT articles_slug_unique UNIQUE (org_id, slug, locale),
-  CONSTRAINT article_status_check
-    CHECK (status IN ('draft','published','archived')),
   CONSTRAINT locale_check
     CHECK (locale ~ '^[a-z]{2}(-[A-Z]{2})?$')
 );
