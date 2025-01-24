@@ -508,6 +508,7 @@ CREATE POLICY tags_mod
 CREATE TABLE public.attachments (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   org_id      uuid NOT NULL,
+  ticket_id   uuid NOT NULL,
   bucket      varchar(255)  NOT NULL,
   path        varchar(1024) NOT NULL,
   filename    varchar(255)  NOT NULL,
@@ -517,12 +518,15 @@ CREATE TABLE public.attachments (
   created_at  timestamptz   NOT NULL DEFAULT now(),
   CONSTRAINT attachments_org_fkey
     FOREIGN KEY (org_id) REFERENCES public.organizations (id),
+  CONSTRAINT attachments_ticket_fkey
+    FOREIGN KEY (ticket_id) REFERENCES public.tickets (id),
   CONSTRAINT attachment_size_check CHECK (size > 0),
   CONSTRAINT attachment_path_unique UNIQUE (bucket, path)
 );
 
 -- Indexes
 CREATE INDEX attachment_org_idx ON attachments(org_id, created_at);
+CREATE INDEX attachment_ticket_idx ON attachments(ticket_id, created_at);
 CREATE UNIQUE INDEX attachment_path_idx ON attachments(bucket, path);
 
 ALTER TABLE public.attachments ENABLE ROW LEVEL SECURITY;

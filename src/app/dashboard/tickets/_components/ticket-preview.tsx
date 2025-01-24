@@ -1,21 +1,21 @@
 'use client';
 
+import { PriorityBadge } from '@/components/tickets/priority-badge';
+import { StatusBadge } from '@/components/tickets/status-badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTicket } from '@/lib/tickets/use-tickets';
-import { ArrowUpRightIcon, UserCircle, Users } from 'lucide-react';
+import { humanize } from '@/lib/utils/text';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import { UserCircle, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useTicketQueue } from './ticket-queue-provider';
-import { StatusBadge } from '@/components/tickets/status-badge'
-import { PriorityBadge } from '@/components/tickets/priority-badge'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import dayjs from 'dayjs'
-import relativeTime from 'dayjs/plugin/relativeTime'
-import { humanize } from '@/lib/utils/text'
 
-dayjs.extend(relativeTime)
+dayjs.extend(relativeTime);
 
 export function TicketPreview() {
   const { previewTicketId } = useTicketQueue();
@@ -23,7 +23,7 @@ export function TicketPreview() {
 
   if (!previewTicketId) {
     return (
-      <div className='flex h-[600px] items-center justify-center text-center text-sm text-muted-foreground'>
+      <div className='flex h-full items-center justify-center text-center text-sm text-muted-foreground'>
         Select a ticket to view details
       </div>
     );
@@ -35,31 +35,31 @@ export function TicketPreview() {
 
   if (!ticket) {
     return (
-      <div className='flex h-[600px] items-center justify-center text-center text-sm text-muted-foreground'>
+      <div className='flex h-full items-center justify-center text-center text-sm text-muted-foreground'>
         Ticket not found
       </div>
     );
   }
 
   return (
-    <div className='flex h-[600px] flex-col'>
+    <div className='flex h-full flex-col'>
       {/* Header */}
       <div className='border-b p-4'>
         <div className='mb-2 flex items-center justify-between'>
           <Badge variant='outline'>#{ticket.number}</Badge>
-          <Link
-            href={`/dashboard/tickets/${ticket.number}`}
-            className='text-muted-foreground hover:text-foreground'
-          >
-            <ArrowUpRightIcon className='h-4 w-4' />
-          </Link>
         </div>
         <h3 className='text-lg font-semibold'>{ticket.subject}</h3>
+        <Link
+          href={`/dashboard/tickets/${ticket.number}`}
+          className='text-sm text-muted-foreground hover:text-foreground'
+        >
+          View Details
+        </Link>
       </div>
 
       {/* Content */}
-      <ScrollArea className='flex-1 p-4'>
-        <div className='space-y-4'>
+      <ScrollArea className='flex-1'>
+        <div className='space-y-6 px-4 py-6'>
           {/* Status and Priority */}
           <div className='flex items-center justify-between'>
             <div className='space-y-1'>
@@ -138,7 +138,7 @@ export function TicketPreview() {
 
 function TicketPreviewSkeleton() {
   return (
-    <div className='flex h-[600px] flex-col'>
+    <div className='flex h-full flex-col'>
       <div className='border-b p-4'>
         <div className='mb-2 flex items-center justify-between'>
           <Skeleton className='h-5 w-16' />

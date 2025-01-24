@@ -108,6 +108,7 @@ export type Database = {
           org_id: string
           path: string
           size: number
+          ticket_id: string
         }
         Insert: {
           bucket: string
@@ -119,6 +120,7 @@ export type Database = {
           org_id: string
           path: string
           size: number
+          ticket_id: string
         }
         Update: {
           bucket?: string
@@ -130,6 +132,7 @@ export type Database = {
           org_id?: string
           path?: string
           size?: number
+          ticket_id?: string
         }
         Relationships: [
           {
@@ -137,6 +140,13 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attachments_ticket_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
             referencedColumns: ["id"]
           },
         ]
@@ -649,6 +659,14 @@ export type Database = {
           _ticket_id: string
         }
         Returns: string
+      }
+      is_org_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_system_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
     }
     Enums: {

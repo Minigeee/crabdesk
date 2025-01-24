@@ -315,10 +315,11 @@
 - NOTES: Used for ticket categorization
 
 ### Attachments
-**Purpose**: Stores file metadata
+**Purpose**: Stores file metadata for ticket attachments
 **Key Attributes**:
 - id: uuid PRIMARY KEY
 - org_id: uuid NOT NULL
+- ticket_id: uuid NOT NULL
 - bucket: varchar(255) NOT NULL
 - path: varchar(1024) NOT NULL
 - filename: varchar(255) NOT NULL
@@ -328,10 +329,12 @@
 - created_at: timestamptz NOT NULL DEFAULT now()
 **Relationships**: 
 - FOREIGN KEY (org_id) REFERENCES organizations(id)
+- FOREIGN KEY (ticket_id) REFERENCES tickets(id)
 **Constraints**: 
 - CHECK (size > 0)
 **Indexes**: 
 - INDEX attachment_org_idx ON attachments(org_id, created_at)
+- INDEX attachment_ticket_idx ON attachments(ticket_id, created_at)
 - UNIQUE INDEX attachment_path_idx ON attachments(bucket, path)
 **Security Policies**:
 - READ: Users can read attachments on tickets they can access

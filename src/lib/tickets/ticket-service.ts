@@ -34,6 +34,11 @@ export type TicketQueryOptions = {
   includeRelations?: boolean;
 };
 
+export type FileAttachment = {
+  file: File;
+  filename: string;
+};
+
 export class TicketService {
   constructor(
     private readonly supabase: SupabaseClient<Database>,
@@ -159,17 +164,69 @@ export class TicketService {
     return data as unknown as Rels extends true ? TicketWithRelations : Ticket;
   }
 
-  async createTicket(ticket: TicketInsert): Promise<Ticket> {
-    const { data, error } = await this.supabase
+  private async uploadFile(file: File, ticketId: string): Promise<Tables<'attachments'>> {
+    const supabase = this.supabase;
+    const filename = `${Date.now()}-${file.name}`;
+    const path = `tickets/${ticketId}/${filename}`;
+
+    // Upload the file
+    const { error: uploadError } = await supabase.storage
+      .from('attachments')
+      .upload(path, file);
+
+    if (uploadError) throw uploadError;
+
+    // Create attachment record
+    const { data: attachment, error: attachmentError } = await supabase
+      .from('attachments')
+      .insert({
+        org_id: this.orgId,
+        ticket_id: ticketId,
+        bucket: 'attachments',
+        path,
+        filename: file.name,
+        size: file.size,
+        mime_type: file.type,
+      })
+      .select()
+      .single();
+
+    if (attachmentError) throw attachmentError;
+    return attachment;
+  }
+
+  async createTicket(
+    ticket: TicketInsert,
+    attachments?: FileAttachment[]
+  ): Promise<Ticket> {
+    const supabase = this.supabase;
+
+    // Create the ticket first
+    console.log('createTicket', ticket, attachments);
+    const { data: newTicket, error: ticketError } = await supabase
       .from('tickets')
       .insert({ ...ticket, org_id: this.orgId })
       .select()
       .single();
+    console.log('newTicket', newTicket);
 
-    if (error) throw error;
-    if (!data) throw new Error('Failed to create ticket');
+    if (ticketError) throw ticketError;
+    if (!newTicket) throw new Error('Failed to create ticket');
 
-    return data;
+    // If we have attachments, upload them
+    if (attachments?.length) {
+      try {
+        await Promise.all(
+          attachments.map(({ file }) => this.uploadFile(file, newTicket.id))
+        );
+      } catch (error) {
+        // If attachment upload fails, we should probably delete the ticket
+        await supabase.from('tickets').delete().eq('id', newTicket.id);
+        throw error;
+      }
+    }
+
+    return newTicket;
   }
 
   async updateTicket(id: string, update: TicketUpdate): Promise<Ticket> {

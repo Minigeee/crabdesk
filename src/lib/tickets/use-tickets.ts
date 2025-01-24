@@ -15,6 +15,7 @@ import {
   type TicketQueryOptions,
   type TicketUpdate,
   type TicketWithRelations,
+  type FileAttachment,
 } from './ticket-service';
 
 // Query keys
@@ -134,9 +135,15 @@ export function useCreateTicket() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (newTicket: TicketInsert) => {
+    mutationFn: async ({
+      ticket,
+      attachments,
+    }: {
+      ticket: TicketInsert;
+      attachments?: FileAttachment[];
+    }) => {
       assert(ticketService, 'Ticket service is not initialized');
-      return ticketService.createTicket(newTicket);
+      return ticketService.createTicket(ticket, attachments);
     },
     onSuccess: () => {
       // Invalidate all ticket lists

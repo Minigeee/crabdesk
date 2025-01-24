@@ -18,7 +18,7 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { KeyboardEvent, useCallback, useState } from 'react';
 import { useTicketQueue } from './ticket-queue-provider';
 
 dayjs.extend(relativeTime);
@@ -32,8 +32,8 @@ type SortButtonProps = {
 function SortButton({ active, ascending, onSort }: SortButtonProps) {
   return (
     <Button
-      variant="ghost"
-      size="sm"
+      variant='ghost'
+      size='sm'
       className={cn(
         '-ml-3 h-8',
         active
@@ -47,12 +47,12 @@ function SortButton({ active, ascending, onSort }: SortButtonProps) {
     >
       {active ? (
         ascending ? (
-          <ArrowUp className="h-4 w-4" />
+          <ArrowUp className='h-4 w-4' />
         ) : (
-          <ArrowDown className="h-4 w-4" />
+          <ArrowDown className='h-4 w-4' />
         )
       ) : (
-        <ArrowUpDown className="h-4 w-4" />
+        <ArrowUpDown className='h-4 w-4' />
       )}
     </Button>
   );
@@ -145,8 +145,8 @@ export function TicketTable() {
   );
 
   // Handle keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLDivElement>) => {
       switch (e.key) {
         case 'ArrowUp':
         case 'ArrowDown': {
@@ -192,21 +192,19 @@ export function TicketTable() {
           break;
         }
       }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [
-    tickets,
-    focusedTicketId,
-    selectedTickets,
-    toggleTicket,
-    setPreviewTicketId,
-  ]);
+    },
+    [
+      tickets,
+      focusedTicketId,
+      selectedTickets,
+      toggleTicket,
+      setPreviewTicketId,
+    ]
+  );
 
   return (
     <div className='relative'>
-      <Table>
+      <Table onKeyDown={handleKeyDown}>
         <TableHeader>
           <TableRow>
             <TableHead className='w-[40px] p-0'>
@@ -255,6 +253,9 @@ export function TicketTable() {
               )}
               onClick={() => setPreviewTicketId(ticket.id)}
               onFocus={() => setFocusedTicketId(ticket.id)}
+              onDoubleClick={() =>
+                router.push(`/dashboard/tickets/${ticket.number}`)
+              }
               tabIndex={0}
             >
               <TableCell className='p-0'>
