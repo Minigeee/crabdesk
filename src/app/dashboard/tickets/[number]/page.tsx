@@ -71,6 +71,7 @@ export default async function TicketPage({ params }: PageProps) {
           <TicketActions ticket={ticket} />
 
           <ContactPanel
+            ticketId={ticket.id}
             contact={ticket.contact}
             recentTickets={ticket.recentContactTickets}
           />

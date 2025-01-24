@@ -3,6 +3,7 @@
 
 import { ThemeProvider } from 'next-themes';
 // Since QueryClientProvider relies on useContext under the hood, we have to put 'use client' on top
+import { Toaster } from '@/components/ui/toaster';
 import {
   isServer,
   QueryClient,
@@ -51,7 +52,10 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       enableSystem
       disableTransitionOnChange
     >
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        {children}
+        <Toaster />
+      </QueryClientProvider>
     </ThemeProvider>
   );
 }

@@ -102,7 +102,7 @@
 - INDEX contact_portal_idx ON contacts(portal_user_id) WHERE portal_user_id IS NOT NULL
 - INDEX contact_seen_idx ON contacts(org_id, last_seen_at)
 **Security Policies**:
-- READ: Internal users can read contacts in their organization
+- READ: Internal users can read contacts in their organization, portal users can read their own contacts
 - INSERT: Internal users can create contacts in their organization
 - UPDATE: Internal users can update contacts in their organization
 - DELETE: Organization admins can delete contacts (soft delete preferred)
@@ -207,8 +207,8 @@
 - INDEX ticket_assignee_idx ON tickets(assignee_id, status)
 - INDEX ticket_team_idx ON tickets(team_id, status)
 **Security Policies**:
-- READ: Internal users can read tickets in their org, assigned to them, or their team
-- INSERT: Internal users and portal users can create tickets
+- READ: Internal users can read tickets in their org, assigned to them, or their team, portal users can read their own tickets
+- INSERT: Internal users and portal users can create tickets, portal users can only create tickets for their own contacts
 - UPDATE: Assignee, team members, and admins can update tickets
 - DELETE: Organization admins can delete tickets (soft delete preferred)
 - NOTES: Portal users can only read/update their own tickets

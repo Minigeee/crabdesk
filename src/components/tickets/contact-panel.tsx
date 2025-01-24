@@ -1,24 +1,57 @@
 'use client';
 
+import { generatePortalLink } from '@/app/actions';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
 import type { Tables } from '@/lib/database.types';
 import { formatDistanceToNow } from 'date-fns';
+import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { useCallback, useState } from 'react';
 import { StatusBadge } from './status-badge';
 
 interface ContactPanelProps {
+  ticketId: string;
   contact: Tables<'contacts'>;
   recentTickets: Tables<'tickets'>[];
   onEditContact?: () => void;
 }
 
 export function ContactPanel({
+  ticketId,
   contact,
   recentTickets,
   onEditContact,
 }: ContactPanelProps) {
+  const [isGenerating, setIsGenerating] = useState(false);
+  const { toast } = useToast();
+
+  const handleGenerateLink = useCallback(async () => {
+    setIsGenerating(true);
+    try {
+      const result = await generatePortalLink(contact.id, ticketId);
+
+      if (result.error || !result.link) throw new Error(result.error);
+
+      // Copy to clipboard
+      await navigator.clipboard.writeText(result.link);
+      toast({
+        title: 'Portal link copied!',
+        description: 'The link has been copied to your clipboard.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Failed to generate link',
+        description: 'Please try again later.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [contact.id, ticketId]);
+
   return (
     <div className='space-y-6'>
       <Card className='p-4'>
@@ -59,6 +92,24 @@ export function ContactPanel({
                 addSuffix: true,
               })}
             </span>
+          </div>
+          <div className='pt-2'>
+            <Button
+              variant='secondary'
+              size='sm'
+              className='w-full'
+              onClick={handleGenerateLink}
+              disabled={isGenerating}
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                  Generating link...
+                </>
+              ) : (
+                'Generate Portal Link'
+              )}
+            </Button>
           </div>
         </div>
       </Card>

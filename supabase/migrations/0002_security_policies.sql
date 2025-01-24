@@ -43,6 +43,105 @@ BEGIN
     END LOOP;
 END $$;
 
+
+--------------------------------------------------------------------------------
+-- Helper Functions for Auth
+--------------------------------------------------------------------------------
+
+-- Get the org_roles map from JWT app_metadata
+CREATE OR REPLACE FUNCTION public.get_org_roles()
+  RETURNS jsonb
+  LANGUAGE sql STABLE
+AS $$
+  SELECT COALESCE(auth.jwt() -> 'app_metadata' -> 'org_roles', '{}'::jsonb)
+$$;
+
+-- Check if user has access to an org with any role
+CREATE OR REPLACE FUNCTION public.has_org_access(org_id uuid)
+  RETURNS boolean
+  LANGUAGE sql STABLE
+AS $$
+  SELECT public.get_org_roles() ? org_id::text
+$$;
+
+-- Get user's role for a specific org
+CREATE OR REPLACE FUNCTION public.get_org_role(org_id uuid)
+  RETURNS user_role
+  LANGUAGE sql STABLE
+AS $$
+  SELECT (public.get_org_roles() ->> org_id::text)::user_role
+$$;
+
+-- Check if user is a system admin
+CREATE OR REPLACE FUNCTION public.is_system_admin()
+  RETURNS boolean
+  LANGUAGE sql STABLE
+AS $$
+  SELECT (auth.jwt() -> 'app_metadata' ->> 'is_system_admin')::boolean
+$$;
+
+-- Check if user is an internal user (admin or regular) for an org
+CREATE OR REPLACE FUNCTION public.is_internal_user(org_id uuid)
+  RETURNS boolean
+  LANGUAGE sql STABLE
+AS $$
+  SELECT public.get_org_role(org_id) IN ('internal_user', 'internal_admin')
+$$;
+
+-- Check if user is an internal admin for an org
+CREATE OR REPLACE FUNCTION public.is_internal_admin(org_id uuid)
+  RETURNS boolean
+  LANGUAGE sql STABLE
+AS $$
+  SELECT public.get_org_role(org_id) = 'internal_admin'
+$$;
+
+-- Check if user is a portal user for an org
+CREATE OR REPLACE FUNCTION public.is_portal_user(org_id uuid)
+  RETURNS boolean
+  LANGUAGE sql STABLE
+AS $$
+  SELECT public.get_org_role(org_id) = 'portal_user'
+$$;
+
+-- Helper Function to avoid recursion in RLS policies
+CREATE OR REPLACE FUNCTION public.fetch_team_org_id(_team_id uuid)
+  RETURNS uuid
+  LANGUAGE sql
+  STABLE
+  SECURITY DEFINER
+AS $$
+  SELECT org_id FROM public.teams
+   WHERE id = _team_id
+   LIMIT 1
+$$;
+
+-- Helper Function to avoid recursion in RLS policies
+CREATE OR REPLACE FUNCTION public.fetch_ticket_org_id(_ticket_id uuid)
+  RETURNS uuid
+  LANGUAGE sql
+  STABLE
+  SECURITY DEFINER
+AS $$
+  SELECT org_id FROM public.tickets
+   WHERE id = _ticket_id
+   LIMIT 1
+$$;
+
+-- Helper Function to get auth_user_id from a contact through portal_user
+CREATE OR REPLACE FUNCTION public.get_contact_auth_user_id(_contact_id uuid)
+  RETURNS uuid
+  LANGUAGE sql
+  STABLE
+  SECURITY DEFINER
+AS $$
+  SELECT pu.auth_user_id
+  FROM contacts c
+  JOIN portal_users pu ON c.portal_user_id = pu.id
+  WHERE c.id = _contact_id
+  LIMIT 1
+$$;
+
 -------------------------------------------------------------------------------
 -- Helper Functions to Check Admin Roles
 -- (Placeholders; adjust claim keys to match your JWT payload)
@@ -53,7 +152,7 @@ CREATE OR REPLACE FUNCTION public.is_system_admin()
   STABLE
 AS $$
   -- Expects your JWT to have { "role": "system_admin" } set for system admins.
-  SELECT (auth.jwt() -> 'user_metadata' ->> 'role')::text = 'system_admin'
+  SELECT (auth.jwt() -> 'app_metadata' ->> 'role')::text = 'system_admin'
 $$;
 
 CREATE OR REPLACE FUNCTION public.is_org_admin()
@@ -62,13 +161,13 @@ CREATE OR REPLACE FUNCTION public.is_org_admin()
   STABLE
 AS $$
   -- Expects your JWT to have { "is_admin": true, "org_id": "<UUID>" } set for org admins.
-  SELECT (auth.jwt() -> 'user_metadata' ->> 'is_admin')::boolean = true
+  SELECT (auth.jwt() -> 'app_metadata' ->> 'is_admin')::boolean = true
 $$;
 
 -------------------------------------------------------------------------------
 -- 1) organizations
 -- Security Policies:
---   READ: Authenticated users can read organizations they belong to (via internal_users)
+--   READ: Users can read organizations they have access to
 --   INSERT: Only system admins can create organizations
 --   UPDATE: Organization admins can update their own organization
 --   DELETE: Only system admins can delete organizations
@@ -79,7 +178,7 @@ CREATE POLICY organizations_read
   FOR SELECT
   TO authenticated
   USING (
-    id = public.current_org_id()
+    public.has_org_access(id)
   );
 
 -- INSERT
@@ -97,12 +196,10 @@ CREATE POLICY organizations_update
   FOR UPDATE
   TO authenticated
   USING (
-    id = public.current_org_id()
-    AND public.is_org_admin()
+    public.is_internal_admin(id)
   )
   WITH CHECK (
-    id = public.current_org_id()
-    AND public.is_org_admin()
+    public.is_internal_admin(id)
   );
 
 -- DELETE
@@ -119,8 +216,8 @@ CREATE POLICY organizations_delete
 -- Security Policies:
 --   READ: Users can read internal_users within their organization
 --   INSERT: Organization admins can create new internal users
---   UPDATE: Users can update their own profile; admins can update any user in their org
---   DELETE: Organization admins can delete users (soft delete preferred)
+--   UPDATE: Users can update their own profile, admins can update any user in their org
+--   DELETE: Organization admins can delete users
 -------------------------------------------------------------------------------
 -- READ
 CREATE POLICY internal_users_read
@@ -128,7 +225,7 @@ CREATE POLICY internal_users_read
   FOR SELECT
   TO authenticated
   USING (
-    org_id = public.current_org_id()
+    public.is_internal_user(org_id)
   );
 
 -- INSERT
@@ -137,8 +234,7 @@ CREATE POLICY internal_users_insert
   FOR INSERT
   TO authenticated
   WITH CHECK (
-    org_id = public.current_org_id()
-    AND public.is_org_admin()
+    public.is_internal_admin(org_id)
   );
 
 -- UPDATE
@@ -147,19 +243,12 @@ CREATE POLICY internal_users_update
   FOR UPDATE
   TO authenticated
   USING (
-    org_id = public.current_org_id()
-    AND (
-      -- same user updating their own record
-      id = auth.uid()
-      OR public.is_org_admin()
-    )
+    public.is_internal_user(org_id) AND
+    (auth.uid() = auth_user_id OR public.is_internal_admin(org_id))
   )
   WITH CHECK (
-    org_id = public.current_org_id()
-    AND (
-      id = auth.uid()
-      OR public.is_org_admin()
-    )
+    public.is_internal_user(org_id) AND
+    (auth.uid() = auth_user_id OR public.is_internal_admin(org_id))
   );
 
 -- DELETE
@@ -168,17 +257,16 @@ CREATE POLICY internal_users_delete
   FOR DELETE
   TO authenticated
   USING (
-    org_id = public.current_org_id()
-    AND public.is_org_admin()
+    public.is_internal_admin(org_id)
   );
 
 -------------------------------------------------------------------------------
 -- 3) contacts
 -- Security Policies:
---   READ: Internal users can read contacts in their organization
+--   READ: Internal users can read contacts in their organization and portal users can read their own contacts
 --   INSERT: Internal users can create contacts in their organization
 --   UPDATE: Internal users can update contacts in their organization
---   DELETE: Organization admins can delete contacts (soft delete preferred)
+--   DELETE: Organization admins can delete contacts
 -------------------------------------------------------------------------------
 -- READ
 CREATE POLICY contacts_read
@@ -186,7 +274,8 @@ CREATE POLICY contacts_read
   FOR SELECT
   TO authenticated
   USING (
-    org_id = public.current_org_id()
+    public.is_internal_user(org_id) OR
+    (public.is_portal_user(org_id) AND public.get_contact_auth_user_id(id) = auth.uid())
   );
 
 -- INSERT
@@ -195,7 +284,7 @@ CREATE POLICY contacts_insert
   FOR INSERT
   TO authenticated
   WITH CHECK (
-    org_id = public.current_org_id()
+    public.is_internal_user(org_id)
   );
 
 -- UPDATE
@@ -204,10 +293,10 @@ CREATE POLICY contacts_update
   FOR UPDATE
   TO authenticated
   USING (
-    org_id = public.current_org_id()
+    public.is_internal_user(org_id)
   )
   WITH CHECK (
-    org_id = public.current_org_id()
+    public.is_internal_user(org_id)
   );
 
 -- DELETE
@@ -216,14 +305,13 @@ CREATE POLICY contacts_delete
   FOR DELETE
   TO authenticated
   USING (
-    org_id = public.current_org_id()
-    AND public.is_org_admin()
+    public.is_internal_admin(org_id)
   );
 
 -------------------------------------------------------------------------------
 -- 4) portal_users
 -- Security Policies:
---   READ: Internal users can read portal users in their org
+--   READ: Internal users can read all portal users in their org
 --   INSERT: Internal users can create portal users
 --   UPDATE: Internal users can update portal users, users can update their own
 --   DELETE: Organization admins can delete portal users
@@ -234,7 +322,8 @@ CREATE POLICY portal_users_read
   FOR SELECT
   TO authenticated
   USING (
-    org_id = public.current_org_id()
+    public.is_internal_user(org_id) OR
+    (public.is_portal_user(org_id) AND auth.uid() = auth_user_id)
   );
 
 -- INSERT
@@ -243,7 +332,7 @@ CREATE POLICY portal_users_insert
   FOR INSERT
   TO authenticated
   WITH CHECK (
-    org_id = public.current_org_id()
+    public.is_internal_user(org_id)
   );
 
 -- UPDATE
@@ -252,11 +341,12 @@ CREATE POLICY portal_users_update
   FOR UPDATE
   TO authenticated
   USING (
-    org_id = public.current_org_id()
+    public.is_internal_user(org_id) OR
+    (public.is_portal_user(org_id) AND auth.uid() = auth_user_id)
   )
   WITH CHECK (
-    org_id = public.current_org_id()
-    -- refine if only the same user or admins can update
+    public.is_internal_user(org_id) OR
+    (public.is_portal_user(org_id) AND auth.uid() = auth_user_id)
   );
 
 -- DELETE
@@ -265,8 +355,7 @@ CREATE POLICY portal_users_delete
   FOR DELETE
   TO authenticated
   USING (
-    org_id = public.current_org_id()
-    AND public.is_org_admin()
+    public.is_internal_admin(org_id)
   );
 
 -------------------------------------------------------------------------------
@@ -283,7 +372,7 @@ CREATE POLICY teams_read
   FOR SELECT
   TO authenticated
   USING (
-    org_id = public.current_org_id()
+    public.is_internal_user(org_id)
   );
 
 -- INSERT
@@ -292,8 +381,7 @@ CREATE POLICY teams_insert
   FOR INSERT
   TO authenticated
   WITH CHECK (
-    org_id = public.current_org_id()
-    AND public.is_org_admin()
+    public.is_internal_admin(org_id)
   );
 
 -- UPDATE
@@ -302,12 +390,10 @@ CREATE POLICY teams_update
   FOR UPDATE
   TO authenticated
   USING (
-    org_id = public.current_org_id()
+    public.is_internal_admin(org_id)
   )
   WITH CHECK (
-    org_id = public.current_org_id()
-    -- refine for team leader check if needed
-    AND public.is_org_admin()
+    public.is_internal_admin(org_id)
   );
 
 -- DELETE
@@ -316,8 +402,7 @@ CREATE POLICY teams_delete
   FOR DELETE
   TO authenticated
   USING (
-    org_id = public.current_org_id()
-    AND public.is_org_admin()
+    public.is_internal_admin(org_id)
   );
 
 -------------------------------------------------------------------------------
@@ -334,7 +419,7 @@ CREATE POLICY team_members_read
   FOR SELECT
   TO authenticated
   USING (
-    public.fetch_team_org_id(team_id) = public.current_org_id()
+    public.is_internal_user(public.fetch_team_org_id(team_id))
   );
 
 -- INSERT
@@ -343,9 +428,7 @@ CREATE POLICY team_members_insert
   FOR INSERT
   TO authenticated
   WITH CHECK (
-    public.fetch_team_org_id(team_id) = public.current_org_id()
-    AND public.is_org_admin()
-    -- refine for team leader checks as needed
+    public.is_internal_admin(public.fetch_team_org_id(team_id))
   );
 
 -- UPDATE
@@ -354,12 +437,10 @@ CREATE POLICY team_members_update
   FOR UPDATE
   TO authenticated
   USING (
-    public.fetch_team_org_id(team_id) = public.current_org_id()
+    public.is_internal_admin(public.fetch_team_org_id(team_id))
   )
   WITH CHECK (
-    public.fetch_team_org_id(team_id) = public.current_org_id()
-    AND public.is_org_admin()
-    -- refine for team leader checks as needed
+    public.is_internal_admin(public.fetch_team_org_id(team_id))
   );
 
 -- DELETE
@@ -368,17 +449,16 @@ CREATE POLICY team_members_delete
   FOR DELETE
   TO authenticated
   USING (
-    public.fetch_team_org_id(team_id) = public.current_org_id()
-    AND public.is_org_admin()
+    public.is_internal_admin(public.fetch_team_org_id(team_id))
   );
 
 -------------------------------------------------------------------------------
 -- 7) tickets
 -- Security Policies:
---   READ: Internal users can read tickets in their org, assigned to them or team
---   INSERT: Internal users and portal users can create tickets
---   UPDATE: Assignee, team members, and admins can update tickets
---   DELETE: Organization admins can delete tickets (soft delete preferred)
+--   READ: Internal users can read tickets in their org, portal users their own
+--   INSERT: Internal users and portal users can create tickets, portal users can only create tickets for their own contacts
+--   UPDATE: Internal users can update tickets
+--   DELETE: Organization admins can delete tickets
 -------------------------------------------------------------------------------
 -- READ
 CREATE POLICY tickets_read
@@ -386,7 +466,8 @@ CREATE POLICY tickets_read
   FOR SELECT
   TO authenticated
   USING (
-    org_id = public.current_org_id()
+    public.is_internal_user(org_id) OR
+    (public.is_portal_user(org_id) AND public.get_contact_auth_user_id(contact_id) = auth.uid())
   );
 
 -- INSERT
@@ -395,7 +476,8 @@ CREATE POLICY tickets_insert
   FOR INSERT
   TO authenticated
   WITH CHECK (
-    org_id = public.current_org_id()
+    (public.is_internal_user(org_id)) OR
+    (public.is_portal_user(org_id) AND public.get_contact_auth_user_id(contact_id) = auth.uid())
   );
 
 -- UPDATE
@@ -404,12 +486,10 @@ CREATE POLICY tickets_update
   FOR UPDATE
   TO authenticated
   USING (
-    org_id = public.current_org_id()
-    -- refine for who is assigned or in team
+    public.is_internal_user(org_id)
   )
   WITH CHECK (
-    org_id = public.current_org_id()
-    -- refine for who is assigned or in team or org admin
+    public.is_internal_user(org_id)
   );
 
 -- DELETE
@@ -418,8 +498,7 @@ CREATE POLICY tickets_delete
   FOR DELETE
   TO authenticated
   USING (
-    org_id = public.current_org_id()
-    AND public.is_org_admin()
+    public.is_internal_admin(org_id)
   );
 
 -------------------------------------------------------------------------------
@@ -436,7 +515,11 @@ CREATE POLICY messages_read
   FOR SELECT
   TO authenticated
   USING (
-    public.fetch_ticket_org_id(ticket_id) = public.current_org_id()
+    public.is_internal_user(public.fetch_ticket_org_id(ticket_id)) OR
+    (public.is_portal_user(public.fetch_ticket_org_id(ticket_id)) AND ticket_id IN (
+      SELECT t.id FROM tickets t
+      WHERE public.get_contact_auth_user_id(t.contact_id) = auth.uid()
+    ))
   );
 
 -- INSERT
@@ -445,7 +528,11 @@ CREATE POLICY messages_insert
   FOR INSERT
   TO authenticated
   WITH CHECK (
-    public.fetch_ticket_org_id(ticket_id) = public.current_org_id()
+    public.is_internal_user(public.fetch_ticket_org_id(ticket_id)) OR
+    (public.is_portal_user(public.fetch_ticket_org_id(ticket_id)) AND ticket_id IN (
+      SELECT t.id FROM tickets t
+      WHERE public.get_contact_auth_user_id(t.contact_id) = auth.uid()
+    ))
   );
 
 -- UPDATE
@@ -454,12 +541,12 @@ CREATE POLICY messages_update
   FOR UPDATE
   TO authenticated
   USING (
-    public.fetch_ticket_org_id(ticket_id) = public.current_org_id()
-    -- refine to check if sender matches
+    public.is_internal_user(public.fetch_ticket_org_id(ticket_id)) AND
+    created_at > now() - interval '5 minutes'
   )
   WITH CHECK (
-    public.fetch_ticket_org_id(ticket_id) = public.current_org_id()
-    -- refine to check if sender matches
+    public.is_internal_user(public.fetch_ticket_org_id(ticket_id)) AND
+    created_at > now() - interval '5 minutes'
   );
 
 -- DELETE
@@ -467,13 +554,10 @@ CREATE POLICY messages_delete
   ON public.messages
   FOR DELETE
   TO authenticated
-  USING (
-    FALSE
-  ); 
--- or do not create a policy for delete at all, if fully disallowed
+  USING (FALSE);
 
 -------------------------------------------------------------------------------
--- 9) articles (Knowledge Base)
+-- 9) articles
 -- Security Policies:
 --   READ: Published articles visible to all users in org, drafts to internal users
 --   INSERT: Internal users can create articles
@@ -486,7 +570,8 @@ CREATE POLICY articles_read
   FOR SELECT
   TO authenticated
   USING (
-    org_id = public.current_org_id()
+    (status = 'published' AND public.has_org_access(org_id)) OR
+    public.is_internal_user(org_id)
   );
 
 -- INSERT
@@ -495,9 +580,7 @@ CREATE POLICY articles_insert
   FOR INSERT
   TO authenticated
   WITH CHECK (
-    org_id = public.current_org_id()
-    AND public.is_org_admin() = true
-    -- or refine for any internal user
+    public.is_internal_user(org_id)
   );
 
 -- UPDATE
@@ -506,11 +589,12 @@ CREATE POLICY articles_update
   FOR UPDATE
   TO authenticated
   USING (
-    org_id = public.current_org_id()
+    public.is_internal_user(org_id) AND
+    (author_id = auth.uid() OR public.is_internal_admin(org_id))
   )
   WITH CHECK (
-    org_id = public.current_org_id()
-    -- refine for author or admin
+    public.is_internal_user(org_id) AND
+    (author_id = auth.uid() OR public.is_internal_admin(org_id))
   );
 
 -- DELETE
@@ -519,8 +603,7 @@ CREATE POLICY articles_delete
   FOR DELETE
   TO authenticated
   USING (
-    org_id = public.current_org_id()
-    AND public.is_org_admin()
+    public.is_internal_admin(org_id)
   );
 
 -------------------------------------------------------------------------------
@@ -537,7 +620,7 @@ CREATE POLICY skills_read
   FOR SELECT
   TO authenticated
   USING (
-    org_id = public.current_org_id()
+    public.is_internal_user(org_id)
   );
 
 -- INSERT
@@ -546,8 +629,7 @@ CREATE POLICY skills_insert
   FOR INSERT
   TO authenticated
   WITH CHECK (
-    org_id = public.current_org_id()
-    AND public.is_org_admin()
+    public.is_internal_admin(org_id)
   );
 
 -- UPDATE
@@ -556,12 +638,10 @@ CREATE POLICY skills_update
   FOR UPDATE
   TO authenticated
   USING (
-    org_id = public.current_org_id()
-    AND public.is_org_admin()
+    public.is_internal_admin(org_id)
   )
   WITH CHECK (
-    org_id = public.current_org_id()
-    AND public.is_org_admin()
+    public.is_internal_admin(org_id)
   );
 
 -- DELETE
@@ -570,8 +650,7 @@ CREATE POLICY skills_delete
   FOR DELETE
   TO authenticated
   USING (
-    org_id = public.current_org_id()
-    AND public.is_org_admin()
+    public.is_internal_admin(org_id)
   );
 
 -------------------------------------------------------------------------------
@@ -588,7 +667,7 @@ CREATE POLICY tags_read
   FOR SELECT
   TO authenticated
   USING (
-    org_id = public.current_org_id()
+    public.has_org_access(org_id)
   );
 
 -- INSERT
@@ -597,9 +676,7 @@ CREATE POLICY tags_insert
   FOR INSERT
   TO authenticated
   WITH CHECK (
-    org_id = public.current_org_id()
-    AND public.is_org_admin() = true
-    -- or refine for general internal user if desired
+    public.is_internal_user(org_id)
   );
 
 -- UPDATE
@@ -608,10 +685,10 @@ CREATE POLICY tags_update
   FOR UPDATE
   TO authenticated
   USING (
-    org_id = public.current_org_id()
+    public.is_internal_user(org_id)
   )
   WITH CHECK (
-    org_id = public.current_org_id()
+    public.is_internal_user(org_id)
   );
 
 -- DELETE
@@ -620,8 +697,7 @@ CREATE POLICY tags_delete
   FOR DELETE
   TO authenticated
   USING (
-    org_id = public.current_org_id()
-    AND public.is_org_admin()
+    public.is_internal_admin(org_id)
   );
 
 -------------------------------------------------------------------------------
@@ -638,7 +714,11 @@ CREATE POLICY attachments_read
   FOR SELECT
   TO authenticated
   USING (
-    org_id = public.current_org_id()
+    public.is_internal_user(org_id) OR
+    (public.is_portal_user(org_id) AND ticket_id IN (
+      SELECT t.id FROM tickets t
+      WHERE public.get_contact_auth_user_id(t.contact_id) = auth.uid()
+    ))
   );
 
 -- INSERT
@@ -647,7 +727,11 @@ CREATE POLICY attachments_insert
   FOR INSERT
   TO authenticated
   WITH CHECK (
-    org_id = public.current_org_id()
+    public.is_internal_user(org_id) OR
+    (public.is_portal_user(org_id) AND ticket_id IN (
+      SELECT t.id FROM tickets t
+      WHERE public.get_contact_auth_user_id(t.contact_id) = auth.uid()
+    ))
   );
 
 -- UPDATE
@@ -655,11 +739,8 @@ CREATE POLICY attachments_update
   ON public.attachments
   FOR UPDATE
   TO authenticated
-  USING (
-    FALSE
-  )
+  USING (FALSE)
   WITH CHECK (FALSE);
--- or remove the policy entirely if no updates are allowed
 
 -- DELETE
 CREATE POLICY attachments_delete
@@ -667,8 +748,7 @@ CREATE POLICY attachments_delete
   FOR DELETE
   TO authenticated
   USING (
-    org_id = public.current_org_id()
-    AND public.is_org_admin()
+    public.is_internal_admin(org_id)
   );
 
 -------------------------------------------------------------------------------
@@ -685,21 +765,19 @@ CREATE POLICY audit_logs_read
   FOR SELECT
   TO authenticated
   USING (
-    org_id = public.current_org_id()
+    public.is_internal_user(org_id)
   );
 
--- INSERT (often done by a server function or system user)
+-- INSERT
 CREATE POLICY audit_logs_insert
   ON public.audit_logs
   FOR INSERT
   TO authenticated
   WITH CHECK (
-    org_id = public.current_org_id()
-    -- optionally allow only system user or service role
-    AND public.is_org_admin() = true
+    public.is_internal_user(org_id)
   );
 
--- No update policy
+-- UPDATE
 CREATE POLICY audit_logs_update
   ON public.audit_logs
   FOR UPDATE
@@ -707,7 +785,7 @@ CREATE POLICY audit_logs_update
   USING (FALSE)
   WITH CHECK (FALSE);
 
--- No delete policy
+-- DELETE
 CREATE POLICY audit_logs_delete
   ON public.audit_logs
   FOR DELETE
@@ -720,7 +798,7 @@ CREATE POLICY audit_logs_delete
 --   READ: Internal users can read portal links in their org
 --   INSERT: Internal users can create portal links
 --   UPDATE: Internal users can update portal links (for marking as used)
---   DELETE: Organization admins can delete portal links
+--   DELETE: Internal users can create portal links
 -------------------------------------------------------------------------------
 -- READ
 CREATE POLICY portal_links_read
@@ -728,7 +806,7 @@ CREATE POLICY portal_links_read
   FOR SELECT
   TO authenticated
   USING (
-    org_id = public.current_org_id()
+    public.is_internal_user(org_id)
   );
 
 -- INSERT
@@ -737,7 +815,7 @@ CREATE POLICY portal_links_insert
   FOR INSERT
   TO authenticated
   WITH CHECK (
-    org_id = public.current_org_id()
+    public.is_internal_user(org_id)
   );
 
 -- UPDATE
@@ -746,10 +824,10 @@ CREATE POLICY portal_links_update
   FOR UPDATE
   TO authenticated
   USING (
-    org_id = public.current_org_id()
+    public.is_internal_user(org_id)
   )
   WITH CHECK (
-    org_id = public.current_org_id()
+    public.is_internal_user(org_id)
   );
 
 -- DELETE
@@ -758,8 +836,7 @@ CREATE POLICY portal_links_delete
   FOR DELETE
   TO authenticated
   USING (
-    org_id = public.current_org_id()
-    AND public.is_org_admin()
+    public.is_internal_user(org_id)
   );
 
 COMMIT; 

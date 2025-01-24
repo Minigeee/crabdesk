@@ -307,3 +307,21 @@ function TicketHeader({ status, priority }: { status: Enums<'ticket_status'>, pr
   )
 }
 ```
+
+## Portal Links
+
+### Generating Portal Access Links
+```typescript
+// Example usage in a route handler
+export async function POST(request: Request) {
+  const { contactId, ticketId } = await request.json();
+  const portalService = new PortalService();
+  
+  try {
+    const link = await portalService.generatePortalLink(contactId, ticketId);
+    return Response.json({ link });
+  } catch (error) {
+    return Response.json({ error: 'Failed to generate link' }, { status: 500 });
+  }
+}
+```

@@ -4,9 +4,9 @@ import { AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 
 interface Props {
-  searchParams: {
+  searchParams: Promise<{
     code?: string;
-  };
+  }>;
 }
 
 const errorMessages = {
@@ -21,8 +21,8 @@ const errorMessages = {
   },
 };
 
-export default function ErrorPage({ searchParams }: Props) {
-  const { code } = searchParams;
+export default async function ErrorPage({ searchParams }: Props) {
+  const { code } = await searchParams;
   const error = code
     ? errorMessages[code as keyof typeof errorMessages]
     : errorMessages.default;

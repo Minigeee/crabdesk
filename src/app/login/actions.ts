@@ -2,6 +2,7 @@
 
 import { PortalService } from '@/lib/portal/portal-service';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/service';
 import { redirect } from 'next/navigation';
 
 export async function login(formData: FormData, next: string) {
@@ -26,11 +27,23 @@ export async function login(formData: FormData, next: string) {
       const portalService = new PortalService();
       const portalLink = await portalService.validatePortalLink(token);
       if (portalLink) {
+        // Create portal access
         await portalService.getOrCreatePortalAccess(
           data.user.id,
           portalLink.orgId,
           portalLink.contactId
         );
+
+        // Update user's app_metadata to include org role
+        const serviceClient = createServiceClient();
+        await serviceClient.auth.admin.updateUserById(data.user.id, {
+          app_metadata: {
+            org_roles: {
+              [portalLink.orgId]: 'portal_user',
+            },
+          },
+        });
+
         await portalService.markLinkAsUsed(token);
       }
     } catch (error) {
@@ -67,7 +80,6 @@ export async function signup(formData: FormData, next: string) {
     options: {
       data: {
         name,
-        org_id: portalLink?.orgId,
       },
     },
   });
@@ -79,6 +91,16 @@ export async function signup(formData: FormData, next: string) {
   // If there's a portal link, create portal access
   if (portalLink && data.user) {
     try {
+      // Add org role to user
+      const serviceClient = createServiceClient();
+      await serviceClient.auth.admin.updateUserById(data.user.id, {
+        app_metadata: {
+          org_roles: {
+            [portalLink.orgId]: 'portal_user',
+          },
+        },
+      });
+
       const portalService = new PortalService();
       await portalService.getOrCreatePortalAccess(
         data.user.id,

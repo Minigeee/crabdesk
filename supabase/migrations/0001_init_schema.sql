@@ -34,16 +34,8 @@ CREATE TYPE article_status AS ENUM ('draft', 'published', 'archived');
 -- Audit Log Action
 CREATE TYPE audit_log_action AS ENUM ('insert', 'update', 'delete', 'restore');
 
---------------------------------------------------------------------------------
--- Helper Function: current_org_id()
--- Returns the "org_id" from the user's JWT app_metadata.
---------------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION public.current_org_id()
-  RETURNS uuid
-  LANGUAGE sql STABLE
-AS $$
-  SELECT (auth.jwt() -> 'app_metadata' ->> 'org_id')::uuid
-$$;
+-- User Role Type
+CREATE TYPE user_role AS ENUM ('internal_user', 'internal_admin', 'portal_user');
 
 --------------------------------------------------------------------------------
 -- Table: organizations
@@ -63,25 +55,6 @@ CREATE TABLE public.organizations (
 -- Indexes
 CREATE UNIQUE INDEX org_domain_idx ON organizations(domain);
 CREATE INDEX org_created_at_idx ON organizations(created_at);
-
--- Enable RLS
-ALTER TABLE public.organizations ENABLE ROW LEVEL SECURITY;
-
--- Policy: Allow org members to see only their organization row
-CREATE POLICY org_select_policy
-  ON public.organizations
-  FOR SELECT
-  TO authenticated
-  USING (id = public.current_org_id());
-
--- Policy: Allow org admins to update their organization
--- (Adjust the role check to match your JWT claims or internal_users table as needed)
-CREATE POLICY org_update_policy
-  ON public.organizations
-  FOR UPDATE
-  TO authenticated
-  USING (id = public.current_org_id())
-  WITH CHECK (id = public.current_org_id());
 
 --------------------------------------------------------------------------------
 -- Table: internal_users
@@ -106,23 +79,6 @@ CREATE INDEX internal_user_org_idx ON internal_users(org_id);
 CREATE UNIQUE INDEX internal_user_auth_idx ON internal_users(org_id, auth_user_id);
 CREATE INDEX internal_user_admin_idx ON internal_users(org_id, is_admin);
 
-ALTER TABLE public.internal_users ENABLE ROW LEVEL SECURITY;
-
--- Policy: Only return internal_users from the same org
-CREATE POLICY internal_users_select
-  ON public.internal_users
-  FOR SELECT
-  TO authenticated
-  USING (org_id = public.current_org_id());
-
--- Policy: Insert / update only if it matches the same org
-CREATE POLICY internal_users_mod
-  ON public.internal_users
-  FOR ALL
-  TO authenticated
-  USING (org_id = public.current_org_id())
-  WITH CHECK (org_id = public.current_org_id());
-
 --------------------------------------------------------------------------------
 -- Table: portal_users
 --------------------------------------------------------------------------------
@@ -141,21 +97,6 @@ CREATE TABLE public.portal_users (
 
 -- Indexes
 CREATE UNIQUE INDEX portal_user_auth_idx ON portal_users(org_id, auth_user_id);
-
-ALTER TABLE public.portal_users ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY portal_users_select
-  ON public.portal_users
-  FOR SELECT
-  TO authenticated
-  USING (org_id = public.current_org_id());
-
-CREATE POLICY portal_users_mod
-  ON public.portal_users
-  FOR ALL
-  TO authenticated
-  USING (org_id = public.current_org_id())
-  WITH CHECK (org_id = public.current_org_id());
 
 --------------------------------------------------------------------------------
 -- Table: contacts
@@ -183,21 +124,6 @@ CREATE UNIQUE INDEX contact_email_idx ON contacts(org_id, email);
 CREATE INDEX contact_portal_idx ON contacts(portal_user_id) WHERE portal_user_id IS NOT NULL;
 CREATE INDEX contact_seen_idx ON contacts(org_id, last_seen_at);
 
-ALTER TABLE public.contacts ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY contacts_select
-  ON public.contacts
-  FOR SELECT
-  TO authenticated
-  USING (org_id = public.current_org_id());
-
-CREATE POLICY contacts_mod
-  ON public.contacts
-  FOR ALL
-  TO authenticated
-  USING (org_id = public.current_org_id())
-  WITH CHECK (org_id = public.current_org_id());
-
 --------------------------------------------------------------------------------
 -- Table: teams
 --------------------------------------------------------------------------------
@@ -218,33 +144,6 @@ CREATE TABLE public.teams (
 -- Indexes
 CREATE UNIQUE INDEX team_name_idx ON teams(org_id, name);
 
-ALTER TABLE public.teams ENABLE ROW LEVEL SECURITY;
-
--- Helper Function to avoid recursion in RLS policies
-CREATE OR REPLACE FUNCTION public.fetch_team_org_id(_team_id uuid)
-  RETURNS uuid
-  LANGUAGE sql
-  STABLE
-  SECURITY DEFINER
-AS $$
-  SELECT org_id FROM public.teams
-   WHERE id = _team_id
-   LIMIT 1
-$$;
-
-CREATE POLICY teams_select
-  ON public.teams
-  FOR SELECT
-  TO authenticated
-  USING (org_id = public.current_org_id());
-
-CREATE POLICY teams_mod
-  ON public.teams
-  FOR ALL
-  TO authenticated
-  USING (org_id = public.current_org_id())
-  WITH CHECK (org_id = public.current_org_id());
-
 --------------------------------------------------------------------------------
 -- Table: team_members (linking internal_users to teams)
 --------------------------------------------------------------------------------
@@ -260,28 +159,6 @@ CREATE TABLE public.team_members (
   CONSTRAINT team_role_check CHECK (role IN ('leader','member')),
   CONSTRAINT team_members_pk PRIMARY KEY (team_id, user_id)
 );
-
-ALTER TABLE public.team_members ENABLE ROW LEVEL SECURITY;
-
--- We must fetch the org_id from the related team to compare to the current user's org.
-CREATE POLICY team_members_select
-  ON public.team_members
-  FOR SELECT
-  TO authenticated
-  USING (
-    public.fetch_team_org_id(team_id) = public.current_org_id()
-  );
-
-CREATE POLICY team_members_mod
-  ON public.team_members
-  FOR ALL
-  TO authenticated
-  USING (
-    public.fetch_team_org_id(team_id) = public.current_org_id()
-  )
-  WITH CHECK (
-    public.fetch_team_org_id(team_id) = public.current_org_id()
-  );
 
 --------------------------------------------------------------------------------
 -- Table: tickets
@@ -321,31 +198,6 @@ CREATE INDEX ticket_team_idx ON tickets(team_id, status);
 
 ALTER TABLE public.tickets ENABLE ROW LEVEL SECURITY;
 
--- Helper Function to avoid recursion in RLS policies
-CREATE OR REPLACE FUNCTION public.fetch_ticket_org_id(_ticket_id uuid)
-  RETURNS uuid
-  LANGUAGE sql
-  STABLE
-  SECURITY DEFINER
-AS $$
-  SELECT org_id FROM public.tickets
-   WHERE id = _ticket_id
-   LIMIT 1
-$$;
-
-CREATE POLICY tickets_select
-  ON public.tickets
-  FOR SELECT
-  TO authenticated
-  USING (org_id = public.current_org_id());
-
-CREATE POLICY tickets_mod
-  ON public.tickets
-  FOR ALL
-  TO authenticated
-  USING (org_id = public.current_org_id())
-  WITH CHECK (org_id = public.current_org_id());
-
 --------------------------------------------------------------------------------
 -- Table: messages
 --------------------------------------------------------------------------------
@@ -370,27 +222,6 @@ CREATE TABLE public.messages (
 -- Indexes
 CREATE INDEX message_ticket_idx ON messages(ticket_id, created_at);
 CREATE INDEX message_sender_idx ON messages(sender_type, sender_id);
-
-ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY messages_select
-  ON public.messages
-  FOR SELECT
-  TO authenticated
-  USING (
-    public.fetch_ticket_org_id(ticket_id) = public.current_org_id()
-  );
-
-CREATE POLICY messages_mod
-  ON public.messages
-  FOR ALL
-  TO authenticated
-  USING (
-    public.fetch_ticket_org_id(ticket_id) = public.current_org_id()
-  )
-  WITH CHECK (
-    public.fetch_ticket_org_id(ticket_id) = public.current_org_id()
-  );
 
 --------------------------------------------------------------------------------
 -- Table: articles (Knowledge Base)
@@ -422,21 +253,6 @@ CREATE TABLE public.articles (
 CREATE UNIQUE INDEX article_slug_idx ON articles(org_id, slug, locale);
 CREATE INDEX article_status_idx ON articles(org_id, status, updated_at);
 
-ALTER TABLE public.articles ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY articles_select
-  ON public.articles
-  FOR SELECT
-  TO authenticated
-  USING (org_id = public.current_org_id());
-
-CREATE POLICY articles_mod
-  ON public.articles
-  FOR ALL
-  TO authenticated
-  USING (org_id = public.current_org_id())
-  WITH CHECK (org_id = public.current_org_id());
-
 --------------------------------------------------------------------------------
 -- Table: skills
 --------------------------------------------------------------------------------
@@ -456,21 +272,6 @@ CREATE TABLE public.skills (
 -- Indexes
 CREATE UNIQUE INDEX skill_name_idx ON skills(org_id, name);
 
-ALTER TABLE public.skills ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY skills_select
-  ON public.skills
-  FOR SELECT
-  TO authenticated
-  USING (org_id = public.current_org_id());
-
-CREATE POLICY skills_mod
-  ON public.skills
-  FOR ALL
-  TO authenticated
-  USING (org_id = public.current_org_id())
-  WITH CHECK (org_id = public.current_org_id());
-
 --------------------------------------------------------------------------------
 -- Table: tags
 --------------------------------------------------------------------------------
@@ -489,21 +290,6 @@ CREATE TABLE public.tags (
 
 -- Indexes
 CREATE UNIQUE INDEX tag_name_idx ON tags(org_id, name);
-
-ALTER TABLE public.tags ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY tags_select
-  ON public.tags
-  FOR SELECT
-  TO authenticated
-  USING (org_id = public.current_org_id());
-
-CREATE POLICY tags_mod
-  ON public.tags
-  FOR ALL
-  TO authenticated
-  USING (org_id = public.current_org_id())
-  WITH CHECK (org_id = public.current_org_id());
 
 --------------------------------------------------------------------------------
 -- Table: attachments
@@ -532,21 +318,6 @@ CREATE INDEX attachment_org_idx ON attachments(org_id, created_at);
 CREATE INDEX attachment_ticket_idx ON attachments(ticket_id, created_at);
 CREATE UNIQUE INDEX attachment_path_idx ON attachments(bucket, path);
 
-ALTER TABLE public.attachments ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY attachments_select
-  ON public.attachments
-  FOR SELECT
-  TO authenticated
-  USING (org_id = public.current_org_id());
-
-CREATE POLICY attachments_mod
-  ON public.attachments
-  FOR ALL
-  TO authenticated
-  USING (org_id = public.current_org_id())
-  WITH CHECK (org_id = public.current_org_id());
-
 --------------------------------------------------------------------------------
 -- Table: audit_logs
 --------------------------------------------------------------------------------
@@ -570,21 +341,6 @@ CREATE TABLE public.audit_logs (
 -- Indexes
 CREATE INDEX audit_org_idx ON audit_logs(org_id, created_at);
 CREATE INDEX audit_entity_idx ON audit_logs(entity_type, entity_id);
-
-ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY audit_logs_select
-  ON public.audit_logs
-  FOR SELECT
-  TO authenticated
-  USING (org_id = public.current_org_id());
-
--- Typically only admins can insert (or an automated system).
-CREATE POLICY audit_logs_insert
-  ON public.audit_logs
-  FOR INSERT
-  TO authenticated
-  WITH CHECK (org_id = public.current_org_id());
 
 --------------------------------------------------------------------------------
 -- Table: portal_links
@@ -611,7 +367,5 @@ CREATE TABLE public.portal_links (
 CREATE UNIQUE INDEX portal_links_token_idx ON portal_links(token);
 CREATE INDEX portal_links_contact_idx ON portal_links(contact_id);
 CREATE INDEX portal_links_expires_idx ON portal_links(expires_at) WHERE NOT used;
-
-ALTER TABLE public.portal_links ENABLE ROW LEVEL SECURITY;
 
 COMMIT; 

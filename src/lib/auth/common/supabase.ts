@@ -6,6 +6,8 @@ import { User } from '@supabase/supabase-js';
 export interface AuthUser extends Omit<User, 'user_metadata'> {
   user_metadata: {
     name: string;
+  };
+  app_metadata: {
     org_id?: string;
   };
 }
@@ -30,7 +32,9 @@ export const getAuthUser = cache(async () => {
     ...user,
     user_metadata: {
       name: user.user_metadata.name as string,
-      org_id: user.user_metadata.org_id as string | undefined,
+    },
+    app_metadata: {
+      org_id: user.app_metadata.org_id as string | undefined,
     },
   } as AuthUser;
 });

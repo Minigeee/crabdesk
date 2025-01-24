@@ -1,5 +1,6 @@
 import { TablesInsert, Tables } from '@/lib/database.types';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/service';
 import { nanoid } from 'nanoid';
 
 const LINK_EXPIRY_HOURS = 24;
@@ -7,7 +8,7 @@ const LINK_EXPIRY_HOURS = 24;
 export type PortalLink = {
   token: string;
   contactId: string;
-  ticketId?: string;
+  ticketNumber?: number;
   orgId: string;
   expiresAt: Date;
   used: boolean;
@@ -23,6 +24,10 @@ export class PortalService {
 
   private async getClient() {
     return createClient();
+  }
+
+  private async getServiceClient() {
+    return createServiceClient();
   }
 
   /**
@@ -73,12 +78,18 @@ export class PortalService {
 
   /**
    * Validates a portal access token and returns the associated data
+   * Uses service role to bypass RLS since this needs to work for unauthenticated users
    */
   async validatePortalLink(token: string): Promise<PortalLink | null> {
-    const supabase = await this.getClient();
+    const supabase = await this.getServiceClient();
     const { data } = await supabase
       .from('portal_links')
-      .select('*')
+      .select(`
+        *,
+        tickets:ticket_id (
+          number
+        )
+      `)
       .eq('token', token)
       .gt('expires_at', new Date().toISOString())
       .single();
@@ -90,7 +101,7 @@ export class PortalService {
     return {
       token: data.token,
       contactId: data.contact_id,
-      ticketId: data.ticket_id || undefined,
+      ticketNumber: data.tickets?.number,
       orgId: data.org_id,
       expiresAt: new Date(data.expires_at),
       used: data.used,
@@ -105,7 +116,7 @@ export class PortalService {
     orgId: string,
     contactId: string
   ): Promise<PortalAccess> {
-    const supabase = await this.getClient();
+    const supabase = await this.getServiceClient();
 
     // Check if user already has portal access for this org
     const { data: existingPortalUser } = await supabase
@@ -165,7 +176,7 @@ export class PortalService {
    * Marks a portal link as used
    */
   async markLinkAsUsed(token: string): Promise<void> {
-    const supabase = await this.getClient();
+    const supabase = await this.getServiceClient();
     const { error } = await supabase
       .from('portal_links')
       .update({ used: true })
