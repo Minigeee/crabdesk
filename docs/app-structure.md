@@ -151,7 +151,7 @@
 
 ## Customer Portal Components
 
-### Portal Layout (`/app/(portal)/layout.tsx`)
+### Portal Layout (`/app/portal/layout.tsx`)
 - **Purpose**: Customer-facing interface
 - **Components**:
   - `PortalNav`: Simplified navigation
@@ -163,7 +163,7 @@
   - Minimal navigation
   - Focus on self-service
 
-### Ticket Management (`/app/(portal)/tickets/page.tsx`)
+### Ticket Management (`/app/portal/tickets/page.tsx`)
 - **Purpose**: Customer ticket interface
 - **Components**:
   - `TicketList`: Customer's tickets
@@ -176,6 +176,45 @@
   - Create new tickets
   - View ticket status
   - Reply to support
+
+## Core Workflows
+
+### Email Processing (`/src/lib/email`)
+- **Purpose**: Convert incoming emails to tickets and maintain email threads
+- **Key Workflows**:
+  1. Email to Ticket Creation:
+     - Extract email metadata (from, subject, body, attachments)
+     - Identify if part of existing ticket thread
+     - Create new ticket or append to existing thread
+     - Handle attachments via Supabase storage
+  2. Ticket to Email Response:
+     - Maintain email thread IDs and references
+     - Format responses with correct threading headers
+     - Include ticket reference in subject
+
+### Ticket Assignment (`/src/lib/tickets`)
+- **Purpose**: Efficiently distribute tickets to available agents
+- **Key Workflows**:
+  1. Load Balancing:
+     - Track agent current ticket load
+     - Consider agent working hours and availability
+     - Factor in ticket priority and SLAs
+  2. Skill-based Routing:
+     - Match ticket tags/category with agent skills
+     - Consider agent performance in similar tickets
+     - Factor in language requirements
+
+### Auto-categorization (`/src/lib/tickets`)
+- **Purpose**: Automatically categorize and tag incoming tickets
+- **Key Workflows**:
+  1. Initial Classification:
+     - Analyze ticket subject and content
+     - Match against common patterns
+     - Apply relevant tags and priority
+  2. Learning from Actions:
+     - Track manual tag changes by agents
+     - Update classification patterns
+     - Improve accuracy over time 
 
 ## Initial Build Focus
 For the MVP, we will focus on:
@@ -190,4 +229,4 @@ Later iterations will add:
 - Automation features
 - Analytics and reporting
 - Knowledge base integration
-- API access management 
+- API access management

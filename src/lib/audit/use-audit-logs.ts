@@ -1,9 +1,9 @@
-import { useOrganization } from '@/components/providers/organization-provider';
-import { useCallback, useEffect, useMemo } from 'react';
-import { AuditLog, AuditService } from './audit-service';
+import { useInternalAuth } from '@/lib/auth/internal/hooks';
 import { createClient } from '@/lib/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import assert from 'assert';
+import { useEffect, useMemo } from 'react';
+import { AuditLog, AuditService } from './audit-service';
 
 // Query keys
 export const auditKeys = {
@@ -14,7 +14,7 @@ export const auditKeys = {
 };
 
 export function useAuditLogs(entityType: string, entityId: string) {
-  const { organization } = useOrganization();
+  const { organization } = useInternalAuth();
   const queryClient = useQueryClient();
 
   // Create memoized service instance
@@ -53,4 +53,4 @@ export function useAuditLogs(entityType: string, entityId: string) {
     },
     enabled: !!auditService,
   });
-} 
+}

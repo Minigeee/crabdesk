@@ -9,7 +9,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Home } from 'lucide-react';
+import { ArrowLeft, Home } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import * as React from 'react';
@@ -43,7 +43,7 @@ export function Breadcrumbs() {
       {isSubRoute && (
         <Button variant='ghost' size='icon' className='h-8 w-8' asChild>
           <Link href={breadcrumbs[breadcrumbs.length - 2].href}>
-            <ChevronLeft className='h-4 w-4' />
+            <ArrowLeft className='h-4 w-4' />
             <span className='sr-only'>Go back</span>
           </Link>
         </Button>

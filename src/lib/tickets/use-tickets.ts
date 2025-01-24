@@ -1,4 +1,4 @@
-import { useOrganization } from '@/components/providers/organization-provider';
+import { useInternalAuth } from '@/lib/auth/internal/hooks';
 import {
   useMutation,
   useQuery,
@@ -30,7 +30,7 @@ export const ticketKeys = {
 
 // Hook for managing ticket service instance
 function useTicketService() {
-  const { organization } = useOrganization();
+  const { organization } = useInternalAuth();
   const service = useMemo(() => {
     const supabase = createClient();
     if (!organization) return null;

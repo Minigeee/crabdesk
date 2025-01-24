@@ -586,4 +586,32 @@ CREATE POLICY audit_logs_insert
   TO authenticated
   WITH CHECK (org_id = public.current_org_id());
 
+--------------------------------------------------------------------------------
+-- Table: portal_links
+--------------------------------------------------------------------------------
+CREATE TABLE public.portal_links (
+  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  org_id      uuid NOT NULL,
+  token       varchar(64) NOT NULL,
+  contact_id  uuid NOT NULL,
+  ticket_id   uuid,
+  expires_at  timestamptz NOT NULL,
+  used        boolean NOT NULL DEFAULT false,
+  created_at  timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT portal_links_org_fkey
+    FOREIGN KEY (org_id) REFERENCES public.organizations (id),
+  CONSTRAINT portal_links_contact_fkey
+    FOREIGN KEY (contact_id) REFERENCES public.contacts (id),
+  CONSTRAINT portal_links_ticket_fkey
+    FOREIGN KEY (ticket_id) REFERENCES public.tickets (id),
+  CONSTRAINT portal_links_token_unique UNIQUE (token)
+);
+
+-- Indexes
+CREATE UNIQUE INDEX portal_links_token_idx ON portal_links(token);
+CREATE INDEX portal_links_contact_idx ON portal_links(contact_id);
+CREATE INDEX portal_links_expires_idx ON portal_links(expires_at) WHERE NOT used;
+
+ALTER TABLE public.portal_links ENABLE ROW LEVEL SECURITY;
+
 COMMIT; 

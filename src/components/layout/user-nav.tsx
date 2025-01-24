@@ -1,6 +1,5 @@
 'use client';
 
-import { useAuth } from '@/components/providers/auth-provider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,15 +9,19 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Icons } from '@/components/ui/icons';
+import { createClient } from '@/lib/supabase/client';
+import { AuthUser } from '@supabase/supabase-js';
 import { useTheme } from 'next-themes';
+import { useRouter } from 'next/navigation';
 import { useMemo } from 'react';
 
-export function UserNav() {
-  const { user, signOut } = useAuth();
+export function UserNav({ user }: { user: AuthUser | null }) {
+  const client = createClient();
+
+  const router = useRouter();
   const { setTheme, theme } = useTheme();
 
   const metadata = user?.user_metadata;
@@ -92,7 +95,13 @@ export function UserNav() {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => signOut()}>
+        <DropdownMenuItem
+          onClick={() => {
+            client.auth.signOut().then(() => {
+              router.push('/');
+            });
+          }}
+        >
           <Icons.logout className='mr-2 h-4 w-4' />
           Log out
         </DropdownMenuItem>

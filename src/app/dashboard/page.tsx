@@ -3,8 +3,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { TicketMetrics } from './_components/ticket-metrics';
 import { createClient } from '@/lib/supabase/server';
 import { DashboardService } from '@/lib/dashboard/dashboard-service';
-import { getUserWithOrganization } from '@/lib/auth/session';
 import { redirect } from 'next/navigation';
+import { getCurrentInternalUser } from '@/lib/auth/internal/session';
 
 function TicketMetricsSkeleton() {
   return (
@@ -20,7 +20,7 @@ function TicketMetricsSkeleton() {
 }
 
 async function getDashboardData() {
-  const userData = await getUserWithOrganization();
+  const userData = await getCurrentInternalUser();
   if (!userData) redirect('/login');
 
   const supabase = await createClient();

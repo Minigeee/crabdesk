@@ -714,4 +714,52 @@ CREATE POLICY audit_logs_delete
   TO authenticated
   USING (FALSE);
 
+-------------------------------------------------------------------------------
+-- 14) portal_links
+-- Security Policies:
+--   READ: Internal users can read portal links in their org
+--   INSERT: Internal users can create portal links
+--   UPDATE: Internal users can update portal links (for marking as used)
+--   DELETE: Organization admins can delete portal links
+-------------------------------------------------------------------------------
+-- READ
+CREATE POLICY portal_links_read
+  ON public.portal_links
+  FOR SELECT
+  TO authenticated
+  USING (
+    org_id = public.current_org_id()
+  );
+
+-- INSERT
+CREATE POLICY portal_links_insert
+  ON public.portal_links
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    org_id = public.current_org_id()
+  );
+
+-- UPDATE
+CREATE POLICY portal_links_update
+  ON public.portal_links
+  FOR UPDATE
+  TO authenticated
+  USING (
+    org_id = public.current_org_id()
+  )
+  WITH CHECK (
+    org_id = public.current_org_id()
+  );
+
+-- DELETE
+CREATE POLICY portal_links_delete
+  ON public.portal_links
+  FOR DELETE
+  TO authenticated
+  USING (
+    org_id = public.current_org_id()
+    AND public.is_org_admin()
+  );
+
 COMMIT; 

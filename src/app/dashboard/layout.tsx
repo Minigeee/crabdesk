@@ -1,24 +1,24 @@
-import { MainNav } from '@/components/layout/main-nav'
-import { MobileNav } from '@/components/layout/mobile-nav'
-import { Header } from '@/components/layout/header'
-import { OrganizationProvider } from '@/components/providers/organization-provider'
-import { ErrorBoundary } from './_components/error-boundary'
+import { Header } from '@/components/layout/header';
+import { MainNav } from '@/components/layout/main-nav';
+import { MobileNav } from '@/components/layout/mobile-nav';
+import { InternalAuthProvider } from '@/lib/auth/internal/provider';
+import { ErrorBoundary } from '@/components/error-boundary';
 
 export default function DashboardLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
-    <OrganizationProvider>
+    <InternalAuthProvider>
       <ErrorBoundary>
-        <div className="flex min-h-screen">
+        <div className='flex min-h-screen'>
           {/* Desktop Sidebar */}
-          <aside className="hidden md:flex w-64 flex-col border-r bg-background">
-            <div className="p-6">
-              <h2 className="text-lg font-semibold">CrabDesk</h2>
+          <aside className='hidden w-64 flex-col border-r bg-background md:flex'>
+            <div className='p-6'>
+              <h2 className='text-lg font-semibold'>CrabDesk</h2>
             </div>
-            <div className="flex-1 px-4">
+            <div className='flex-1 px-4'>
               <MainNav />
             </div>
           </aside>
@@ -27,16 +27,16 @@ export default function DashboardLayout({
           <MobileNav />
 
           {/* Main Content */}
-          <div className="flex-1 flex flex-col">
+          <div className='flex flex-1 flex-col'>
             <Header />
 
             {/* Page Content */}
-            <main className="overflow-y-auto h-[calc(100vh-3.5rem)]">
+            <main className='h-[calc(100vh-3.5rem)] overflow-y-auto'>
               {children}
             </main>
           </div>
         </div>
       </ErrorBoundary>
-    </OrganizationProvider>
-  )
-} 
+    </InternalAuthProvider>
+  );
+}

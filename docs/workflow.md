@@ -151,6 +151,8 @@ Data is the core behind any application, and it is important to design the model
 
 Start by creating a vague outline of the front-end views the user will be exposed to. Think about which views each user role (if using roles such as admin, client, etc.) will be exposed to, and how each view changes based on who is viewing it.
 
+IMPORTANT: This is the first time you are thinking about the UI, so do not get caught up in the specifics of the UI.
+
 - This outline should be vague, component of the outline should generally describe a view or feature without describing the specific UI components that will be used to create the view
 - By the time the vague outline is created, you should be able to answer each of the following for each component of the outline:
   - Why does this view / feature exist?
@@ -162,13 +164,14 @@ Start by creating a vague outline of the front-end views the user will be expose
 
 For each part of the vague outline, drill into the details a little more
 
+IMPORTANT: During the initial build up stage, try to limit feature sprawl. Focus on functionality that actually matters rather than adding crap just for the sake of it.
+
 - Start answering these questions:
   - What components will be needed to achieve the purpose of the front-end view?
   - What will interactions with the key components do? Will it bring up a dialog with a form? Will I need to confirm a certain action? Does it sort this table? Does it link to another page?
   - What will the general layout of the view look like? Will there be a sidebar for info or nav? Will there be a header there? Should we include a breadcrumb component?
 - The purpose is to establish the functionality of each view and its components
 - Iterate over each of these components as you go
-- IMPORTANT: During the initial build up stage, try to limit feature sprawl. Focus on functionality first before adding bells and whistles
 
 #### Step 3: Create the app structure
 
@@ -199,33 +202,35 @@ For each part of the vague outline, drill into the details a little more
 
 This is the view that will be the focus of the next steps
 
-#### Step 4: Split into actionable tasks
+#### Step 4: Split into tasks
 
-- Ask an AI to split the implementation of the view into an actionable road map with actionable tasks
-- Start by describing each task in one or two short sentences
-- Since we are building a product from the ground up, we should focus only on the most important features and systems first
-- Order the tasks so that the most foundational features and systems are implemented first. If a feature is dependent on another feature, it should be implemented after the feature it depends on
-- Add annotations on which route a feature belongs to, if applicable
-- Afterwards, analyze these broad tasks and create a list of which data model entities will be needed to implement them
+The goal of this step:
+- Choose one or a few pieces of the app structure to focus on
+- Split these pieces into tasks that need to be completed in order to implement the structure pieces
+- When splitting into tasks, consider:
+  - Which data entities will be needed to make the feature work?
+  - How will this data be consumed? Should it be fetched on server side because it can be treated as static data? Or should you do an initial server side fetch, and manage refetching with React Query? Or can it be treated as purely client side data that does not need to be fetched from the server?
+  - What set of features should the structure piece offer to the user? (Hint: KISS)
+  - What sub components will be needed to implement the feature or view? Can any of these be reused in other views?
 
-#### Step 5: Add more details
+To do this:
+- First, think step by step about how you will create the tasks in a brainstorming phase.
+- Make sure you are aware of why every feature is needed, and how it fits into the overall product
+- When creating the task list, split them into sections
+- For each section, include a short description paragraph to offer context to the coder agent
 
-- This should build on the previous step
-- Add more details to each task, and add/remove tasks as needed. Each task should now be detailed enough for the coder agent that will be implementing it to understand everything we determined in the previous App Structure phase:
-  - Feature requirements
-  - Why the task/feature is needed
-  - How it fits into the overall product
-  - Which user types will have access to or use the feature
-  - The user experience the feature should provide
-- IMPORTANT: During the initial build up stage, try to limit feature sprawl
+Considerations:
+- Order the tasks so that the features that others are dependent on are implemented first. This means that foundational features are often implemented first. This also means that the data interface layer should often be implemented first.
+- Do not include any specific code in the tasks, just the high level overview of what needs to be done
+- IMPORTANT: During the initial build up stage, try to limit feature sprawl. Don't add features just for the sake of it.
 
-#### Step 6: Feed the tasks to the model and repeat until done
+#### Step 5: Feed the tasks to the model and repeat until done
 
 - Guide the model as you go
 - The model should understand how to interface with data, coding conventions, best practices (from the cursor rules)
 - It should also understand how to implement the task, how it fits into the app, etc. (from the context and app structure document)
 
-#### Step 7: Repeat steps 3-6 until the product is where you want it to be
+#### Step 6: Repeat steps 3-5 until the product is where you want it to be
 
 - This is an iterative process, and the goal is to get the product to a point where it is where you want it to be
 - The goal is to get the product to a point where it is where you want it to be

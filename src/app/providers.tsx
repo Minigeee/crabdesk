@@ -1,7 +1,6 @@
 // In Next.js, this file would be called: app/providers.tsx
 'use client';
 
-import { AuthProvider } from '@/components/providers/auth-provider';
 import { ThemeProvider } from 'next-themes';
 // Since QueryClientProvider relies on useContext under the hood, we have to put 'use client' on top
 import {
@@ -47,14 +46,12 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <ThemeProvider
-      attribute="class"
-      defaultTheme="system"
+      attribute='class'
+      defaultTheme='system'
       enableSystem
       disableTransitionOnChange
     >
-      <AuthProvider>
-        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-      </AuthProvider>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     </ThemeProvider>
   );
 }

@@ -1,6 +1,5 @@
 'use client';
 
-import { useOrganization } from '@/components/providers/organization-provider';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -14,6 +13,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { EyeOffIcon } from 'lucide-react';
 import { useState } from 'react';
 import { UserAvatar } from '../users/user-avatar';
+import { useInternalAuth } from '@/lib/auth/internal/hooks';
 
 interface MessageThreadProps {
   ticketId: string;
@@ -21,7 +21,7 @@ interface MessageThreadProps {
 
 export function MessageThread({ ticketId }: MessageThreadProps) {
   const { messages, isLoading, addMessage } = useMessages(ticketId);
-  const { internalUser } = useOrganization();
+  const { user: internalUser } = useInternalAuth();
   const [newMessage, setNewMessage] = useState('');
   const [isInternal, setIsInternal] = useState(false);
   const [isSending, setIsSending] = useState(false);

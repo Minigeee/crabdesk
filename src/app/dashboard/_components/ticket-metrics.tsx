@@ -115,7 +115,7 @@ export function TicketMetrics({
           </CardHeader>
           <CardContent>
             {/* TODO: Get this data from database somehow */}
-            <div className='text-2xl font-bold'>1.2h</div>
+            <div className='text-2xl font-bold'>TODO</div>
             <p className='text-xs text-muted-foreground'>
               Average first response time
             </p>

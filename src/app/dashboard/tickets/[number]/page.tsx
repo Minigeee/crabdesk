@@ -3,7 +3,7 @@ import { MessageThread } from '@/components/tickets/message-thread';
 import { TicketActions } from '@/components/tickets/ticket-actions';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { getUserWithOrganization } from '@/lib/auth/session';
+import { getCurrentInternalUser } from '@/lib/auth/internal/session';
 import { createClient } from '@/lib/supabase/server';
 import { TicketService } from '@/lib/tickets/ticket-service';
 import { notFound } from 'next/navigation';
@@ -15,7 +15,7 @@ interface PageProps {
 }
 
 async function getTicketByNumber(number: string) {
-  const userData = await getUserWithOrganization();
+  const userData = await getCurrentInternalUser();
   if (!userData) return null;
 
   const supabase = await createClient();
@@ -59,7 +59,7 @@ export default async function TicketPage({ params }: PageProps) {
     notFound();
   }
 
-  const userData = await getUserWithOrganization();
+  const userData = await getCurrentInternalUser();
   if (!userData) {
     notFound();
   }

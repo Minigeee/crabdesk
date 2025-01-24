@@ -10,9 +10,9 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useCreateTicket } from '@/lib/tickets/use-tickets';
 import { useState } from 'react';
-import { useOrganization } from '../providers/organization-provider';
 import { TicketForm, type TicketFormData } from './ticket-form';
 import type { FileAttachment } from '@/lib/tickets/ticket-service';
+import { useInternalAuth } from '@/lib/auth/internal/hooks';
 
 interface CreateTicketDialogProps {
   trigger?: React.ReactNode;
@@ -22,7 +22,7 @@ export function CreateTicketDialog({ trigger }: CreateTicketDialogProps) {
   const [open, setOpen] = useState(false);
   const createTicket = useCreateTicket();
   const { toast } = useToast();
-  const { organization } = useOrganization();
+  const { organization } = useInternalAuth();
 
   const handleSubmit = async (data: TicketFormData, attachments: FileAttachment[]) => {
     if (!organization) return;
