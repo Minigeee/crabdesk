@@ -31,10 +31,10 @@
 [X] Add delay simulation for testing real-world scenarios
 
 ### Basic Email Features
-[ ] Implement email sending through internal system
-[ ] Add reply handling with proper thread maintenance
-[ ] Set up basic email templates for responses
-[ ] Handle attachments using Supabase storage
+[X] Implement email sending through internal system
+[X] Add reply handling with proper thread maintenance
+[X] Set up basic email templates for responses
+[ ] Handle attachments using Supabase storage (skip for now)
 
 ## Ticket Assignment (Basic)
 
@@ -55,7 +55,7 @@
 [ ] Add basic load checking (ticket count per agent)
 
 ### Assignment UI
-[ ] Add assign button to ticket view
+[X] Add assign button to ticket view
 [ ] Create simple team assignment dropdown
 [ ] Add bulk assignment capability to ticket list
 [ ] Display current assignee and assignment history

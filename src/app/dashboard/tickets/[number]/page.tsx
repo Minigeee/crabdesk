@@ -7,8 +7,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getCurrentUser } from '@/lib/auth/session';
 import { createClient } from '@/lib/supabase/server';
 import { TicketService } from '@/lib/tickets/ticket-service';
-import { EyeOffIcon, MessageCircleIcon } from 'lucide-react';
+import { EyeOffIcon, MailIcon, MessageCircleIcon } from 'lucide-react';
 import { notFound } from 'next/navigation';
+import { EmailThreadView } from '../_components/email-thread-view';
+import { TicketViewProvider } from '../_components/ticket-view-provider';
 
 interface PageProps {
   params: Promise<{
@@ -67,59 +69,71 @@ export default async function TicketPage({ params }: PageProps) {
   }
 
   return (
-    <div className='flex h-full'>
-      <ScrollArea className='w-[300px] overflow-y-auto border-r xl:w-[400px]'>
-        <div className='space-y-6 p-4'>
-          <TicketActions ticket={ticket} />
-          <ContactPanel
-            contact={ticket.contact}
-            recentTickets={ticket.recentContactTickets}
-          />
+    <TicketViewProvider>
+      <div className='flex h-full'>
+        <ScrollArea className='w-[300px] overflow-y-auto border-r xl:w-[400px]'>
+          <div className='space-y-6 p-4'>
+            <TicketActions ticket={ticket} />
+            <ContactPanel
+              contact={ticket.contact}
+              recentTickets={ticket.recentContactTickets}
+            />
+          </div>
+        </ScrollArea>
+
+        {/* Main content */}
+        <div className='flex min-w-0 flex-1 flex-col'>
+          <div className='border-b bg-background p-4'>
+            <div className='flex items-center'>
+              <Badge variant='outline' className='-mt-1 mr-2 text-sm'>
+                #{ticket.number}
+              </Badge>
+              <h1 className='mb-1 text-xl font-semibold'>{ticket.subject}</h1>
+            </div>
+            <div className='text-sm text-muted-foreground'>
+              Opened by {ticket.contact.name ?? ticket.contact.email}
+            </div>
+          </div>
+
+          <Tabs defaultValue='email' className='flex h-0 flex-1 flex-col'>
+            <TabsList className='justify-start rounded-none border-b py-5'>
+              <TabsTrigger value='email' className='gap-2'>
+                <MailIcon className='h-4 w-4' />
+                Emails
+              </TabsTrigger>
+              <TabsTrigger value='public' className='gap-2'>
+                <MessageCircleIcon className='h-4 w-4' />
+                Messages
+              </TabsTrigger>
+              <TabsTrigger value='internal' className='gap-2'>
+                <EyeOffIcon className='h-4 w-4' />
+                Internal Notes
+              </TabsTrigger>
+            </TabsList>
+
+            <div className='min-h-0 flex-1'>
+              <TabsContent
+                value='public'
+                className='m-0 h-full data-[state=inactive]:hidden'
+              >
+                <MessageThread ticketId={ticket.id} visibility='public' />
+              </TabsContent>
+              <TabsContent
+                value='internal'
+                className='m-0 h-full data-[state=inactive]:hidden'
+              >
+                <MessageThread ticketId={ticket.id} visibility='internal' />
+              </TabsContent>
+              <TabsContent
+                value='email'
+                className='m-0 h-full data-[state=inactive]:hidden'
+              >
+                <EmailThreadView ticketId={ticket.id} />
+              </TabsContent>
+            </div>
+          </Tabs>
         </div>
-      </ScrollArea>
-
-      {/* Main content */}
-      <div className='flex min-w-0 flex-1 flex-col'>
-        <div className='border-b bg-background p-4'>
-          <div className='flex items-center'>
-            <Badge variant='outline' className='-mt-1 mr-2 text-sm'>
-              #{ticket.number}
-            </Badge>
-            <h1 className='mb-1 text-xl font-semibold'>{ticket.subject}</h1>
-          </div>
-          <div className='text-sm text-muted-foreground'>
-            Opened by {ticket.contact.name ?? ticket.contact.email}
-          </div>
-        </div>
-
-        <Tabs defaultValue='public' className='flex h-0 flex-1 flex-col'>
-          <TabsList className='justify-start rounded-none border-b py-5'>
-            <TabsTrigger value='public' className='gap-2'>
-              <MessageCircleIcon className='h-4 w-4' />
-              Messages
-            </TabsTrigger>
-            <TabsTrigger value='internal' className='gap-2'>
-              <EyeOffIcon className='h-4 w-4' />
-              Internal Notes
-            </TabsTrigger>
-          </TabsList>
-
-          <div className='min-h-0 flex-1'>
-            <TabsContent
-              value='public'
-              className='m-0 h-full data-[state=inactive]:hidden'
-            >
-              <MessageThread ticketId={ticket.id} visibility='public' />
-            </TabsContent>
-            <TabsContent
-              value='internal'
-              className='m-0 h-full data-[state=inactive]:hidden'
-            >
-              <MessageThread ticketId={ticket.id} visibility='internal' />
-            </TabsContent>
-          </div>
-        </Tabs>
       </div>
-    </div>
+    </TicketViewProvider>
   );
 }

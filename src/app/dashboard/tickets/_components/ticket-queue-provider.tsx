@@ -117,6 +117,11 @@ export function TicketQueueProvider({
         }
       });
 
+      // If page is 1, remove it from the URL
+      if (params.get('page') === '1') {
+        params.delete('page');
+      }
+
       router.push(`${pathname}?${params.toString()}`);
     },
     [pathname, router, searchParams]
