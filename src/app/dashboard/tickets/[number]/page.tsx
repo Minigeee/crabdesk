@@ -3,9 +3,11 @@ import { MessageThread } from '@/components/tickets/message-thread';
 import { TicketActions } from '@/components/tickets/ticket-actions';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getCurrentUser } from '@/lib/auth/session';
 import { createClient } from '@/lib/supabase/server';
 import { TicketService } from '@/lib/tickets/ticket-service';
+import { EyeOffIcon, MessageCircleIcon } from 'lucide-react';
 import { notFound } from 'next/navigation';
 
 interface PageProps {
@@ -69,7 +71,6 @@ export default async function TicketPage({ params }: PageProps) {
       <ScrollArea className='w-[300px] overflow-y-auto border-r xl:w-[400px]'>
         <div className='space-y-6 p-4'>
           <TicketActions ticket={ticket} />
-
           <ContactPanel
             contact={ticket.contact}
             recentTickets={ticket.recentContactTickets}
@@ -91,9 +92,33 @@ export default async function TicketPage({ params }: PageProps) {
           </div>
         </div>
 
-        <div className='flex-1 overflow-hidden'>
-          <MessageThread ticketId={ticket.id} />
-        </div>
+        <Tabs defaultValue='internal' className='flex h-0 flex-1 flex-col'>
+          <TabsList className='justify-start rounded-none border-b py-5'>
+            <TabsTrigger value='internal' className='gap-2'>
+              <EyeOffIcon className='h-4 w-4' />
+              Internal Notes
+            </TabsTrigger>
+            <TabsTrigger value='public' className='gap-2'>
+              <MessageCircleIcon className='h-4 w-4' />
+              Messages
+            </TabsTrigger>
+          </TabsList>
+
+          <div className='min-h-0 flex-1'>
+            <TabsContent
+              value='public'
+              className='m-0 h-full data-[state=inactive]:hidden'
+            >
+              <MessageThread ticketId={ticket.id} visibility='public' />
+            </TabsContent>
+            <TabsContent
+              value='internal'
+              className='m-0 h-full data-[state=inactive]:hidden'
+            >
+              <MessageThread ticketId={ticket.id} visibility='internal' />
+            </TabsContent>
+          </div>
+        </Tabs>
       </div>
     </div>
   );

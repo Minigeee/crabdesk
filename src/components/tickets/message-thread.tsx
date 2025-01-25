@@ -2,9 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/lib/auth/hooks';
 import { MessageWithSender } from '@/lib/messages/message-service';
@@ -12,19 +10,29 @@ import { useMessages } from '@/lib/messages/use-messages';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { EyeOffIcon } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { ScrollArea } from '../ui/scroll-area';
 import { UserAvatar } from '../users/user-avatar';
 
 interface MessageThreadProps {
   ticketId: string;
+  visibility: 'internal' | 'public';
 }
 
-export function MessageThread({ ticketId }: MessageThreadProps) {
+export function MessageThread({ ticketId, visibility }: MessageThreadProps) {
   const { messages, isLoading, addMessage } = useMessages(ticketId);
   const { user: internalUser } = useAuth();
   const [newMessage, setNewMessage] = useState('');
-  const [isInternal, setIsInternal] = useState(false);
   const [isSending, setIsSending] = useState(false);
+
+  // Filter messages based on visibility
+  const visibleMessages = useMemo(
+    () =>
+      messages.filter((message) =>
+        visibility === 'internal' ? message.is_private : !message.is_private
+      ),
+    [messages, visibility]
+  );
 
   const handleSend = async () => {
     if (!newMessage.trim() || !internalUser) return;
@@ -37,7 +45,7 @@ export function MessageThread({ ticketId }: MessageThreadProps) {
         sender_type: 'user',
         sender_id: internalUser.id,
         content_type: 'text',
-        is_private: isInternal,
+        is_private: visibility === 'internal',
       });
       setNewMessage('');
     } finally {
@@ -65,34 +73,28 @@ export function MessageThread({ ticketId }: MessageThreadProps) {
 
   return (
     <div className='flex h-full flex-col'>
-      <div className='flex-1 space-y-4 overflow-y-auto p-4'>
-        {messages.map((message) => (
-          <MessageBubble
-            key={message.id}
-            message={message}
-            isOwnMessage={message.sender_id === internalUser?.id}
-          />
-        ))}
-      </div>
+      <ScrollArea className='min-h-0 flex-1 overflow-y-auto'>
+        <div className='space-y-4 p-4'>
+          {visibleMessages.map((message) => (
+            <MessageBubble
+              key={message.id}
+              message={message}
+              isOwnMessage={message.sender_id === internalUser?.id}
+            />
+          ))}
+        </div>
+      </ScrollArea>
 
       <div className='border-t bg-background p-4'>
         <div className='space-y-4'>
-          {internalUser && (
-            <div className='flex items-center space-x-2'>
-              <Switch
-                id='internal-mode'
-                checked={isInternal}
-                onCheckedChange={setIsInternal}
-              />
-              <Label htmlFor='internal-mode'>Internal note</Label>
-            </div>
-          )}
           <div className='flex gap-2'>
             <Textarea
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder={
-                isInternal ? 'Type an internal note...' : 'Type your message...'
+                visibility === 'internal'
+                  ? 'Type an internal note...'
+                  : 'Type your message...'
               }
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -176,11 +178,7 @@ function MessageBubble({ message, isOwnMessage }: MessageBubbleProps) {
         <div
           className={cn(
             'mt-1 rounded-lg px-4 py-2',
-            message.is_private
-              ? 'bg-muted text-muted-foreground'
-              : isOwnMessage
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-accent',
+            isOwnMessage ? 'bg-primary text-primary-foreground' : 'bg-accent',
             'whitespace-pre-wrap'
           )}
         >
