@@ -1,7 +1,7 @@
+import type { Tables } from '@/lib/database.types';
 import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import type { Tables } from '@/lib/database.types';
 
 export type UserData = {
   user: Tables<'users'>;
@@ -94,7 +94,7 @@ export async function switchOrganization(orgId: string) {
 
   // Update user metadata
   await supabase.auth.updateUser({
-    data: { org_id: orgId }
+    data: { org_id: orgId },
   });
 
   // Clear cookies to force new session
@@ -103,4 +103,4 @@ export async function switchOrganization(orgId: string) {
 
   // Redirect to force reload
   redirect('/');
-} 
+}

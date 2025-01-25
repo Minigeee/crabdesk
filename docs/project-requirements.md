@@ -1,5 +1,4 @@
-
-## Core Architecture  
+## Core Architecture
 
 ### Ticket Data Model
 
@@ -17,6 +16,7 @@ The ticket system is central to AutoCRM, treated as a living document that captu
 ### Employee Interface
 
 #### Queue Management
+
 - Customizable Views: Prioritize tickets effectively.
 - Real-Time Updates: Reflect changes instantly.
 - Quick Filters: Focus on ticket states and priorities.
@@ -30,6 +30,7 @@ The ticket system is central to AutoCRM, treated as a living document that captu
 - Collaboration Tools: Share internal notes and updates.
 
 #### Performance Tools
+
 - Metrics Tracking: Monitor response times and resolution rates.
 - Template Management: Optimize frequently used responses.
 - Personal Stats: Help agents improve efficiency.

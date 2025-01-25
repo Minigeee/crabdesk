@@ -239,10 +239,7 @@ export function useTicketActions<T extends string | undefined>(
         {
           onError: () => {
             // Rollback the optimistic update if the actual update fails
-            queryClient.setQueryData(
-              ticketKeys.detail(targetId),
-              currentData
-            );
+            queryClient.setQueryData(ticketKeys.detail(targetId), currentData);
           },
         }
       );

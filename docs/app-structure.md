@@ -5,18 +5,21 @@
 CrabDesk is a CRM system designed to help organizations manage their customer relationships through email-based ticketing. The system follows these core workflows:
 
 1. Email Integration
+
    - Organizations connect their email system to CrabDesk
    - Incoming emails automatically create new tickets
    - Each unique email thread becomes a separate ticket
    - Customer contacts are automatically created and tracked by email
 
 2. User Management
+
    - Users belong to organizations and handle tickets
    - A single auth user can be part of multiple organizations
    - Each organization has its own set of users with specific roles
    - Users can be organized into teams for better ticket routing
 
 3. Ticket Workflow
+
    - Tickets are created from incoming emails
    - Assigned to teams or individual users
    - Users can collaborate on tickets

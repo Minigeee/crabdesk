@@ -1,8 +1,8 @@
+import { useAuth } from '@/lib/auth/hooks';
 import { Tables } from '@/lib/database.types';
 import { createClient } from '@/lib/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import assert from 'assert';
-import { useAuth } from '@/lib/auth/hooks';
 
 export type Contact = Tables<'contacts'>;
 

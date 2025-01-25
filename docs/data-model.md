@@ -38,6 +38,7 @@ CrabDesk is a CRM system designed for organizations to manage their customer int
 **Description**: Organizations are the top-level entity in CrabDesk. Each organization connects their email system to CrabDesk and manages their customer interactions through the platform. They have their own set of users, contacts, teams, and configuration settings.
 
 **Key Attributes**:
+
 - id: uuid PRIMARY KEY
 - name: varchar(255) NOT NULL
 - domain: varchar(255) NOT NULL
@@ -51,13 +52,16 @@ CrabDesk is a CRM system designed for organizations to manage their customer int
 **Relationships**: Has many users, contacts, teams, and tickets
 **User Interaction**: Created/managed by system admins
 **Constraints**:
+
 - UNIQUE(domain)
 
 **Indexes**:
+
 - UNIQUE INDEX org_domain_idx ON organizations(domain)
 - INDEX org_created_at_idx ON organizations(created_at)
 
 **Security Policies**:
+
 - READ: Users can read organizations they belong to
 - INSERT: Only system admins can create organizations
 - UPDATE: Organization admins can update their own organization
@@ -70,6 +74,7 @@ CrabDesk is a CRM system designed for organizations to manage their customer int
 **Description**: Users are organization members who handle tickets and interact with contacts. A single auth user can have multiple user profiles, one for each organization they belong to. This allows for organization-specific roles, preferences, and settings.
 
 **Key Attributes**:
+
 - id: uuid PRIMARY KEY
 - org_id: uuid NOT NULL
 - auth_user_id: uuid NOT NULL
@@ -82,17 +87,21 @@ CrabDesk is a CRM system designed for organizations to manage their customer int
 - updated_at: timestamptz NOT NULL DEFAULT now()
 
 **Relationships**:
+
 - FOREIGN KEY (org_id) REFERENCES organizations(id)
 
 **Constraints**:
+
 - UNIQUE(org_id, auth_user_id)
 - CHECK (role IN ('admin', 'agent', 'supervisor'))
 
 **Indexes**:
+
 - UNIQUE INDEX user_auth_idx ON users(org_id, auth_user_id)
 - INDEX user_role_idx ON users(org_id, role)
 
 **Security Policies**:
+
 - READ: Users can read other users within their organization
 - INSERT: Organization admins can create new users
 - UPDATE: Users can update their own profile, admins can update any user in their org
@@ -105,6 +114,7 @@ CrabDesk is a CRM system designed for organizations to manage their customer int
 **Description**: Contacts are automatically created when new email threads are received. They are primarily identified by their email address and accumulate interaction history through tickets. Unlike the previous model, contacts don't have portal access as that feature is not implemented.
 
 **Key Attributes**:
+
 - id: uuid PRIMARY KEY
 - org_id: uuid NOT NULL
 - email: varchar(255) NOT NULL
@@ -116,17 +126,21 @@ CrabDesk is a CRM system designed for organizations to manage their customer int
 - updated_at: timestamptz NOT NULL DEFAULT now()
 
 **Relationships**:
+
 - FOREIGN KEY (org_id) REFERENCES organizations(id)
 
 **Constraints**:
+
 - UNIQUE(org_id, email)
 - CHECK (email ~ '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$')
 
 **Indexes**:
+
 - UNIQUE INDEX contact_email_idx ON contacts(org_id, email)
 - INDEX contact_seen_idx ON contacts(org_id, last_seen_at)
 
 **Security Policies**:
+
 - READ: Users can read contacts in their organization
 - INSERT: System can create contacts from incoming emails
 - UPDATE: Users can update contacts in their organization
@@ -139,6 +153,7 @@ CrabDesk is a CRM system designed for organizations to manage their customer int
 **Description**: Teams help organize users within an organization for better ticket management. They can be used for different departments (sales, support) or specialties (technical, billing). Teams are crucial for ticket routing and workload distribution.
 
 **Key Attributes**:
+
 - id: uuid PRIMARY KEY
 - org_id: uuid NOT NULL
 - name: varchar(255) NOT NULL
@@ -150,17 +165,21 @@ CrabDesk is a CRM system designed for organizations to manage their customer int
 - updated_at: timestamptz NOT NULL DEFAULT now()
 
 **Relationships**:
+
 - FOREIGN KEY (org_id) REFERENCES organizations(id)
 
 **Constraints**:
+
 - UNIQUE(org_id, name)
 - UNIQUE(org_id, email_alias)
 
 **Indexes**:
+
 - UNIQUE INDEX team_name_idx ON teams(org_id, name)
 - UNIQUE INDEX team_email_idx ON teams(org_id, email_alias)
 
 **Security Policies**:
+
 - READ: All users can read teams in their organization
 - INSERT: Organization admins can create teams
 - UPDATE: Team leaders and org admins can update team details
@@ -173,20 +192,24 @@ CrabDesk is a CRM system designed for organizations to manage their customer int
 **Description**: Manages team membership and roles. Users can belong to multiple teams, and their role within each team can affect their permissions and responsibilities for team-specific tickets.
 
 **Key Attributes**:
+
 - team_id: uuid NOT NULL
 - user_id: uuid NOT NULL
 - role: varchar(50) DEFAULT 'member'
 - created_at: timestamptz NOT NULL DEFAULT now()
 
 **Relationships**:
+
 - FOREIGN KEY (team_id) REFERENCES teams(id)
 - FOREIGN KEY (user_id) REFERENCES users(id)
 
 **Constraints**:
+
 - PRIMARY KEY (team_id, user_id)
 - CHECK (role IN ('leader', 'member'))
 
 **Security Policies**:
+
 - READ: All users can read team memberships in their org
 - INSERT: Team leaders and org admins can add members
 - UPDATE: Team leaders and org admins can modify roles
@@ -199,6 +222,7 @@ CrabDesk is a CRM system designed for organizations to manage their customer int
 **Description**: Tickets are created automatically from incoming emails and represent ongoing conversations with contacts. Each new email thread creates a new ticket, maintaining a clean separation between different conversation threads while preserving the relationship to the contact.
 
 **Key Attributes**:
+
 - id: uuid PRIMARY KEY DEFAULT gen_random_uuid()
 - org_id: uuid NOT NULL
 - number: bigint NOT NULL GENERATED ALWAYS AS IDENTITY
@@ -216,15 +240,18 @@ CrabDesk is a CRM system designed for organizations to manage their customer int
 - resolved_at: timestamptz
 
 **Relationships**:
+
 - FOREIGN KEY (org_id) REFERENCES organizations(id)
 - FOREIGN KEY (contact_id) REFERENCES contacts(id)
 - FOREIGN KEY (assignee_id) REFERENCES users(id)
 - FOREIGN KEY (team_id) REFERENCES teams(id)
 
 **Constraints**:
+
 - UNIQUE(org_id, number)
 
 **Indexes**:
+
 - UNIQUE INDEX ticket_number_idx ON tickets(org_id, number)
 - INDEX ticket_status_idx ON tickets(org_id, status, created_at)
 - INDEX ticket_contact_idx ON tickets(contact_id, created_at)
@@ -232,6 +259,7 @@ CrabDesk is a CRM system designed for organizations to manage their customer int
 - INDEX ticket_team_idx ON tickets(team_id, status)
 
 **Security Policies**:
+
 - READ: Users can read tickets in their org, assigned to them, or their team
 - INSERT: System creates tickets from incoming emails
 - UPDATE: Assignee, team members, and admins can update tickets
@@ -244,6 +272,7 @@ CrabDesk is a CRM system designed for organizations to manage their customer int
 **Description**: Maintains the relationship between email threads and tickets, storing only the necessary metadata to link with the email service provider's storage. This allows for efficient email thread tracking without storing the actual email content in the database.
 
 **Key Attributes**:
+
 - id: uuid PRIMARY KEY
 - org_id: uuid NOT NULL
 - ticket_id: uuid NOT NULL
@@ -258,18 +287,22 @@ CrabDesk is a CRM system designed for organizations to manage their customer int
 - updated_at: timestamptz NOT NULL DEFAULT now()
 
 **Relationships**:
+
 - FOREIGN KEY (org_id) REFERENCES organizations(id)
 - FOREIGN KEY (ticket_id) REFERENCES tickets(id)
 
 **Constraints**:
+
 - UNIQUE(org_id, provider_thread_id)
 
 **Indexes**:
+
 - UNIQUE INDEX email_thread_provider_idx ON email_threads(org_id, provider_thread_id)
 - INDEX email_thread_ticket_idx ON email_threads(ticket_id)
 - INDEX email_thread_updated_idx ON email_threads(org_id, last_message_at)
 
 **Security Policies**:
+
 - READ: Users can read email threads in their organization
 - INSERT: System creates email thread records
 - UPDATE: System updates email thread metadata
@@ -282,6 +315,7 @@ CrabDesk is a CRM system designed for organizations to manage their customer int
 **Description**: Supports team collaboration through real-time messages and internal notes. Messages are always associated with a ticket and can be either internal team discussions or public responses to contacts. The actual email communication is handled separately through the email_threads system.
 
 **Key Attributes**:
+
 - id: uuid PRIMARY KEY
 - ticket_id: uuid NOT NULL
 - sender_type: message_sender_type NOT NULL
@@ -293,14 +327,17 @@ CrabDesk is a CRM system designed for organizations to manage their customer int
 - updated_at: timestamptz NOT NULL DEFAULT now()
 
 **Relationships**:
+
 - FOREIGN KEY (ticket_id) REFERENCES tickets(id)
 
 **Indexes**:
+
 - INDEX message_ticket_idx ON messages(ticket_id, created_at)
 - INDEX message_sender_idx ON messages(sender_type, sender_id)
 - INDEX message_private_idx ON messages(ticket_id, is_private)
 
 **Security Policies**:
+
 - READ: Users can read messages in their organization
 - INSERT: Users can create messages for accessible tickets
 - UPDATE: Message creators can update their messages within a time window
@@ -315,6 +352,7 @@ CrabDesk is a CRM system designed for organizations to manage their customer int
 **Description**: Skills represent different capabilities that users may have, such as product knowledge, language proficiency, or technical expertise. These are used for intelligent ticket routing and team organization.
 
 **Key Attributes**:
+
 - id: uuid PRIMARY KEY
 - org_id: uuid NOT NULL
 - name: varchar(255) NOT NULL
@@ -323,16 +361,20 @@ CrabDesk is a CRM system designed for organizations to manage their customer int
 - created_at: timestamptz NOT NULL DEFAULT now()
 
 **Relationships**:
+
 - FOREIGN KEY (org_id) REFERENCES organizations(id)
 
 **Constraints**:
+
 - UNIQUE(org_id, name)
 - CHECK (level BETWEEN 1 AND 5)
 
 **Indexes**:
+
 - UNIQUE INDEX skill_name_idx ON skills(org_id, name)
 
 **Security Policies**:
+
 - READ: All users can read skills
 - INSERT: Organization admins can create skills
 - UPDATE: Organization admins can update skills
@@ -345,6 +387,7 @@ CrabDesk is a CRM system designed for organizations to manage their customer int
 **Description**: Tags provide a flexible way to categorize tickets for reporting, routing, and organization. They can be applied manually by users or automatically through rules based on ticket content or metadata.
 
 **Key Attributes**:
+
 - id: uuid PRIMARY KEY
 - org_id: uuid NOT NULL
 - name: varchar(255) NOT NULL
@@ -353,16 +396,20 @@ CrabDesk is a CRM system designed for organizations to manage their customer int
 - created_at: timestamptz NOT NULL DEFAULT now()
 
 **Relationships**:
+
 - FOREIGN KEY (org_id) REFERENCES organizations(id)
 
 **Constraints**:
+
 - UNIQUE(org_id, name)
 - CHECK (color ~ '^#[0-9A-Fa-f]{6}$')
 
 **Indexes**:
+
 - UNIQUE INDEX tag_name_idx ON tags(org_id, name)
 
 **Security Policies**:
+
 - READ: All users can read tags
 - INSERT: Users can create tags
 - UPDATE: Users can update tags
@@ -375,6 +422,7 @@ CrabDesk is a CRM system designed for organizations to manage their customer int
 **Description**: Manages files attached to emails and messages. Files are stored in Supabase storage, while this table maintains the metadata and relationships to tickets and messages.
 
 **Key Attributes**:
+
 - id: uuid PRIMARY KEY
 - org_id: uuid NOT NULL
 - ticket_id: uuid NOT NULL
@@ -388,19 +436,23 @@ CrabDesk is a CRM system designed for organizations to manage their customer int
 - created_at: timestamptz NOT NULL DEFAULT now()
 
 **Relationships**:
+
 - FOREIGN KEY (org_id) REFERENCES organizations(id)
 - FOREIGN KEY (ticket_id) REFERENCES tickets(id)
 - FOREIGN KEY (message_id) REFERENCES messages(id)
 
 **Constraints**:
+
 - CHECK (size > 0)
 
 **Indexes**:
+
 - INDEX attachment_org_idx ON attachments(org_id, created_at)
 - INDEX attachment_ticket_idx ON attachments(ticket_id, created_at)
 - UNIQUE INDEX attachment_path_idx ON attachments(bucket, path)
 
 **Security Policies**:
+
 - READ: Users can read attachments in their organization
 - INSERT: System creates attachment records from emails
 - UPDATE: No updates allowed after creation
@@ -413,6 +465,7 @@ CrabDesk is a CRM system designed for organizations to manage their customer int
 **Description**: Maintains a comprehensive audit trail of all significant changes in the system. This is crucial for security, compliance, and debugging purposes. Each log entry captures the what, who, and when of changes.
 
 **Key Attributes**:
+
 - id: uuid PRIMARY KEY
 - org_id: uuid NOT NULL
 - action: audit_log_action NOT NULL
@@ -423,14 +476,17 @@ CrabDesk is a CRM system designed for organizations to manage their customer int
 - created_at: timestamptz NOT NULL DEFAULT now()
 
 **Relationships**:
+
 - FOREIGN KEY (org_id) REFERENCES organizations(id)
 - FOREIGN KEY (actor_id) REFERENCES users(id)
 
 **Indexes**:
+
 - INDEX audit_org_idx ON audit_logs(org_id, created_at)
 - INDEX audit_entity_idx ON audit_logs(entity_type, entity_id)
 
 **Security Policies**:
+
 - READ: Users can read audit logs in their organization
 - INSERT: System automatically creates audit logs
 - UPDATE: No updates allowed

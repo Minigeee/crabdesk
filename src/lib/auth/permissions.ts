@@ -2,12 +2,6 @@ import type { Tables } from '@/lib/database.types';
 
 type User = Tables<'users'>;
 
-// Define the preferences type
-interface UserPreferences {
-  last_org_id?: string;
-  [key: string]: any;
-}
-
 export type Permission =
   | 'manage:users'
   | 'manage:teams'
@@ -32,7 +26,7 @@ const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     'manage:tickets',
     'manage:contacts',
     'manage:email',
-    'view:analytics'
+    'view:analytics',
   ],
 };
 
@@ -82,7 +76,7 @@ export async function hasTeamAccess(
       .select('org_id')
       .eq('id', teamId)
       .single();
-    
+
     return team?.org_id === user.org_id;
   }
 

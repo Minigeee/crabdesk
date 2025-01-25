@@ -77,7 +77,7 @@ import {
   requireUser,
   requireOrganizationAccess,
   signOut,
-  switchOrganization
+  switchOrganization,
 } from '@/lib/auth/session';
 
 // Get current user (if any)
@@ -174,7 +174,7 @@ import {
   hasOrganizationAccess,
   hasTeamAccess,
   getUserPermissions,
-  type Permission
+  type Permission,
 } from '@/lib/auth/permissions';
 
 // Check specific permission
@@ -197,6 +197,7 @@ const permissions = getUserPermissions(user);
 ```
 
 Available permissions:
+
 - `manage:users` - Can manage users and their roles
 - `manage:teams` - Can create and manage teams
 - `manage:tickets` - Can manage tickets and their assignments

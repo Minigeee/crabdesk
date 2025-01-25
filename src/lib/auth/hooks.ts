@@ -1,6 +1,6 @@
-import { createClient } from '@/lib/supabase/client';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Tables } from '@/lib/database.types';
+import { createClient } from '@/lib/supabase/client';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export type UserData = {
   user: Tables<'users'>;
@@ -61,7 +61,7 @@ export function useAuth() {
       return {
         user,
         organization,
-        organizations: organizations?.map(row => row.organizations) ?? [],
+        organizations: organizations?.map((row) => row.organizations) ?? [],
       };
     },
   });
@@ -70,7 +70,7 @@ export function useAuth() {
   const switchOrganization = useMutation({
     mutationFn: async (orgId: string) => {
       await supabase.auth.updateUser({
-        data: { org_id: orgId }
+        data: { org_id: orgId },
       });
     },
     onSuccess: () => {
@@ -94,4 +94,4 @@ export function useAuth() {
     switchOrganization: switchOrganization.mutate,
     signOut: signOut.mutate,
   };
-} 
+}

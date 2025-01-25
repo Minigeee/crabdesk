@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/select';
 import { UserSelect } from '@/components/users/user-select';
 import { auditKeys } from '@/lib/audit/use-audit-logs';
-import type { Enums, Tables } from '@/lib/database.types';
+import type { Enums } from '@/lib/database.types';
 import { TicketWithRelations } from '@/lib/tickets/ticket-service';
 import { useTicket, useTicketActions } from '@/lib/tickets/use-tickets';
 import { useQueryClient } from '@tanstack/react-query';
@@ -36,7 +36,10 @@ const TICKET_PRIORITIES: Enums<'ticket_priority'>[] = [
   'urgent',
 ];
 
-export function TicketActions({ ticket: initialTicket, onMergeTicket }: TicketActionsProps) {
+export function TicketActions({
+  ticket: initialTicket,
+  onMergeTicket,
+}: TicketActionsProps) {
   const queryClient = useQueryClient();
   // Use hook for optimistic update
   const { data: ticket } = useTicket(initialTicket.id, true, {
