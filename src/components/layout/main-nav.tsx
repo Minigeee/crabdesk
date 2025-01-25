@@ -14,6 +14,7 @@ import {
   Inbox,
   Settings,
   Users,
+  Beaker,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -51,6 +52,11 @@ const navItems: NavItem[] = [
     title: 'Settings',
     href: '/dashboard/settings',
     icon: Settings,
+  },
+  {
+    title: 'Testing',
+    href: '/dashboard/testing',
+    icon: Beaker,
   },
 ];
 

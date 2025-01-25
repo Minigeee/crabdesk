@@ -49,7 +49,7 @@ export function TicketPreview() {
           <Link href={`/dashboard/tickets/${ticket.number}`}>
             <Button variant='ghost' size='sm'>
               <ArrowUpRight className='mr-1 h-4 w-4' />
-              View
+              Open
             </Button>
           </Link>
         </div>

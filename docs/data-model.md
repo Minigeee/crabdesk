@@ -282,6 +282,11 @@ CrabDesk is a CRM system designed for organizations to manage their customer int
 - to_email: varchar(255) NOT NULL
 - subject: varchar(255) NOT NULL
 - last_message_at: timestamptz NOT NULL
+- in_reply_to: varchar(255)
+- message_id: varchar(255)
+- references: text[]
+- headers: jsonb DEFAULT '{}'
+- raw_payload: jsonb DEFAULT '{}'
 - metadata: jsonb DEFAULT '{}'
 - created_at: timestamptz NOT NULL DEFAULT now()
 - updated_at: timestamptz NOT NULL DEFAULT now()
@@ -300,6 +305,8 @@ CrabDesk is a CRM system designed for organizations to manage their customer int
 - UNIQUE INDEX email_thread_provider_idx ON email_threads(org_id, provider_thread_id)
 - INDEX email_thread_ticket_idx ON email_threads(ticket_id)
 - INDEX email_thread_updated_idx ON email_threads(org_id, last_message_at)
+- INDEX idx_email_threads_message_id ON email_threads(message_id)
+- INDEX idx_email_threads_in_reply_to ON email_threads(in_reply_to)
 
 **Security Policies**:
 
@@ -321,7 +328,6 @@ CrabDesk is a CRM system designed for organizations to manage their customer int
 - sender_type: message_sender_type NOT NULL
 - sender_id: uuid NOT NULL
 - content: text NOT NULL
-- content_type: message_content_type DEFAULT 'text'
 - is_private: boolean DEFAULT false
 - created_at: timestamptz NOT NULL DEFAULT now()
 - updated_at: timestamptz NOT NULL DEFAULT now()
@@ -491,6 +497,51 @@ CrabDesk is a CRM system designed for organizations to manage their customer int
 - INSERT: System automatically creates audit logs
 - UPDATE: No updates allowed
 - DELETE: No deletion allowed
+
+### Email Messages
+
+**Purpose**: Stores the complete content and metadata of individual email messages.
+
+**Description**: Maintains a comprehensive record of all email communications, storing both content and metadata for each message within an email thread. This enables complete email history tracking, proper threading, and rich content display while maintaining provider independence.
+
+**Key Attributes**:
+
+- id: uuid PRIMARY KEY DEFAULT gen_random_uuid()
+- thread_id: uuid NOT NULL
+- message_id: varchar(255) NOT NULL
+- in_reply_to: varchar(255)
+- reference_ids: text[]
+- from_email: varchar(255) NOT NULL
+- from_name: varchar(255)
+- to_emails: text[] NOT NULL
+- cc_emails: text[]
+- bcc_emails: text[]
+- subject: varchar(255) NOT NULL
+- text_body: text
+- html_body: text
+- headers: jsonb NOT NULL DEFAULT '{}'
+- metadata: jsonb NOT NULL DEFAULT '{}'
+- created_at: timestamptz NOT NULL DEFAULT now()
+
+**Relationships**:
+
+- FOREIGN KEY (thread_id) REFERENCES email_threads(id)
+
+**Constraints**:
+
+- UNIQUE(thread_id, message_id)
+
+**Indexes**:
+
+- UNIQUE INDEX email_message_id_idx ON email_messages(thread_id, message_id)
+- INDEX email_message_created_idx ON email_messages(thread_id, created_at)
+
+**Security Policies**:
+
+- READ: Users can read email messages in their organization
+- INSERT: System creates message records from incoming emails
+- UPDATE: No updates allowed after creation
+- DELETE: Organization admins can delete email messages
 
 ## Notes
 

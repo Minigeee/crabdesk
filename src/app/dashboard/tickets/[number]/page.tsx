@@ -92,15 +92,15 @@ export default async function TicketPage({ params }: PageProps) {
           </div>
         </div>
 
-        <Tabs defaultValue='internal' className='flex h-0 flex-1 flex-col'>
+        <Tabs defaultValue='public' className='flex h-0 flex-1 flex-col'>
           <TabsList className='justify-start rounded-none border-b py-5'>
-            <TabsTrigger value='internal' className='gap-2'>
-              <EyeOffIcon className='h-4 w-4' />
-              Internal Notes
-            </TabsTrigger>
             <TabsTrigger value='public' className='gap-2'>
               <MessageCircleIcon className='h-4 w-4' />
               Messages
+            </TabsTrigger>
+            <TabsTrigger value='internal' className='gap-2'>
+              <EyeOffIcon className='h-4 w-4' />
+              Internal Notes
             </TabsTrigger>
           </TabsList>
 

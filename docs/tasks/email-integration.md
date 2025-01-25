@@ -2,30 +2,36 @@
 
 ## Email Processing Core
 
-**Context**: Implement essential email processing using Postmark for reliable email handling and thread tracking.
+**Context**: Implement webhook endpoint and processing system that can handle Postmark-formatted email data. For development, we'll create a testing tool to simulate incoming emails without actual email service integration.
 
 **Considerations**:
 - Email thread table needs provider_thread_id and provider_message_ids for reliable threading
-- Organizations need to store their email domain and Postmark settings
-- Attachments should be stored with content-type and size validation
+- Webhook needs to validate payload format matches Postmark's schema
+- Create test data generator that matches Postmark's inbound webhook format
 - Edge functions need proper error handling and retry mechanisms
-- Rate limiting should be considered for the webhook endpoint
 - Email content should be sanitized before storage
+- Test data should simulate various email scenarios (new threads, replies, attachments)
 
 ### Initial Setup
-[ ] Set up Postmark account and get API credentials
-[ ] Add environment variables for Postmark configuration
-[ ] Create MessageStream for support tickets
-[ ] Set up inbound webhook domain
+[X] Research and document Postmark's inbound webhook payload format
+[X] Create test data generator for simulating email webhooks
+[X] Set up edge function endpoint for webhook
+[X] Create basic email payload validation
 
 ### Core Email Processing
-[ ] Create edge function for inbound email webhook
-[ ] Implement basic email parsing (from, to, subject, body)
-[ ] Set up thread detection and tracking
-[ ] Store email content and metadata in Supabase
+[X] Create edge function for processing webhook data
+[X] Implement email parsing (from, to, subject, body)
+[X] Set up thread detection and tracking
+[X] Store email content and metadata in Supabase
+
+### Testing Infrastructure
+[X] Create UI tool for sending test emails to webhook
+[X] Add preset templates for common email scenarios
+[X] Implement attachment simulation
+[X] Add delay simulation for testing real-world scenarios
 
 ### Basic Email Features
-[ ] Implement email sending through Postmark
+[ ] Implement email sending through internal system
 [ ] Add reply handling with proper thread maintenance
 [ ] Set up basic email templates for responses
 [ ] Handle attachments using Supabase storage

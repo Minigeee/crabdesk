@@ -343,3 +343,56 @@ export async function POST(request: Request) {
   }
 }
 ```
+
+## Email Processing
+
+### Using Email Service
+
+```typescript
+import { EmailProcessingService } from '@/lib/email/service';
+import { createClient } from '@/lib/supabase/server';
+
+// Process incoming email
+async function handleIncomingEmail(orgId: string, emailData: ProcessedEmailData) {
+  const supabase = await createClient();
+  const emailService = new EmailProcessingService(supabase, orgId);
+  
+  try {
+    const result = await emailService.processEmail(emailData);
+    // result contains created/updated thread, ticket, message, and contact
+    return result;
+  } catch (error) {
+    console.error('Failed to process email:', error);
+    throw error;
+  }
+}
+```
+
+### Testing Email Processing
+
+```typescript
+import { generateTestEmailPayload, generateEmailThread } from '@/lib/email/test-utils';
+
+// Generate single test email
+const testEmail = generateTestEmailPayload({
+  fromEmail: 'customer@example.com',
+  toEmail: 'support@company.com',
+  subject: 'Need help',
+});
+
+// Generate email thread (simulates conversation)
+const thread = generateEmailThread(3); // Creates 3 messages in thread
+const [initial, firstReply, secondReply] = thread;
+
+// Test webhook endpoint
+const response = await fetch('/api/webhooks/email', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Postmark-Signature': 'test-signature',
+  },
+  body: JSON.stringify(testEmail),
+});
+
+const result = await response.json();
+```

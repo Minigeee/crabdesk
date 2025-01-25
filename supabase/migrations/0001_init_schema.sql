@@ -195,6 +195,11 @@ CREATE TABLE public.email_threads (
   metadata          jsonb NOT NULL DEFAULT '{}',
   created_at        timestamptz NOT NULL DEFAULT now(),
   updated_at        timestamptz NOT NULL DEFAULT now(),
+  in_reply_to       varchar(255),
+  message_id        varchar(255),
+  reference_ids     text[],
+  headers           jsonb DEFAULT '{}',
+  raw_payload       jsonb DEFAULT '{}',
   CONSTRAINT email_threads_org_fkey
     FOREIGN KEY (org_id) REFERENCES public.organizations (id),
   CONSTRAINT email_threads_ticket_fkey
@@ -206,9 +211,11 @@ CREATE TABLE public.email_threads (
 CREATE UNIQUE INDEX email_thread_provider_idx ON email_threads(org_id, provider_thread_id);
 CREATE INDEX email_thread_ticket_idx ON email_threads(ticket_id);
 CREATE INDEX email_thread_updated_idx ON email_threads(org_id, last_message_at);
+CREATE INDEX idx_email_threads_message_id ON email_threads(message_id);
+CREATE INDEX idx_email_threads_in_reply_to ON email_threads(in_reply_to);
 
 --------------------------------------------------------------------------------
--- Table: messages
+-- Table: messages (real time non-email messages)
 --------------------------------------------------------------------------------
 CREATE TABLE public.messages (
   id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -346,5 +353,34 @@ CREATE TABLE public.audit_logs (
 -- Indexes
 CREATE INDEX audit_org_idx ON audit_logs(org_id, created_at);
 CREATE INDEX audit_entity_idx ON audit_logs(entity_type, entity_id);
+
+--------------------------------------------------------------------------------
+-- Table: email_messages
+--------------------------------------------------------------------------------
+CREATE TABLE public.email_messages (
+  id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  thread_id     uuid NOT NULL,
+  message_id    varchar(255) NOT NULL,
+  in_reply_to   varchar(255),
+  reference_ids text[],
+  from_email    varchar(255) NOT NULL,
+  from_name     varchar(255),
+  to_emails     text[] NOT NULL,
+  cc_emails     text[],
+  bcc_emails    text[],
+  subject       varchar(255) NOT NULL,
+  text_body     text,
+  html_body     text,
+  headers       jsonb NOT NULL DEFAULT '{}',
+  metadata      jsonb NOT NULL DEFAULT '{}',
+  created_at    timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT email_messages_thread_fkey
+    FOREIGN KEY (thread_id) REFERENCES public.email_threads (id),
+  CONSTRAINT email_message_unique UNIQUE (thread_id, message_id)
+);
+
+-- Indexes
+CREATE UNIQUE INDEX email_message_id_idx ON email_messages(thread_id, message_id);
+CREATE INDEX email_message_created_idx ON email_messages(thread_id, created_at);
 
 COMMIT; 
