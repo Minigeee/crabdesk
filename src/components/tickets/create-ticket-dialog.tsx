@@ -8,7 +8,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { useInternalAuth } from '@/lib/auth/internal/hooks';
+import { useAuth } from '@/lib/auth/hooks';
 import type { FileAttachment } from '@/lib/tickets/ticket-service';
 import { useCreateTicket } from '@/lib/tickets/use-tickets';
 import { useState } from 'react';
@@ -22,7 +22,7 @@ export function CreateTicketDialog({ trigger }: CreateTicketDialogProps) {
   const [open, setOpen] = useState(false);
   const createTicket = useCreateTicket();
   const { toast } = useToast();
-  const { organization } = useInternalAuth();
+  const { organization } = useAuth();
 
   const handleSubmit = async (
     data: TicketFormData,
@@ -33,7 +33,7 @@ export function CreateTicketDialog({ trigger }: CreateTicketDialogProps) {
       const insertData = {
         ...data,
         org_id: organization.id,
-        source: 'portal' as const, // Since this is from the dashboard
+        source: 'api' as const, // Since this is from the dashboard
         assignee_id: data.assignee_id || undefined,
         metadata: {
           description: data.description,

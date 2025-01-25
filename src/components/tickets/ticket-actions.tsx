@@ -14,11 +14,12 @@ import {
 import { UserSelect } from '@/components/users/user-select';
 import { auditKeys } from '@/lib/audit/use-audit-logs';
 import type { Enums, Tables } from '@/lib/database.types';
-import { useTicketActions } from '@/lib/tickets/use-tickets';
+import { TicketWithRelations } from '@/lib/tickets/ticket-service';
+import { useTicket, useTicketActions } from '@/lib/tickets/use-tickets';
 import { useQueryClient } from '@tanstack/react-query';
 
 interface TicketActionsProps {
-  ticket: Tables<'tickets'>;
+  ticket: TicketWithRelations;
   onMergeTicket?: () => void;
 }
 
@@ -35,16 +36,20 @@ const TICKET_PRIORITIES: Enums<'ticket_priority'>[] = [
   'urgent',
 ];
 
-export function TicketActions({ ticket, onMergeTicket }: TicketActionsProps) {
+export function TicketActions({ ticket: initialTicket, onMergeTicket }: TicketActionsProps) {
   const queryClient = useQueryClient();
+  // Use hook for optimistic update
+  const { data: ticket } = useTicket(initialTicket.id, true, {
+    initialData: initialTicket,
+  });
   const { updateStatus, updatePriority, updateAssignee } = useTicketActions(
-    ticket.id
+    initialTicket.id
   );
 
   // Helper for audit log invalidation
   const invalidateAuditLogs = () => {
     return queryClient.invalidateQueries({
-      queryKey: [...auditKeys.list('ticket', ticket.id)],
+      queryKey: [...auditKeys.list('ticket', initialTicket.id)],
     });
   };
 
@@ -72,7 +77,7 @@ export function TicketActions({ ticket, onMergeTicket }: TicketActionsProps) {
             <Label>Status</Label>
             <div className='mt-1.5 flex items-center gap-3'>
               <Select
-                value={ticket.status}
+                value={ticket?.status}
                 onValueChange={(value) =>
                   handleStatusUpdate(value as Enums<'ticket_status'>)
                 }
@@ -95,7 +100,7 @@ export function TicketActions({ ticket, onMergeTicket }: TicketActionsProps) {
             <Label>Priority</Label>
             <div className='mt-1.5 flex items-center gap-3'>
               <Select
-                value={ticket.priority}
+                value={ticket?.priority}
                 onValueChange={(value) =>
                   handlePriorityUpdate(value as Enums<'ticket_priority'>)
                 }
@@ -118,7 +123,7 @@ export function TicketActions({ ticket, onMergeTicket }: TicketActionsProps) {
             <Label>Assignee</Label>
             <div className='mt-1.5'>
               <UserSelect
-                value={ticket.assignee_id ?? undefined}
+                value={ticket?.assignee_id ?? undefined}
                 onChange={(value) => handleAssigneeUpdate(value ?? null)}
               />
             </div>
@@ -138,7 +143,7 @@ export function TicketActions({ ticket, onMergeTicket }: TicketActionsProps) {
 
       <Card className='p-4'>
         <h3 className='mb-4 font-medium'>Activity Log</h3>
-        <AuditLogList entityType='ticket' entityId={ticket.id} />
+        <AuditLogList entityType='ticket' entityId={initialTicket.id} />
       </Card>
     </div>
   );

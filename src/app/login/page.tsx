@@ -7,7 +7,6 @@ export default async function LoginPage({
 }) {
   const params = await searchParams;
   const next = params.next || '/';
-  const token = params.token;
 
   return (
     <div className='flex h-screen flex-col items-center justify-center'>
@@ -21,7 +20,7 @@ export default async function LoginPage({
           </p>
         </div>
 
-        <LoginForm next={next} token={token} />
+        <LoginForm next={next} />
       </div>
     </div>
   );

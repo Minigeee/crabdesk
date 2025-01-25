@@ -7,7 +7,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { SearchBar } from '@/components/ui/search-bar';
-import { useInternalUsers } from '@/lib/users/use-internal-users';
+import { useOrganizationUsers } from '@/lib/users/use-organization-users';
 import { PenIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Avatar, AvatarFallback } from '../ui/avatar';
@@ -23,7 +23,7 @@ export function UserSelect({ value, onChange }: UserSelectProps) {
   const [search, setSearch] = useState('');
   const [autofocus, setAutofocus] = useState(false);
   const [choosing, setChoosing] = useState(false);
-  const { data: users = [] } = useInternalUsers(search);
+  const { data: users = [] } = useOrganizationUsers(search);
 
   const selectedUser = useMemo(
     () => users.find((user) => user.id === value),

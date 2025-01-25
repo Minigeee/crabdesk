@@ -1,4 +1,4 @@
-import { useInternalAuth } from '@/lib/auth/internal/hooks';
+import { useAuth } from '@/lib/auth/hooks';
 import { createClient } from '@/lib/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import assert from 'assert';
@@ -14,7 +14,7 @@ export const auditKeys = {
 };
 
 export function useAuditLogs(entityType: string, entityId: string) {
-  const { organization } = useInternalAuth();
+  const { organization } = useAuth();
   const queryClient = useQueryClient();
 
   // Create memoized service instance

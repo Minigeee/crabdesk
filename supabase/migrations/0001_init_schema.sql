@@ -34,9 +34,6 @@ CREATE TYPE article_status AS ENUM ('draft', 'published', 'archived');
 -- Audit Log Action
 CREATE TYPE audit_log_action AS ENUM ('insert', 'update', 'delete', 'restore');
 
--- User Role Type
-CREATE TYPE user_role AS ENUM ('internal_user', 'internal_admin', 'portal_user');
-
 --------------------------------------------------------------------------------
 -- Table: organizations
 --------------------------------------------------------------------------------
@@ -157,6 +154,7 @@ CREATE TABLE public.tickets (
   contact_id    uuid NOT NULL,
   assignee_id   uuid,
   team_id       uuid,
+  metadata      jsonb NOT NULL DEFAULT '{}',
   email_metadata jsonb NOT NULL DEFAULT '{}',
   created_at    timestamptz NOT NULL DEFAULT now(),
   updated_at    timestamptz NOT NULL DEFAULT now(),
@@ -307,7 +305,6 @@ CREATE TABLE public.attachments (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   org_id      uuid NOT NULL,
   ticket_id   uuid NOT NULL,
-  message_id  uuid NOT NULL,
   bucket      varchar(255) NOT NULL,
   path        varchar(1024) NOT NULL,
   filename    varchar(255) NOT NULL,
@@ -319,8 +316,6 @@ CREATE TABLE public.attachments (
     FOREIGN KEY (org_id) REFERENCES public.organizations (id),
   CONSTRAINT attachments_ticket_fkey
     FOREIGN KEY (ticket_id) REFERENCES public.tickets (id),
-  CONSTRAINT attachments_message_fkey
-    FOREIGN KEY (message_id) REFERENCES public.messages (id),
   CONSTRAINT attachment_size_check CHECK (size > 0),
   CONSTRAINT attachment_path_unique UNIQUE (bucket, path)
 );

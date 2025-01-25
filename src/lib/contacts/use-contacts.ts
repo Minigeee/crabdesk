@@ -2,12 +2,12 @@ import { Tables } from '@/lib/database.types';
 import { createClient } from '@/lib/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import assert from 'assert';
-import { useInternalAuth } from '../auth/internal/hooks';
+import { useAuth } from '@/lib/auth/hooks';
 
 export type Contact = Tables<'contacts'>;
 
 export function useContacts(search: string) {
-  const { organization } = useInternalAuth();
+  const { organization } = useAuth();
 
   return useQuery({
     queryKey: ['contacts', search],

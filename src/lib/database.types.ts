@@ -103,7 +103,6 @@ export type Database = {
           created_at: string
           filename: string
           id: string
-          message_id: string
           metadata: Json
           mime_type: string
           org_id: string
@@ -116,7 +115,6 @@ export type Database = {
           created_at?: string
           filename: string
           id?: string
-          message_id: string
           metadata?: Json
           mime_type: string
           org_id: string
@@ -129,7 +127,6 @@ export type Database = {
           created_at?: string
           filename?: string
           id?: string
-          message_id?: string
           metadata?: Json
           mime_type?: string
           org_id?: string
@@ -138,13 +135,6 @@ export type Database = {
           ticket_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "attachments_message_fkey"
-            columns: ["message_id"]
-            isOneToOne: false
-            referencedRelation: "messages"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "attachments_org_fkey"
             columns: ["org_id"]
@@ -553,6 +543,7 @@ export type Database = {
           created_at: string
           email_metadata: Json
           id: string
+          metadata: Json
           number: number
           org_id: string
           priority: Database["public"]["Enums"]["ticket_priority"]
@@ -569,6 +560,7 @@ export type Database = {
           created_at?: string
           email_metadata?: Json
           id?: string
+          metadata?: Json
           number?: never
           org_id: string
           priority?: Database["public"]["Enums"]["ticket_priority"]
@@ -585,6 +577,7 @@ export type Database = {
           created_at?: string
           email_metadata?: Json
           id?: string
+          metadata?: Json
           number?: never
           org_id?: string
           priority?: Database["public"]["Enums"]["ticket_priority"]
@@ -694,19 +687,15 @@ export type Database = {
         }
         Returns: string
       }
-      get_requested_org_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
       has_org_access: {
         Args: {
-          org_id: string
+          _org_id: string
         }
         Returns: boolean
       }
       is_org_admin: {
         Args: {
-          org_id: string
+          _org_id: string
         }
         Returns: boolean
       }

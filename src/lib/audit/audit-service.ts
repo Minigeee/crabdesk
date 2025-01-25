@@ -3,7 +3,7 @@ import { Database } from '@/lib/database.types';
 import { SupabaseClient } from '@supabase/supabase-js';
 
 export type AuditLog = Tables<'audit_logs'> & {
-  actor?: Pick<Tables<'internal_users'>, 'id' | 'name' | 'avatar_url'> | null;
+  actor?: Pick<Tables<'users'>, 'id' | 'name' | 'avatar_url'> | null;
 };
 
 export class AuditService {

@@ -39,12 +39,7 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // Protected routes - redirect to /login if not authenticated
-  if (
-    !user &&
-    (request.nextUrl.pathname.startsWith('/dashboard') ||
-      (request.nextUrl.pathname.startsWith('/portal') &&
-        request.nextUrl.pathname !== '/portal/verify'))
-  ) {
+  if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
     const redirectUrl = new URL('/login', request.url);
     // Add the current path as the next parameter
     redirectUrl.searchParams.set('next', request.nextUrl.pathname);
@@ -52,23 +47,10 @@ export async function middleware(request: NextRequest) {
   }
 
   // Auth routes - redirect to /dashboard if already authenticated
-  if (
-    user &&
-    (request.nextUrl.pathname === '/login' ||
-      request.nextUrl.pathname === '/register')
-  ) {
-    // If there's a next parameter, redirect there, otherwise go to dashboard or portal
-    const orgId = user.app_metadata.org_id;
-    const orgRole = orgId
-      ? user.app_metadata.org_roles[orgId]
-      : Object.values(user.app_metadata.org_roles)[0];
-
-    if (orgRole) {
-      const next =
-        request.nextUrl.searchParams.get('next') ||
-        (orgRole === 'portal_user' ? '/portal' : '/dashboard');
-      return NextResponse.redirect(new URL(next, request.url));
-    }
+  if (user && request.nextUrl.pathname === '/login') {
+    // If there's a next parameter, redirect there, otherwise go to dashboard
+    const next = request.nextUrl.searchParams.get('next') || '/dashboard';
+    return NextResponse.redirect(new URL(next, request.url));
   }
 
   return response;

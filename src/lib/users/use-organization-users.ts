@@ -2,26 +2,26 @@ import { Tables } from '@/lib/database.types';
 import { createClient } from '@/lib/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import assert from 'assert';
-import { useInternalAuth } from '../auth/internal/hooks';
+import { useAuth } from '@/lib/auth/hooks';
 
-export type InternalUser = Tables<'internal_users'>;
+export type User = Tables<'users'>;
 
-export function useInternalUsers(search: string) {
-  const { organization } = useInternalAuth();
+export function useOrganizationUsers(search: string) {
+  const { organization } = useAuth();
 
   return useQuery({
-    queryKey: ['internal_users', search],
+    queryKey: ['users', search],
     queryFn: async () => {
       assert(organization, 'Organization is required');
       const supabase = createClient();
       const { data } = await supabase
-        .from('internal_users')
+        .from('users')
         .select('*')
         .eq('org_id', organization.id)
         .ilike('name', `%${search}%`)
         .order('name')
         .limit(10);
-      return (data as InternalUser[]) || [];
+      return (data as User[]) || [];
     },
     enabled: !!organization,
   });

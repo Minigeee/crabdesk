@@ -18,13 +18,9 @@ export interface AuthContext<U extends BaseUser> {
   error: Error | null;
 }
 
-export interface InternalAuthContext
-  extends AuthContext<Tables<'internal_users'>> {
+export interface OrganizationAuthContext
+  extends AuthContext<Tables<'users'>> {
   organization: Tables<'organizations'> | null;
   organizations: Tables<'organizations'>[];
   switchOrganization: (orgId: string) => Promise<void>;
-}
-
-export interface PortalAuthContext extends AuthContext<Tables<'portal_users'>> {
-  contact: Tables<'contacts'> | null;
 }

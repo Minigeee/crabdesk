@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { useInternalAuth } from '@/lib/auth/internal/hooks';
+import { useAuth } from '@/lib/auth/hooks';
 import { MessageWithSender } from '@/lib/messages/message-service';
 import { useMessages } from '@/lib/messages/use-messages';
 import { cn } from '@/lib/utils';
@@ -21,7 +21,7 @@ interface MessageThreadProps {
 
 export function MessageThread({ ticketId }: MessageThreadProps) {
   const { messages, isLoading, addMessage } = useMessages(ticketId);
-  const { user: internalUser } = useInternalAuth();
+  const { user: internalUser } = useAuth();
   const [newMessage, setNewMessage] = useState('');
   const [isInternal, setIsInternal] = useState(false);
   const [isSending, setIsSending] = useState(false);
@@ -34,7 +34,7 @@ export function MessageThread({ ticketId }: MessageThreadProps) {
       await addMessage({
         ticket_id: ticketId,
         content: newMessage,
-        sender_type: 'internal_user',
+        sender_type: 'user',
         sender_id: internalUser.id,
         content_type: 'text',
         is_private: isInternal,
@@ -123,7 +123,7 @@ interface MessageBubbleProps {
 }
 
 function MessageBubble({ message, isOwnMessage }: MessageBubbleProps) {
-  const isInternalUser = message.sender_type === 'internal_user';
+  const isInternalUser = message.sender_type === 'user';
   const sender = message.sender;
 
   return (

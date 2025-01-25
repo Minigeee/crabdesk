@@ -40,35 +40,31 @@ END $$;
 -- Helper Functions for Auth
 --------------------------------------------------------------------------------
 
--- Get the requested org_id from JWT
-CREATE OR REPLACE FUNCTION public.get_requested_org_id()
-  RETURNS uuid
-  LANGUAGE sql STABLE
-AS $$
-  SELECT NULLIF((auth.jwt() -> 'user_metadata' ->> 'org_id')::text, '')::uuid;
-$$;
-
 -- Check if user has access to an org
-CREATE OR REPLACE FUNCTION public.has_org_access(org_id uuid)
+CREATE OR REPLACE FUNCTION public.has_org_access(_org_id uuid)
   RETURNS boolean
   LANGUAGE sql STABLE
+  SECURITY DEFINER
+  SET search_path = public
 AS $$
   SELECT EXISTS (
     SELECT 1 FROM users
     WHERE auth_user_id = auth.uid()
-    AND org_id = org_id
+    AND org_id = _org_id
   );
 $$;
 
 -- Check if user is an admin for an org
-CREATE OR REPLACE FUNCTION public.is_org_admin(org_id uuid)
+CREATE OR REPLACE FUNCTION public.is_org_admin(_org_id uuid)
   RETURNS boolean
   LANGUAGE sql STABLE
+  SECURITY DEFINER
+  SET search_path = public
 AS $$
   SELECT EXISTS (
     SELECT 1 FROM users
     WHERE auth_user_id = auth.uid()
-    AND org_id = org_id
+    AND org_id = _org_id
     AND is_admin = true
   );
 $$;
@@ -79,6 +75,7 @@ CREATE OR REPLACE FUNCTION public.fetch_team_org_id(_team_id uuid)
   LANGUAGE sql
   STABLE
   SECURITY DEFINER
+  SET search_path = public
 AS $$
   SELECT org_id FROM public.teams
    WHERE id = _team_id
@@ -91,6 +88,7 @@ CREATE OR REPLACE FUNCTION public.fetch_ticket_org_id(_ticket_id uuid)
   LANGUAGE sql
   STABLE
   SECURITY DEFINER
+  SET search_path = public
 AS $$
   SELECT org_id FROM public.tickets
    WHERE id = _ticket_id
@@ -105,7 +103,7 @@ CREATE POLICY organizations_read
   FOR SELECT
   TO authenticated
   USING (
-    id = public.get_requested_org_id() AND public.has_org_access(id)
+    public.has_org_access(id)
   );
 
 CREATE POLICY organizations_insert
@@ -119,10 +117,10 @@ CREATE POLICY organizations_update
   FOR UPDATE
   TO authenticated
   USING (
-    id = public.get_requested_org_id() AND public.is_org_admin(id)
+    public.is_org_admin(id)
   )
   WITH CHECK (
-    id = public.get_requested_org_id() AND public.is_org_admin(id)
+    public.is_org_admin(id)
   );
 
 CREATE POLICY organizations_delete
@@ -139,7 +137,7 @@ CREATE POLICY users_read
   FOR SELECT
   TO authenticated
   USING (
-    org_id = public.get_requested_org_id() AND public.has_org_access(org_id)
+    public.has_org_access(org_id)
   );
 
 CREATE POLICY users_insert
@@ -147,7 +145,7 @@ CREATE POLICY users_insert
   FOR INSERT
   TO authenticated
   WITH CHECK (
-    org_id = public.get_requested_org_id() AND public.is_org_admin(org_id)
+    public.is_org_admin(org_id)
   );
 
 CREATE POLICY users_update
@@ -155,12 +153,10 @@ CREATE POLICY users_update
   FOR UPDATE
   TO authenticated
   USING (
-    org_id = public.get_requested_org_id() AND 
-    (auth_user_id = auth.uid() OR public.is_org_admin(org_id))
+    auth_user_id = auth.uid() OR public.is_org_admin(org_id)
   )
   WITH CHECK (
-    org_id = public.get_requested_org_id() AND 
-    (auth_user_id = auth.uid() OR public.is_org_admin(org_id))
+    auth_user_id = auth.uid() OR public.is_org_admin(org_id)
   );
 
 CREATE POLICY users_delete
@@ -168,7 +164,7 @@ CREATE POLICY users_delete
   FOR DELETE
   TO authenticated
   USING (
-    org_id = public.get_requested_org_id() AND public.is_org_admin(org_id)
+    public.is_org_admin(org_id)
   );
 
 -------------------------------------------------------------------------------
@@ -179,7 +175,7 @@ CREATE POLICY contacts_read
   FOR SELECT
   TO authenticated
   USING (
-    org_id = public.get_requested_org_id() AND public.has_org_access(org_id)
+    public.has_org_access(org_id)
   );
 
 CREATE POLICY contacts_insert
@@ -187,7 +183,7 @@ CREATE POLICY contacts_insert
   FOR INSERT
   TO authenticated
   WITH CHECK (
-    org_id = public.get_requested_org_id() AND public.has_org_access(org_id)
+    public.has_org_access(org_id)
   );
 
 CREATE POLICY contacts_update
@@ -195,10 +191,10 @@ CREATE POLICY contacts_update
   FOR UPDATE
   TO authenticated
   USING (
-    org_id = public.get_requested_org_id() AND public.has_org_access(org_id)
+    public.has_org_access(org_id)
   )
   WITH CHECK (
-    org_id = public.get_requested_org_id() AND public.has_org_access(org_id)
+    public.has_org_access(org_id)
   );
 
 CREATE POLICY contacts_delete
@@ -206,7 +202,7 @@ CREATE POLICY contacts_delete
   FOR DELETE
   TO authenticated
   USING (
-    org_id = public.get_requested_org_id() AND public.is_org_admin(org_id)
+    public.is_org_admin(org_id)
   );
 
 -------------------------------------------------------------------------------
@@ -217,7 +213,7 @@ CREATE POLICY teams_read
   FOR SELECT
   TO authenticated
   USING (
-    org_id = public.get_requested_org_id() AND public.has_org_access(org_id)
+    public.has_org_access(org_id)
   );
 
 CREATE POLICY teams_insert
@@ -225,7 +221,7 @@ CREATE POLICY teams_insert
   FOR INSERT
   TO authenticated
   WITH CHECK (
-    org_id = public.get_requested_org_id() AND public.is_org_admin(org_id)
+    public.is_org_admin(org_id)
   );
 
 CREATE POLICY teams_update
@@ -233,10 +229,10 @@ CREATE POLICY teams_update
   FOR UPDATE
   TO authenticated
   USING (
-    org_id = public.get_requested_org_id() AND public.is_org_admin(org_id)
+    public.is_org_admin(org_id)
   )
   WITH CHECK (
-    org_id = public.get_requested_org_id() AND public.is_org_admin(org_id)
+    public.is_org_admin(org_id)
   );
 
 CREATE POLICY teams_delete
@@ -244,7 +240,7 @@ CREATE POLICY teams_delete
   FOR DELETE
   TO authenticated
   USING (
-    org_id = public.get_requested_org_id() AND public.is_org_admin(org_id)
+    public.is_org_admin(org_id)
   );
 
 -------------------------------------------------------------------------------
@@ -293,7 +289,7 @@ CREATE POLICY tickets_read
   FOR SELECT
   TO authenticated
   USING (
-    org_id = public.get_requested_org_id() AND public.has_org_access(org_id)
+    public.has_org_access(org_id)
   );
 
 CREATE POLICY tickets_insert
@@ -301,7 +297,7 @@ CREATE POLICY tickets_insert
   FOR INSERT
   TO authenticated
   WITH CHECK (
-    org_id = public.get_requested_org_id() AND public.has_org_access(org_id)
+    public.has_org_access(org_id)
   );
 
 CREATE POLICY tickets_update
@@ -309,10 +305,10 @@ CREATE POLICY tickets_update
   FOR UPDATE
   TO authenticated
   USING (
-    org_id = public.get_requested_org_id() AND public.has_org_access(org_id)
+    public.has_org_access(org_id)
   )
   WITH CHECK (
-    org_id = public.get_requested_org_id() AND public.has_org_access(org_id)
+    public.has_org_access(org_id)
   );
 
 CREATE POLICY tickets_delete
@@ -320,7 +316,7 @@ CREATE POLICY tickets_delete
   FOR DELETE
   TO authenticated
   USING (
-    org_id = public.get_requested_org_id() AND public.is_org_admin(org_id)
+    public.is_org_admin(org_id)
   );
 
 -------------------------------------------------------------------------------
@@ -331,7 +327,7 @@ CREATE POLICY email_threads_read
   FOR SELECT
   TO authenticated
   USING (
-    org_id = public.get_requested_org_id() AND public.has_org_access(org_id)
+    public.has_org_access(org_id)
   );
 
 CREATE POLICY email_threads_insert
@@ -339,7 +335,7 @@ CREATE POLICY email_threads_insert
   FOR INSERT
   TO authenticated
   WITH CHECK (
-    org_id = public.get_requested_org_id() AND public.has_org_access(org_id)
+    public.has_org_access(org_id)
   );
 
 CREATE POLICY email_threads_update
@@ -347,10 +343,10 @@ CREATE POLICY email_threads_update
   FOR UPDATE
   TO authenticated
   USING (
-    org_id = public.get_requested_org_id() AND public.has_org_access(org_id)
+    public.has_org_access(org_id)
   )
   WITH CHECK (
-    org_id = public.get_requested_org_id() AND public.has_org_access(org_id)
+    public.has_org_access(org_id)
   );
 
 CREATE POLICY email_threads_delete
@@ -358,7 +354,7 @@ CREATE POLICY email_threads_delete
   FOR DELETE
   TO authenticated
   USING (
-    org_id = public.get_requested_org_id() AND public.is_org_admin(org_id)
+    public.is_org_admin(org_id)
   );
 
 -------------------------------------------------------------------------------
@@ -409,7 +405,7 @@ CREATE POLICY skills_read
   FOR SELECT
   TO authenticated
   USING (
-    org_id = public.get_requested_org_id() AND public.has_org_access(org_id)
+    public.has_org_access(org_id)
   );
 
 CREATE POLICY skills_insert
@@ -417,7 +413,7 @@ CREATE POLICY skills_insert
   FOR INSERT
   TO authenticated
   WITH CHECK (
-    org_id = public.get_requested_org_id() AND public.is_org_admin(org_id)
+    public.is_org_admin(org_id)
   );
 
 CREATE POLICY skills_update
@@ -425,10 +421,10 @@ CREATE POLICY skills_update
   FOR UPDATE
   TO authenticated
   USING (
-    org_id = public.get_requested_org_id() AND public.is_org_admin(org_id)
+    public.is_org_admin(org_id)
   )
   WITH CHECK (
-    org_id = public.get_requested_org_id() AND public.is_org_admin(org_id)
+    public.is_org_admin(org_id)
   );
 
 CREATE POLICY skills_delete
@@ -436,7 +432,7 @@ CREATE POLICY skills_delete
   FOR DELETE
   TO authenticated
   USING (
-    org_id = public.get_requested_org_id() AND public.is_org_admin(org_id)
+    public.is_org_admin(org_id)
   );
 
 -------------------------------------------------------------------------------
@@ -447,7 +443,7 @@ CREATE POLICY tags_read
   FOR SELECT
   TO authenticated
   USING (
-    org_id = public.get_requested_org_id() AND public.has_org_access(org_id)
+    public.has_org_access(org_id)
   );
 
 CREATE POLICY tags_insert
@@ -455,7 +451,7 @@ CREATE POLICY tags_insert
   FOR INSERT
   TO authenticated
   WITH CHECK (
-    org_id = public.get_requested_org_id() AND public.has_org_access(org_id)
+    public.has_org_access(org_id)
   );
 
 CREATE POLICY tags_update
@@ -463,10 +459,10 @@ CREATE POLICY tags_update
   FOR UPDATE
   TO authenticated
   USING (
-    org_id = public.get_requested_org_id() AND public.has_org_access(org_id)
+    public.has_org_access(org_id)
   )
   WITH CHECK (
-    org_id = public.get_requested_org_id() AND public.has_org_access(org_id)
+    public.has_org_access(org_id)
   );
 
 CREATE POLICY tags_delete
@@ -474,7 +470,7 @@ CREATE POLICY tags_delete
   FOR DELETE
   TO authenticated
   USING (
-    org_id = public.get_requested_org_id() AND public.is_org_admin(org_id)
+    public.is_org_admin(org_id)
   );
 
 -------------------------------------------------------------------------------
@@ -485,7 +481,7 @@ CREATE POLICY attachments_read
   FOR SELECT
   TO authenticated
   USING (
-    org_id = public.get_requested_org_id() AND public.has_org_access(org_id)
+    public.has_org_access(org_id)
   );
 
 CREATE POLICY attachments_insert
@@ -493,7 +489,7 @@ CREATE POLICY attachments_insert
   FOR INSERT
   TO authenticated
   WITH CHECK (
-    org_id = public.get_requested_org_id() AND public.has_org_access(org_id)
+    public.has_org_access(org_id)
   );
 
 CREATE POLICY attachments_update
@@ -508,7 +504,7 @@ CREATE POLICY attachments_delete
   FOR DELETE
   TO authenticated
   USING (
-    org_id = public.get_requested_org_id() AND public.is_org_admin(org_id)
+    public.is_org_admin(org_id)
   );
 
 -------------------------------------------------------------------------------
@@ -519,7 +515,7 @@ CREATE POLICY audit_logs_read
   FOR SELECT
   TO authenticated
   USING (
-    org_id = public.get_requested_org_id() AND public.has_org_access(org_id)
+    public.has_org_access(org_id)
   );
 
 CREATE POLICY audit_logs_insert
@@ -527,7 +523,7 @@ CREATE POLICY audit_logs_insert
   FOR INSERT
   TO authenticated
   WITH CHECK (
-    org_id = public.get_requested_org_id() AND public.has_org_access(org_id)
+    public.has_org_access(org_id)
   );
 
 CREATE POLICY audit_logs_update

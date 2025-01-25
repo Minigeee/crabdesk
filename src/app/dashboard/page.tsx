@@ -1,5 +1,5 @@
 import { Skeleton } from '@/components/ui/skeleton';
-import { getCurrentInternalUser } from '@/lib/auth/internal/session';
+import { getCurrentUser } from '@/lib/auth/session';
 import { DashboardService } from '@/lib/dashboard/dashboard-service';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
@@ -20,7 +20,7 @@ function TicketMetricsSkeleton() {
 }
 
 async function getDashboardData() {
-  const userData = await getCurrentInternalUser();
+  const userData = await getCurrentUser();
   if (!userData) redirect('/login');
 
   const supabase = await createClient();

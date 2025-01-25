@@ -22,13 +22,11 @@ const initialState: AuthState = { error: null };
 
 interface Props {
   next?: string;
-  token?: string;
 }
 
-export function LoginForm({ next = '/', token }: Props) {
+export function LoginForm({ next = '/' }: Props) {
   const [loginState, loginAction] = useActionState(
     async (state: AuthState, formData: FormData) => {
-      if (token) formData.append('token', token);
       return login(formData, next);
     },
     initialState
@@ -36,7 +34,6 @@ export function LoginForm({ next = '/', token }: Props) {
 
   const [signupState, signupAction] = useActionState(
     async (state: AuthState, formData: FormData) => {
-      if (token) formData.append('token', token);
       return signup(formData, next);
     },
     initialState

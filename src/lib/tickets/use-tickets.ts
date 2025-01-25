@@ -1,4 +1,4 @@
-import { useInternalAuth } from '@/lib/auth/internal/hooks';
+import { useAuth } from '@/lib/auth/hooks';
 import {
   useMutation,
   useQuery,
@@ -30,7 +30,7 @@ export const ticketKeys = {
 
 // Hook for managing ticket service instance
 function useTicketService() {
-  const { organization } = useInternalAuth();
+  const { organization } = useAuth();
   const service = useMemo(() => {
     const supabase = createClient();
     if (!organization) return null;
@@ -234,7 +234,18 @@ export function useTicketActions<T extends string | undefined>(
       });
 
       // Perform the actual update
-      return updateTicket.mutateAsync({ id: targetId, data: update });
+      return updateTicket.mutateAsync(
+        { id: targetId, data: update },
+        {
+          onError: () => {
+            // Rollback the optimistic update if the actual update fails
+            queryClient.setQueryData(
+              ticketKeys.detail(targetId),
+              currentData
+            );
+          },
+        }
+      );
     },
     [updateTicket, queryClient]
   );

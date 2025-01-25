@@ -57,7 +57,7 @@ export async function getCurrentUser(): Promise<UserData | null> {
 export async function requireUser(): Promise<UserData> {
   const userData = await getCurrentUser();
   if (!userData) {
-    redirect('/auth/login');
+    redirect('/login');
   }
   return userData;
 }
@@ -71,7 +71,7 @@ export async function requireOrganizationAccess(
 ): Promise<UserData> {
   const userData = await requireUser();
   if (userData.organization.id !== orgId) {
-    redirect('/auth/login');
+    redirect('/login');
   }
   return userData;
 }
@@ -82,7 +82,7 @@ export async function requireOrganizationAccess(
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  redirect('/auth/login');
+  redirect('/login');
 }
 
 /**

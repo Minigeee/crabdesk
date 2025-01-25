@@ -11,10 +11,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Icons } from '@/components/ui/icons';
-import { useInternalAuth } from '@/lib/auth/internal/hooks';
+import { useAuth } from '@/lib/auth/hooks';
 
 export function OrganizationSwitcher() {
-  const { organization, organizations, switchOrganization } = useInternalAuth();
+  const { organization, organizations, switchOrganization } = useAuth();
 
   if (!organization || organizations.length === 0) return null;
 

@@ -11,7 +11,7 @@ export type TicketUpdate = TablesUpdate<'tickets'>;
 
 export type TicketWithRelations = Ticket & {
   contact: Tables<'contacts'>;
-  assignee?: Tables<'internal_users'>;
+  assignee?: Tables<'users'>;
   team?: Tables<'teams'>;
 };
 
@@ -108,7 +108,7 @@ export class TicketService {
       query = query.select(`
         *,
         contact:contacts(*),
-        assignee:internal_users(*),
+        assignee:users(*),
         team:teams(*)
       `);
     }
@@ -150,7 +150,7 @@ export class TicketService {
           ? `
         *,
         contact:contacts(*),
-        assignee:internal_users(*),
+        assignee:users(*),
         team:teams(*)
       `
           : '*'
@@ -178,7 +178,7 @@ export class TicketService {
           ? `
         *,
         contact:contacts(*),
-        assignee:internal_users(*),
+        assignee:users(*),
         team:teams(*)
       `
           : '*'

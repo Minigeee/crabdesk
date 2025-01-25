@@ -28,7 +28,7 @@ export class MessageService {
 
     // Group messages by sender type for efficient fetching
     const internalUserIds = messages
-      .filter((m) => m.sender_type === 'internal_user')
+      .filter((m) => m.sender_type === 'user')
       .map((m) => m.sender_id);
     const contactIds = messages
       .filter((m) => m.sender_type === 'contact')
@@ -38,7 +38,7 @@ export class MessageService {
     const [internalUsers, contacts] = await Promise.all([
       internalUserIds.length
         ? supabase
-            .from('internal_users')
+            .from('users')
             .select('id, name, avatar_url')
             .in('id', internalUserIds)
             .then(({ data, error }) => {
@@ -71,7 +71,7 @@ export class MessageService {
       let sender: MessageSender;
 
       switch (message.sender_type) {
-        case 'internal_user': {
+        case 'user': {
           const user = internalUserMap.get(message.sender_id);
           if (!user) {
             throw new Error(`Internal user not found: ${message.sender_id}`);

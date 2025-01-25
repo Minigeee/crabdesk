@@ -2,15 +2,16 @@
 
 import { PriorityBadge } from '@/components/tickets/priority-badge';
 import { StatusBadge } from '@/components/tickets/status-badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
+import { UserAvatar } from '@/components/users/user-avatar';
 import { useTicket } from '@/lib/tickets/use-tickets';
 import { formatDistanceToNow } from 'date-fns';
-import { ArrowUpRight, Clock, UserCircle, Users } from 'lucide-react';
+import { ArrowUpRight, Clock, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useTicketQueue } from './ticket-queue-provider';
 
@@ -85,16 +86,7 @@ export function TicketPreview() {
                 </div>
                 {ticket.assignee ? (
                   <div className='flex items-center gap-2'>
-                    <Avatar className='h-6 w-6'>
-                      <AvatarImage
-                        src={ticket.assignee.avatar_url || undefined}
-                      />
-                      <AvatarFallback>
-                        {ticket.assignee.name?.[0]?.toUpperCase() ?? (
-                          <UserCircle className='h-4 w-4' />
-                        )}
-                      </AvatarFallback>
-                    </Avatar>
+                    <UserAvatar user={ticket.assignee} />
                     <span className='text-sm'>{ticket.assignee.name}</span>
                   </div>
                 ) : (
