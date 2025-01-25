@@ -67,22 +67,22 @@ const { data } = await supabase.from('tickets').select();
 
 ## Authentication
 
-CrabDesk supports two types of users: internal users (staff) and portal users (customers). The auth system provides separate utilities for handling both types while sharing common functionality.
+CrabDesk uses a single user model with role-based access control. Users belong to organizations and have specific roles (admin or agent) that determine their permissions.
 
-## Server-Side Authentication
-
-### Internal Users
+### Server-Side Authentication
 
 ```typescript
 import {
-  getCurrentInternalUser,
-  requireInternalUser,
+  getCurrentUser,
+  requireUser,
   requireOrganizationAccess,
-} from '@/lib/auth/internal/session';
+  signOut,
+  switchOrganization
+} from '@/lib/auth/session';
 
 // Get current user (if any)
 export default async function Page() {
-  const userData = await getCurrentInternalUser();
+  const userData = await getCurrentUser();
   if (userData) {
     const { user, organization } = userData;
     // Use user and organization data
@@ -91,7 +91,7 @@ export default async function Page() {
 
 // Require authentication
 export default async function ProtectedPage() {
-  const { user, organization } = await requireInternalUser();
+  const { user, organization } = await requireUser();
   // User is guaranteed to be authenticated
 }
 
@@ -104,59 +104,35 @@ export default async function OrgPage({
   const { user, organization } = await requireOrganizationAccess(params.orgId);
   // User is guaranteed to have access to this organization
 }
-```
 
-### Portal Users
-
-```typescript
-import {
-  getCurrentPortalUser,
-  requirePortalUser,
-  requirePortalAccess,
-} from '@/lib/auth/portal/session';
-
-// Get current user (if any)
-export default async function Page() {
-  const userData = await getCurrentPortalUser();
-  if (userData) {
-    const { user, contact } = userData;
-    // Use user and contact data
-  }
+// Sign out
+export async function handleSignOut() {
+  await signOut();
+  // Redirects to login
 }
 
-// Require authentication
-export default async function ProtectedPage() {
-  const { user, contact } = await requirePortalUser();
-  // User is guaranteed to be authenticated
-}
-
-// Require portal access
-export default async function OrgPage({
-  params,
-}: {
-  params: { orgId: string };
-}) {
-  const { user, contact } = await requirePortalAccess(params.orgId);
-  // User is guaranteed to have access to this organization
+// Switch organization
+export async function handleSwitch(orgId: string) {
+  await switchOrganization(orgId);
+  // Redirects to home with new org context
 }
 ```
 
-## Client-Side Authentication
-
-### Internal Users
+### Client-Side Authentication
 
 ```typescript
-import { useInternalAuth } from '@/lib/auth/internal/hooks';
+import { useAuth } from '@/lib/auth/hooks';
 
-export function InternalComponent() {
+export function AuthenticatedComponent() {
   const {
-    user,              // The internal user data
+    user,              // The user data
     organization,      // Current organization
     organizations,     // List of accessible organizations
     switchOrganization, // Function to switch organizations
+    signOut,           // Function to sign out
     isLoading,         // Loading state
     error             // Error state
-  } = useInternalAuth();
+  } = useAuth();
 
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>Error: {error.message}</div>;
@@ -178,68 +154,74 @@ export function InternalComponent() {
           </option>
         ))}
       </select>
+
+      {/* Sign Out */}
+      <button onClick={() => signOut()}>
+        Sign Out
+      </button>
     </div>
   );
 }
 ```
 
-### Portal Users
+### Permissions
+
+The auth system provides utilities for checking user permissions:
 
 ```typescript
-import { usePortalAuth } from '@/lib/auth/portal/hooks';
+import {
+  hasPermission,
+  hasOrganizationAccess,
+  hasTeamAccess,
+  getUserPermissions,
+  type Permission
+} from '@/lib/auth/permissions';
 
-export function PortalComponent() {
-  const {
-    user,       // The portal user data
-    contact,    // Associated contact data
-    isLoading,  // Loading state
-    error       // Error state
-  } = usePortalAuth();
-
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error.message}</div>;
-  if (!user) return <div>Not authenticated</div>;
-
-  return (
-    <div>
-      <h1>Welcome {contact?.name}</h1>
-      <p>Email: {contact?.email}</p>
-    </div>
-  );
+// Check specific permission
+if (hasPermission(user, 'manage:tickets')) {
+  // User can manage tickets
 }
+
+// Check organization access
+if (hasOrganizationAccess(user, orgId)) {
+  // User has access to this organization
+}
+
+// Check team access (async)
+if (await hasTeamAccess(user, teamId, supabase)) {
+  // User has access to this team
+}
+
+// Get all user permissions
+const permissions = getUserPermissions(user);
 ```
 
-## Common Auth Functions
-
-The auth system provides some common functions that work for both user types:
-
-```typescript
-import { getAuthUser, signOut } from '@/lib/auth/common/supabase';
-
-// Get raw Supabase auth user
-const authUser = await getAuthUser();
-
-// Sign out (works for both internal and portal users)
-await signOut();
-```
+Available permissions:
+- `manage:users` - Can manage users and their roles
+- `manage:teams` - Can create and manage teams
+- `manage:tickets` - Can manage tickets and their assignments
+- `manage:contacts` - Can manage contact information
+- `manage:settings` - Can manage organization settings
+- `manage:email` - Can manage email settings and templates
+- `view:analytics` - Can view analytics and reports
 
 ## Type Safety
 
 The auth system is fully typed with TypeScript:
 
 ```typescript
-import type {
-  InternalAuthContext,
-  PortalAuthContext,
-} from '@/lib/auth/common/types';
+import type { Tables } from '@/lib/database.types';
 
-// Internal user types
-type InternalUser = Tables<'internal_users'>;
+// User types
+type User = Tables<'users'>;
 type Organization = Tables<'organizations'>;
 
-// Portal user types
-type PortalUser = Tables<'portal_users'>;
-type Contact = Tables<'contacts'>;
+// Auth context type
+type UserData = {
+  user: User;
+  organization: Organization;
+  organizations: Organization[];
+};
 ```
 
 ## Ticket System
@@ -297,10 +279,10 @@ function NewTicketForm() {
 ```tsx
 import { TicketService } from '@/lib/tickets/ticket-service';
 import { createClient } from '@/lib/supabase/server';
-import { getCurrentInternalUser } from '@/lib/auth/internal/session';
+import { getCurrentUser } from '@/lib/auth/session';
 
 export async function GET(request: Request) {
-  const userData = await getCurrentInternalUser();
+  const userData = await getCurrentUser();
   if (!userData) {
     return new Response('Unauthorized', { status: 401 });
   }

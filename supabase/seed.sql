@@ -28,7 +28,7 @@ INSERT INTO auth.users (
 -- Agent
 (
   '00000000-0000-0000-0000-000000000000',
-  '00000000-0000-0000-0000-000000000002',  -- matches auth_user_id in internal_users
+  '00000000-0000-0000-0000-000000000002',  -- matches auth_user_id in users table
   'authenticated',
   'authenticated',
   'agent@example.com',
@@ -36,28 +36,8 @@ INSERT INTO auth.users (
   current_timestamp,
   current_timestamp,
   current_timestamp,
-  '{"provider":"email","providers":["email"],"org_id":"11111111-1111-1111-1111-111111111111","org_roles":{"11111111-1111-1111-1111-111111111111":"internal_user"}}',
-  '{}',
-  current_timestamp,
-  current_timestamp,
-  '',
-  '',
-  '',
-  ''
-),
--- Customer
-(
-  '00000000-0000-0000-0000-000000000000',
-  '00000000-0000-0000-0000-000000000004',  -- matches auth_user_id in contacts
-  'authenticated',
-  'authenticated',
-  'customer@example.com',
-  crypt('password123', gen_salt('bf')),
-  current_timestamp,
-  current_timestamp,
-  current_timestamp,
-  '{"provider":"email","providers":["email"],"org_id":"11111111-1111-1111-1111-111111111111","org_roles":{"11111111-1111-1111-1111-111111111111":"portal_user"}}',
-  '{}',
+  '{"provider":"email","providers":["email"]}',
+  '{"org_id":"11111111-1111-1111-1111-111111111111"}',
   current_timestamp,
   current_timestamp,
   '',
@@ -87,13 +67,13 @@ INSERT INTO auth.identities (
     current_timestamp,
     current_timestamp
   FROM auth.users
-  WHERE email IN ('agent@example.com', 'customer@example.com')
+  WHERE email = 'agent@example.com'
 );
 
 --------------------------------------------------------------------------------
 -- Test Organization
 --------------------------------------------------------------------------------
-INSERT INTO public.organizations (id, name, domain, timezone, settings, branding)
+INSERT INTO public.organizations (id, name, domain, timezone, settings, email_settings, branding)
 VALUES (
   '11111111-1111-1111-1111-111111111111',
   'Acme Corp',
@@ -107,6 +87,12 @@ VALUES (
     )
   ),
   jsonb_build_object(
+    'inboundDomain', 'support.acme.com',
+    'outboundDomain', 'notifications.acme.com',
+    'defaultFromName', 'Acme Support',
+    'defaultFromEmail', 'support@acme.com'
+  ),
+  jsonb_build_object(
     'logo', 'https://placekitten.com/200/50',
     'primaryColor', '#4f46e5',
     'secondaryColor', '#818cf8'
@@ -114,40 +100,43 @@ VALUES (
 );
 
 --------------------------------------------------------------------------------
--- Internal Users (Support Team)
+-- Users (Support Team)
 --------------------------------------------------------------------------------
 -- Admin
-INSERT INTO public.internal_users (
-  id, org_id, auth_user_id, name, is_admin, preferences
+INSERT INTO public.users (
+  id, org_id, auth_user_id, name, role, is_admin, preferences
 ) VALUES (
   '22222222-2222-2222-2222-222222222222',
   '11111111-1111-1111-1111-111111111111',
-  '00000000-0000-0000-0000-000000000001', -- This would be a real Supabase auth.users id
+  '00000000-0000-0000-0000-000000000001',
   'Jane Admin',
+  'admin',
   true,
   '{}'
 );
 
 -- Support Agent 1
-INSERT INTO public.internal_users (
-  id, org_id, auth_user_id, name, is_admin, preferences
+INSERT INTO public.users (
+  id, org_id, auth_user_id, name, role, is_admin, preferences
 ) VALUES (
   '33333333-3333-3333-3333-333333333333',
   '11111111-1111-1111-1111-111111111111',
   '00000000-0000-0000-0000-000000000002',
   'John Agent',
+  'agent',
   false,
   '{}'
 );
 
 -- Support Agent 2
-INSERT INTO public.internal_users (
-  id, org_id, auth_user_id, name, is_admin, preferences
+INSERT INTO public.users (
+  id, org_id, auth_user_id, name, role, is_admin, preferences
 ) VALUES (
   '44444444-4444-4444-4444-444444444444',
   '11111111-1111-1111-1111-111111111111',
   '00000000-0000-0000-0000-000000000003',
   'Sarah Support',
+  'agent',
   false,
   '{}'
 );
@@ -156,17 +145,22 @@ INSERT INTO public.internal_users (
 -- Teams
 --------------------------------------------------------------------------------
 INSERT INTO public.teams (
-  id, org_id, name, description, schedule
+  id, org_id, name, description, email_alias, routing_rules
 ) VALUES (
   '55555555-5555-5555-5555-555555555555',
   '11111111-1111-1111-1111-111111111111',
   'Technical Support',
   'Primary technical support team',
+  'tech@support.acme.com',
   jsonb_build_object(
-    'timezone', 'America/New_York',
-    'shifts', jsonb_build_array(
-      jsonb_build_object('start', '09:00', 'end', '17:00')
-    )
+    'conditions', jsonb_build_array(
+      jsonb_build_object(
+        'field', 'subject',
+        'operator', 'contains',
+        'value', 'technical'
+      )
+    ),
+    'priority', 'normal'
   )
 );
 
@@ -176,26 +170,8 @@ INSERT INTO public.team_members (team_id, user_id, role) VALUES
 ('55555555-5555-5555-5555-555555555555', '44444444-4444-4444-4444-444444444444', 'member');
 
 --------------------------------------------------------------------------------
--- Portal Users
---------------------------------------------------------------------------------
-INSERT INTO public.portal_users (
-  id, org_id, auth_user_id, preferences
-) VALUES (
-  '88888888-8888-8888-8888-888888888888',
-  '11111111-1111-1111-1111-111111111111',
-  '00000000-0000-0000-0000-000000000004',
-  jsonb_build_object(
-    'notifications', jsonb_build_object(
-      'email', true,
-      'web', true
-    )
-  )
-);
-
---------------------------------------------------------------------------------
 -- Contacts (Customers)
 --------------------------------------------------------------------------------
--- Regular contact (no portal account)
 INSERT INTO public.contacts (
   id, org_id, email, name, metadata
 ) VALUES (
@@ -209,28 +185,15 @@ INSERT INTO public.contacts (
   )
 );
 
--- Contact with portal access
-INSERT INTO public.contacts (
-  id, org_id, email, name, portal_user_id, metadata
-) VALUES (
-  '77777777-7777-7777-7777-777777777777',
-  '11111111-1111-1111-1111-111111111111',
-  'alice@example.com',
-  'Alice Portal',
-  '88888888-8888-8888-8888-888888888888',
-  jsonb_build_object(
-    'company', 'Portal Inc',
-    'phone', '+1-555-0124'
-  )
-);
+--------------------------------------------------------------------------------
+-- Tickets and Email Threads
+--------------------------------------------------------------------------------
 
---------------------------------------------------------------------------------
--- Tickets
---------------------------------------------------------------------------------
--- Ticket from regular contact
+-- Ticket from email
 INSERT INTO public.tickets (
   id, org_id, subject, status, priority, source,
-  contact_id, assignee_id, team_id, metadata
+  contact_id, assignee_id, team_id,
+  email_metadata
 ) VALUES (
   '99999999-9999-9999-9999-999999999999',
   '11111111-1111-1111-1111-111111111111',
@@ -241,10 +204,31 @@ INSERT INTO public.tickets (
   '66666666-6666-6666-6666-666666666666',
   '33333333-3333-3333-3333-333333333333',
   '55555555-5555-5555-5555-555555555555',
-  '{}'
+  jsonb_build_object(
+    'from', 'customer@example.com',
+    'to', 'support@acme.com',
+    'cc', jsonb_build_array(),
+    'bcc', jsonb_build_array()
+  )
 );
 
--- Messages for first ticket
+-- Email Thread
+INSERT INTO public.email_threads (
+  id, org_id, ticket_id, provider_thread_id, provider_message_ids, subject,
+  from_email, to_email, last_message_at
+) VALUES (
+  'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
+  '11111111-1111-1111-1111-111111111111',
+  '99999999-9999-9999-9999-999999999999',
+  'thread_123456',
+  ARRAY['msg_1', 'msg_2', 'msg_3'],
+  'Need help with login',
+  'customer@example.com',
+  'support@acme.com',
+  current_timestamp
+);
+
+-- Messages for the ticket
 INSERT INTO public.messages (
   ticket_id, sender_type, sender_id, content, content_type, is_private
 ) VALUES
@@ -260,7 +244,7 @@ INSERT INTO public.messages (
 -- Internal note
 (
   '99999999-9999-9999-9999-999999999999',
-  'internal_user'::message_sender_type,
+  'user'::message_sender_type,
   '33333333-3333-3333-3333-333333333333',
   'Checked auth logs - no failed attempts found. Might be using wrong email.',
   'text'::message_content_type,
@@ -269,80 +253,11 @@ INSERT INTO public.messages (
 -- Agent response
 (
   '99999999-9999-9999-9999-999999999999',
-  'internal_user'::message_sender_type,
+  'user'::message_sender_type,
   '33333333-3333-3333-3333-333333333333',
   'Hello Bob, I''d be happy to help. Could you confirm which email address you''re using to log in?',
   'text'::message_content_type,
   false
-);
-
--- Ticket from portal user
-INSERT INTO public.tickets (
-  id, org_id, subject, status, priority, source,
-  contact_id, assignee_id, team_id, metadata
-) VALUES (
-  'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-  '11111111-1111-1111-1111-111111111111',
-  'Feature request: Dark mode',
-  'pending'::ticket_status,
-  'low'::ticket_priority,
-  'portal'::ticket_source,
-  '77777777-7777-7777-7777-777777777777',
-  '44444444-4444-4444-4444-444444444444',
-  '55555555-5555-5555-5555-555555555555',
-  jsonb_build_object(
-    'browser', 'Chrome 120',
-    'os', 'Windows 11'
-  )
-);
-
--- Messages for second ticket
-INSERT INTO public.messages (
-  ticket_id, sender_type, sender_id, content, content_type, is_private
-) VALUES
--- Portal user message
-(
-  'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-  'contact'::message_sender_type,
-  '77777777-7777-7777-7777-777777777777',
-  'Would it be possible to add a dark mode to the dashboard? It would be easier on the eyes when working late.',
-  'text'::message_content_type,
-  false
-),
--- Internal note
-(
-  'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-  'internal_user'::message_sender_type,
-  '44444444-4444-4444-4444-444444444444',
-  'This is already on our roadmap for Q2. Will update the customer.',
-  'text'::message_content_type,
-  true
-),
--- Agent response
-(
-  'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-  'internal_user'::message_sender_type,
-  '44444444-4444-4444-4444-444444444444',
-  'Hi Alice, thanks for the suggestion! We''re actually already working on a dark mode feature. We expect to release it in the next few months. I''ll update this ticket when we have more specific timing.',
-  'text'::message_content_type,
-  false
-);
-
---------------------------------------------------------------------------------
--- Knowledge Base Articles
---------------------------------------------------------------------------------
-INSERT INTO public.articles (
-  id, org_id, title, slug, content, status,
-  author_id, published_at
-) VALUES (
-  'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
-  '11111111-1111-1111-1111-111111111111',
-  'Getting Started Guide',
-  'getting-started',
-  '# Getting Started\n\nWelcome to our platform! This guide will help you get up and running quickly...',
-  'published'::article_status,
-  '22222222-2222-2222-2222-222222222222',
-  now()
 );
 
 --------------------------------------------------------------------------------

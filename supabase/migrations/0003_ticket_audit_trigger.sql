@@ -1,7 +1,7 @@
 -- Enable pgcrypto for gen_random_uuid() if not already enabled
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
--- Function to get the internal user ID from the JWT claims
+-- Function to get the user ID
 CREATE OR REPLACE FUNCTION public.current_user_id()
 RETURNS uuid
 LANGUAGE sql
@@ -12,7 +12,7 @@ AS $$
   )
   SELECT i.id
   FROM auth_id a
-  LEFT JOIN public.internal_users i ON i.auth_user_id = a.id
+  LEFT JOIN public.users i ON i.auth_user_id = a.id
   WHERE a.id IS NOT NULL;
 $$;
 
@@ -97,7 +97,7 @@ BEGIN
       WHEN 'UPDATE' THEN NEW.org_id
       WHEN 'DELETE' THEN OLD.org_id
     END,
-    lower(TG_OP),  -- 'insert', 'update', or 'delete'
+    lower(TG_OP)::audit_log_action,  -- 'insert', 'update', or 'delete'
     'ticket',
     CASE TG_OP
       WHEN 'INSERT' THEN NEW.id

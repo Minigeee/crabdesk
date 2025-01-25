@@ -1,5 +1,32 @@
 # App Structure
 
+## Introduction
+
+CrabDesk is a CRM system designed to help organizations manage their customer relationships through email-based ticketing. The system follows these core workflows:
+
+1. Email Integration
+   - Organizations connect their email system to CrabDesk
+   - Incoming emails automatically create new tickets
+   - Each unique email thread becomes a separate ticket
+   - Customer contacts are automatically created and tracked by email
+
+2. User Management
+   - Users belong to organizations and handle tickets
+   - A single auth user can be part of multiple organizations
+   - Each organization has its own set of users with specific roles
+   - Users can be organized into teams for better ticket routing
+
+3. Ticket Workflow
+   - Tickets are created from incoming emails
+   - Assigned to teams or individual users
+   - Users can collaborate on tickets
+   - Responses are sent back through email
+
+4. Contact Management
+   - Contacts are automatically created from email senders
+   - Contact profiles accumulate interaction history
+   - All contact information is organization-specific
+
 ## Core Layout Components
 
 ### Root Layout (`/app/layout.tsx`)
@@ -161,36 +188,6 @@
 - `SkeletonLoader`: Content placeholder
 - `LoadingButton`: Action button states
 
-## Customer Portal Components
-
-### Portal Layout (`/app/portal/layout.tsx`)
-
-- **Purpose**: Customer-facing interface
-- **Components**:
-  - `PortalNav`: Simplified navigation
-  - `PortalHeader`: Branding and user menu
-- **Data Dependencies**:
-  - Portal user details
-  - Organization branding
-- **Layout**:
-  - Minimal navigation
-  - Focus on self-service
-
-### Ticket Management (`/app/portal/tickets/page.tsx`)
-
-- **Purpose**: Customer ticket interface
-- **Components**:
-  - `TicketList`: Customer's tickets
-  - `NewTicketForm`: Create ticket
-  - `TicketDetails`: View conversation
-- **Data Dependencies**:
-  - User's tickets
-  - Support responses
-- **Interactions**:
-  - Create new tickets
-  - View ticket status
-  - Reply to support
-
 ## Core Workflows
 
 ### Email Processing (`/src/lib/email`)
@@ -237,16 +234,16 @@
 
 For the MVP, we will focus on:
 
-1. Core authentication and layout
-2. Basic ticket management
-3. Essential contact handling
-4. Simple team organization
-5. Fundamental portal features
+1. Core authentication and organization management
+2. Email integration and ticket creation
+3. Basic ticket management and responses
+4. Essential contact tracking
+5. Simple team organization
 
 Later iterations will add:
 
 - Advanced filtering and search
 - Automation features
 - Analytics and reporting
-- Knowledge base integration
-- API access management
+- SLA management
+- API access

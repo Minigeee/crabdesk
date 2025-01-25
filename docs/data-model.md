@@ -1,21 +1,29 @@
 # Data Model - Schema Ready
 
+## Overview
+
+CrabDesk is a CRM system designed for organizations to manage their customer interactions through email-based ticketing. The system allows organizations to connect their email systems, automatically creating tickets from incoming emails and tracking customer interactions through a unified interface.
+
+## Core Concepts
+
+- Each organization represents a company using CrabDesk for customer relationship management
+- Users belong to organizations and handle tickets (one auth user can be part of multiple organizations)
+- Contacts are automatically created and tracked by email address
+- Tickets are created from email threads and managed by organization users
+- Teams help organize users and manage ticket routing
+
 ## Custom Enum Types
 
 ### Ticket Related
 
 - **ticket_status**: 'open', 'pending', 'resolved', 'closed'
 - **ticket_priority**: 'low', 'normal', 'high', 'urgent'
-- **ticket_source**: 'email', 'chat', 'portal', 'api'
+- **ticket_source**: 'email', 'api'
 
 ### Message Related
 
-- **message_sender_type**: 'contact', 'internal_user', 'system'
+- **message_sender_type**: 'contact', 'user', 'system'
 - **message_content_type**: 'text', 'html', 'markdown'
-
-### Article Related
-
-- **article_status**: 'draft', 'published', 'archived'
 
 ### Audit Log Related
 
@@ -25,179 +33,172 @@
 
 ### Organizations
 
-**Purpose**: Represents companies using CrabDesk to provide support to their customers.
-**Key Attributes**:
+**Purpose**: Represents companies using CrabDesk to manage their customer relationships and support operations.
 
+**Description**: Organizations are the top-level entity in CrabDesk. Each organization connects their email system to CrabDesk and manages their customer interactions through the platform. They have their own set of users, contacts, teams, and configuration settings.
+
+**Key Attributes**:
 - id: uuid PRIMARY KEY
 - name: varchar(255) NOT NULL
 - domain: varchar(255) NOT NULL
 - settings: jsonb DEFAULT '{}'
 - timezone: varchar(50) NOT NULL DEFAULT 'UTC'
+- email_settings: jsonb DEFAULT '{}'
 - branding: jsonb DEFAULT '{}'
 - created_at: timestamptz NOT NULL DEFAULT now()
 - updated_at: timestamptz NOT NULL DEFAULT now()
-  **Relationships**: Has many internal users, contacts, teams, tickets, and knowledge base articles
-  **User Interaction**: Created/managed by system admins
-  **Constraints**:
+
+**Relationships**: Has many users, contacts, teams, and tickets
+**User Interaction**: Created/managed by system admins
+**Constraints**:
 - UNIQUE(domain)
-  **Indexes**:
+
+**Indexes**:
 - UNIQUE INDEX org_domain_idx ON organizations(domain)
 - INDEX org_created_at_idx ON organizations(created_at)
-  **Security Policies**:
-- READ: Authenticated users can read organizations they belong to (via internal_users)
+
+**Security Policies**:
+- READ: Users can read organizations they belong to
 - INSERT: Only system admins can create organizations
 - UPDATE: Organization admins can update their own organization
 - DELETE: Only system admins can delete organizations
-- NOTES: All other tables will use organization isolation through current_org_id()
 
-### Auth Users
+### Users
 
-**Purpose**: Represents authenticated users in the system (Supabase auth)
-**Notes**: This is handled by Supabase auth (auth.users table), referenced by auth_user_id in our tables
+**Purpose**: Represents organization members who handle tickets and manage customer relationships.
 
-### Internal Users
+**Description**: Users are organization members who handle tickets and interact with contacts. A single auth user can have multiple user profiles, one for each organization they belong to. This allows for organization-specific roles, preferences, and settings.
 
-**Purpose**: Represents support agents, admins, and other staff members
 **Key Attributes**:
-
 - id: uuid PRIMARY KEY
 - org_id: uuid NOT NULL
 - auth_user_id: uuid NOT NULL
 - name: varchar(255) NOT NULL
+- role: varchar(50) NOT NULL DEFAULT 'agent'
 - is_admin: boolean NOT NULL DEFAULT false
 - avatar_url: varchar(1024)
 - preferences: jsonb DEFAULT '{}'
 - created_at: timestamptz NOT NULL DEFAULT now()
 - updated_at: timestamptz NOT NULL DEFAULT now()
-  **Relationships**:
+
+**Relationships**:
 - FOREIGN KEY (org_id) REFERENCES organizations(id)
-- FOREIGN KEY (auth_user_id) REFERENCES auth.users(id) (don't add this constraint)
-  **User Interaction**: Managed by org admins
-  **Constraints**:
+
+**Constraints**:
 - UNIQUE(org_id, auth_user_id)
-  **Indexes**:
-- INDEX internal_user_org_idx ON internal_users(org_id)
-- UNIQUE INDEX internal_user_auth_idx ON internal_users(org_id, auth_user_id)
-- INDEX internal_user_admin_idx ON internal_users(org_id, is_admin)
-  **Security Policies**:
-- READ: Users can read internal_users within their organization
-- INSERT: Organization admins can create new internal users
+- CHECK (role IN ('admin', 'agent', 'supervisor'))
+
+**Indexes**:
+- UNIQUE INDEX user_auth_idx ON users(org_id, auth_user_id)
+- INDEX user_role_idx ON users(org_id, role)
+
+**Security Policies**:
+- READ: Users can read other users within their organization
+- INSERT: Organization admins can create new users
 - UPDATE: Users can update their own profile, admins can update any user in their org
-- DELETE: Organization admins can delete users (soft delete preferred)
-- NOTES: Requires org_id in JWT claims for all operations
+- DELETE: Organization admins can delete users
 
 ### Contacts
 
-**Purpose**: Represents any customer who has contacted support
-**Key Attributes**:
+**Purpose**: Represents customers who have interacted with the organization via email.
 
+**Description**: Contacts are automatically created when new email threads are received. They are primarily identified by their email address and accumulate interaction history through tickets. Unlike the previous model, contacts don't have portal access as that feature is not implemented.
+
+**Key Attributes**:
 - id: uuid PRIMARY KEY
 - org_id: uuid NOT NULL
 - email: varchar(255) NOT NULL
 - name: varchar(255)
-- portal_user_id: uuid
 - first_seen_at: timestamptz NOT NULL DEFAULT now()
 - last_seen_at: timestamptz NOT NULL DEFAULT now()
 - metadata: jsonb DEFAULT '{}'
 - created_at: timestamptz NOT NULL DEFAULT now()
 - updated_at: timestamptz NOT NULL DEFAULT now()
-  **Relationships**:
+
+**Relationships**:
 - FOREIGN KEY (org_id) REFERENCES organizations(id)
-- FOREIGN KEY (portal_user_id) REFERENCES portal_users(id)
-  **User Interaction**: Created automatically from support requests
-  **Constraints**:
+
+**Constraints**:
 - UNIQUE(org_id, email)
 - CHECK (email ~ '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$')
-  **Indexes**:
+
+**Indexes**:
 - UNIQUE INDEX contact_email_idx ON contacts(org_id, email)
-- INDEX contact_portal_idx ON contacts(portal_user_id) WHERE portal_user_id IS NOT NULL
 - INDEX contact_seen_idx ON contacts(org_id, last_seen_at)
-  **Security Policies**:
-- READ: Internal users can read contacts in their organization, portal users can read their own contacts
-- INSERT: Internal users can create contacts in their organization
-- UPDATE: Internal users can update contacts in their organization
-- DELETE: Organization admins can delete contacts (soft delete preferred)
-- NOTES: Portal users can only read/update their own contact record
 
-### Portal Users
-
-**Purpose**: Organization-specific customer portal access
-**Key Attributes**:
-
-- id: uuid PRIMARY KEY
-- org_id: uuid NOT NULL
-- auth_user_id: uuid NOT NULL
-- preferences: jsonb DEFAULT '{}'
-- notification_settings: jsonb DEFAULT '{}'
-- created_at: timestamptz NOT NULL DEFAULT now()
-- updated_at: timestamptz NOT NULL DEFAULT now()
-  **Relationships**:
-- FOREIGN KEY (org_id) REFERENCES organizations(id)
-- FOREIGN KEY (auth_user_id) REFERENCES auth.users(id)
-  **Constraints**:
-- UNIQUE(org_id, auth_user_id)
-  **Indexes**:
-- UNIQUE INDEX portal_user_auth_idx ON portal_users(org_id, auth_user_id)
-  **Security Policies**:
-- READ: Internal users can read all portal users in their org
-- INSERT: Internal users can create portal users
-- UPDATE: Internal users can update portal users, users can update their own preferences
-- DELETE: Organization admins can delete portal users
-- NOTES: Portal users can only read/update their own record
+**Security Policies**:
+- READ: Users can read contacts in their organization
+- INSERT: System can create contacts from incoming emails
+- UPDATE: Users can update contacts in their organization
+- DELETE: Organization admins can delete contacts
 
 ### Teams
 
-**Purpose**: Organizes support agents into functional groups
-**Key Attributes**:
+**Purpose**: Organizes users into functional groups for ticket routing and management.
 
+**Description**: Teams help organize users within an organization for better ticket management. They can be used for different departments (sales, support) or specialties (technical, billing). Teams are crucial for ticket routing and workload distribution.
+
+**Key Attributes**:
 - id: uuid PRIMARY KEY
 - org_id: uuid NOT NULL
 - name: varchar(255) NOT NULL
 - description: text
-- schedule: jsonb DEFAULT '{}'
+- email_alias: varchar(255)
+- routing_rules: jsonb DEFAULT '{}'
 - settings: jsonb DEFAULT '{}'
 - created_at: timestamptz NOT NULL DEFAULT now()
 - updated_at: timestamptz NOT NULL DEFAULT now()
-  **Relationships**:
+
+**Relationships**:
 - FOREIGN KEY (org_id) REFERENCES organizations(id)
-  **Constraints**:
+
+**Constraints**:
 - UNIQUE(org_id, name)
-  **Indexes**:
+- UNIQUE(org_id, email_alias)
+
+**Indexes**:
 - UNIQUE INDEX team_name_idx ON teams(org_id, name)
-  **Security Policies**:
-- READ: All internal users can read teams in their organization
+- UNIQUE INDEX team_email_idx ON teams(org_id, email_alias)
+
+**Security Policies**:
+- READ: All users can read teams in their organization
 - INSERT: Organization admins can create teams
 - UPDATE: Team leaders and org admins can update team details
 - DELETE: Organization admins can delete teams
-- NOTES: Team membership affects ticket visibility and assignment
 
 ### Team Members
 
-**Purpose**: Links internal users to teams
-**Key Attributes**:
+**Purpose**: Links users to teams with specific roles.
 
+**Description**: Manages team membership and roles. Users can belong to multiple teams, and their role within each team can affect their permissions and responsibilities for team-specific tickets.
+
+**Key Attributes**:
 - team_id: uuid NOT NULL
 - user_id: uuid NOT NULL
 - role: varchar(50) DEFAULT 'member'
 - created_at: timestamptz NOT NULL DEFAULT now()
-  **Relationships**:
+
+**Relationships**:
 - FOREIGN KEY (team_id) REFERENCES teams(id)
-- FOREIGN KEY (user_id) REFERENCES internal_users(id)
-  **Constraints**:
+- FOREIGN KEY (user_id) REFERENCES users(id)
+
+**Constraints**:
 - PRIMARY KEY (team_id, user_id)
 - CHECK (role IN ('leader', 'member'))
-  **Security Policies**:
-- READ: All internal users can read team memberships in their org
+
+**Security Policies**:
+- READ: All users can read team memberships in their org
 - INSERT: Team leaders and org admins can add members
 - UPDATE: Team leaders and org admins can modify roles
 - DELETE: Team leaders and org admins can remove members
-- NOTES: Used for determining team-based permissions
 
 ### Tickets
 
-**Purpose**: Tracks customer support requests
-**Key Attributes**:
+**Purpose**: Tracks customer interactions through email threads.
 
+**Description**: Tickets are created automatically from incoming emails and represent ongoing conversations with contacts. Each new email thread creates a new ticket, maintaining a clean separation between different conversation threads while preserving the relationship to the contact.
+
+**Key Attributes**:
 - id: uuid PRIMARY KEY DEFAULT gen_random_uuid()
 - org_id: uuid NOT NULL
 - number: bigint NOT NULL GENERATED ALWAYS AS IDENTITY
@@ -208,35 +209,78 @@
 - contact_id: uuid NOT NULL
 - assignee_id: uuid
 - team_id: uuid
-- metadata: jsonb DEFAULT '{}'
+- email_metadata: jsonb DEFAULT '{}'
 - created_at: timestamptz NOT NULL DEFAULT now()
 - updated_at: timestamptz NOT NULL DEFAULT now()
 - resolved_at: timestamptz
-  **Relationships**:
+
+**Relationships**:
 - FOREIGN KEY (org_id) REFERENCES organizations(id)
 - FOREIGN KEY (contact_id) REFERENCES contacts(id)
-- FOREIGN KEY (assignee_id) REFERENCES internal_users(id)
+- FOREIGN KEY (assignee_id) REFERENCES users(id)
 - FOREIGN KEY (team_id) REFERENCES teams(id)
-  **Constraints**:
+
+**Constraints**:
 - UNIQUE(org_id, number)
-  **Indexes**:
+
+**Indexes**:
 - UNIQUE INDEX ticket_number_idx ON tickets(org_id, number)
 - INDEX ticket_status_idx ON tickets(org_id, status, created_at)
 - INDEX ticket_contact_idx ON tickets(contact_id, created_at)
 - INDEX ticket_assignee_idx ON tickets(assignee_id, status)
 - INDEX ticket_team_idx ON tickets(team_id, status)
-  **Security Policies**:
-- READ: Internal users can read tickets in their org, assigned to them, or their team, portal users can read their own tickets
-- INSERT: Internal users and portal users can create tickets, portal users can only create tickets for their own contacts
+
+**Security Policies**:
+- READ: Users can read tickets in their org, assigned to them, or their team
+- INSERT: System creates tickets from incoming emails
 - UPDATE: Assignee, team members, and admins can update tickets
-- DELETE: Organization admins can delete tickets (soft delete preferred)
-- NOTES: Portal users can only read/update their own tickets
+- DELETE: Organization admins can delete tickets
+
+### Email Threads
+
+**Purpose**: Tracks email conversations linked to tickets.
+
+**Description**: Maintains the relationship between email threads and tickets, storing only the necessary metadata to link with the email service provider's storage. This allows for efficient email thread tracking without storing the actual email content in the database.
+
+**Key Attributes**:
+- id: uuid PRIMARY KEY
+- org_id: uuid NOT NULL
+- ticket_id: uuid NOT NULL
+- provider_thread_id: varchar(255) NOT NULL
+- provider_message_ids: text[] NOT NULL
+- from_email: varchar(255) NOT NULL
+- to_email: varchar(255) NOT NULL
+- subject: varchar(255) NOT NULL
+- last_message_at: timestamptz NOT NULL
+- metadata: jsonb DEFAULT '{}'
+- created_at: timestamptz NOT NULL DEFAULT now()
+- updated_at: timestamptz NOT NULL DEFAULT now()
+
+**Relationships**:
+- FOREIGN KEY (org_id) REFERENCES organizations(id)
+- FOREIGN KEY (ticket_id) REFERENCES tickets(id)
+
+**Constraints**:
+- UNIQUE(org_id, provider_thread_id)
+
+**Indexes**:
+- UNIQUE INDEX email_thread_provider_idx ON email_threads(org_id, provider_thread_id)
+- INDEX email_thread_ticket_idx ON email_threads(ticket_id)
+- INDEX email_thread_updated_idx ON email_threads(org_id, last_message_at)
+
+**Security Policies**:
+- READ: Users can read email threads in their organization
+- INSERT: System creates email thread records
+- UPDATE: System updates email thread metadata
+- DELETE: Organization admins can delete email threads
 
 ### Messages
 
-**Purpose**: Records all communication within tickets
-**Key Attributes**:
+**Purpose**: Enables real-time messaging and internal communication within tickets.
 
+**Description**: Supports team collaboration through real-time messages and internal notes. Messages are always associated with a ticket and can be either internal team discussions or public responses to contacts. The actual email communication is handled separately through the email_threads system.
+
+**Key Attributes**:
 - id: uuid PRIMARY KEY
 - ticket_id: uuid NOT NULL
 - sender_type: message_sender_type NOT NULL
@@ -246,112 +290,95 @@
 - is_private: boolean DEFAULT false
 - metadata: jsonb DEFAULT '{}'
 - created_at: timestamptz NOT NULL DEFAULT now()
-  **Relationships**:
+- updated_at: timestamptz NOT NULL DEFAULT now()
+
+**Relationships**:
 - FOREIGN KEY (ticket_id) REFERENCES tickets(id)
-  **Indexes**:
+
+**Indexes**:
 - INDEX message_ticket_idx ON messages(ticket_id, created_at)
 - INDEX message_sender_idx ON messages(sender_type, sender_id)
-  **Security Policies**:
-- READ: Internal users can read all messages, portal users only their ticket messages
-- INSERT: Any authenticated user can create messages on accessible tickets
+- INDEX message_private_idx ON messages(ticket_id, is_private)
+
+**Security Policies**:
+- READ: Users can read messages in their organization
+- INSERT: Users can create messages for accessible tickets
 - UPDATE: Message creators can update their messages within a time window
 - DELETE: Not allowed (audit requirements)
-- NOTES: Private messages only visible to internal users
-
-### Knowledge Base Articles
-
-**Purpose**: Self-service help documentation
-**Key Attributes**:
-
-- id: uuid PRIMARY KEY
-- org_id: uuid NOT NULL
-- title: varchar(255) NOT NULL
-- slug: varchar(255) NOT NULL
-- content: text NOT NULL
-- status: article_status NOT NULL DEFAULT 'draft'
-- version: integer NOT NULL DEFAULT 1
-- locale: varchar(10) NOT NULL DEFAULT 'en'
-- seo_metadata: jsonb DEFAULT '{}'
-- author_id: uuid NOT NULL
-- published_at: timestamptz
-- created_at: timestamptz NOT NULL DEFAULT now()
-- updated_at: timestamptz NOT NULL DEFAULT now()
-  **Relationships**:
-- FOREIGN KEY (org_id) REFERENCES organizations(id)
-- FOREIGN KEY (author_id) REFERENCES internal_users(id)
-  **Constraints**:
-- UNIQUE(org_id, slug, locale)
-- CHECK (locale ~ '^[a-z]{2}(-[A-Z]{2})?$')
-  **Indexes**:
-- UNIQUE INDEX article_slug_idx ON articles(org_id, slug, locale)
-- INDEX article_status_idx ON articles(org_id, status, updated_at)
-  **Security Policies**:
-- READ: Published articles visible to all users in org, drafts to internal users
-- INSERT: Internal users can create articles
-- UPDATE: Authors and admins can update articles
-- DELETE: Organization admins can delete articles
-- NOTES: Version history should be maintained
 
 ## Supporting Entities
 
 ### Skills
 
-**Purpose**: Defines agent and team capabilities
-**Key Attributes**:
+**Purpose**: Defines user capabilities for intelligent ticket routing.
 
+**Description**: Skills represent different capabilities that users may have, such as product knowledge, language proficiency, or technical expertise. These are used for intelligent ticket routing and team organization.
+
+**Key Attributes**:
 - id: uuid PRIMARY KEY
 - org_id: uuid NOT NULL
 - name: varchar(255) NOT NULL
 - description: text
 - level: integer DEFAULT 1
 - created_at: timestamptz NOT NULL DEFAULT now()
-  **Relationships**:
+
+**Relationships**:
 - FOREIGN KEY (org_id) REFERENCES organizations(id)
-  **Constraints**:
+
+**Constraints**:
 - UNIQUE(org_id, name)
 - CHECK (level BETWEEN 1 AND 5)
-  **Indexes**:
+
+**Indexes**:
 - UNIQUE INDEX skill_name_idx ON skills(org_id, name)
-  **Security Policies**:
-- READ: All internal users can read skills
+
+**Security Policies**:
+- READ: All users can read skills
 - INSERT: Organization admins can create skills
 - UPDATE: Organization admins can update skills
 - DELETE: Organization admins can delete unused skills
-- NOTES: Used for agent capabilities and routing
 
 ### Tags
 
-**Purpose**: Categorization system
-**Key Attributes**:
+**Purpose**: Flexible categorization system for tickets.
 
+**Description**: Tags provide a flexible way to categorize tickets for reporting, routing, and organization. They can be applied manually by users or automatically through rules based on ticket content or metadata.
+
+**Key Attributes**:
 - id: uuid PRIMARY KEY
 - org_id: uuid NOT NULL
 - name: varchar(255) NOT NULL
 - color: varchar(7) DEFAULT '#808080'
 - description: text
 - created_at: timestamptz NOT NULL DEFAULT now()
-  **Relationships**:
+
+**Relationships**:
 - FOREIGN KEY (org_id) REFERENCES organizations(id)
-  **Constraints**:
+
+**Constraints**:
 - UNIQUE(org_id, name)
 - CHECK (color ~ '^#[0-9A-Fa-f]{6}$')
-  **Indexes**:
+
+**Indexes**:
 - UNIQUE INDEX tag_name_idx ON tags(org_id, name)
-  **Security Policies**:
+
+**Security Policies**:
 - READ: All users can read tags
-- INSERT: Internal users can create tags
-- UPDATE: Internal users can update tags
+- INSERT: Users can create tags
+- UPDATE: Users can update tags
 - DELETE: Organization admins can delete unused tags
-- NOTES: Used for ticket categorization
 
 ### Attachments
 
-**Purpose**: Stores file metadata for ticket attachments
-**Key Attributes**:
+**Purpose**: Stores file metadata for email attachments.
 
+**Description**: Manages files attached to emails and messages. Files are stored in Supabase storage, while this table maintains the metadata and relationships to tickets and messages.
+
+**Key Attributes**:
 - id: uuid PRIMARY KEY
 - org_id: uuid NOT NULL
 - ticket_id: uuid NOT NULL
+- message_id: uuid NOT NULL
 - bucket: varchar(255) NOT NULL
 - path: varchar(1024) NOT NULL
 - filename: varchar(255) NOT NULL
@@ -359,49 +386,55 @@
 - mime_type: varchar(255) NOT NULL
 - metadata: jsonb DEFAULT '{}'
 - created_at: timestamptz NOT NULL DEFAULT now()
-  **Relationships**:
+
+**Relationships**:
 - FOREIGN KEY (org_id) REFERENCES organizations(id)
 - FOREIGN KEY (ticket_id) REFERENCES tickets(id)
-  **Constraints**:
+- FOREIGN KEY (message_id) REFERENCES messages(id)
+
+**Constraints**:
 - CHECK (size > 0)
-  **Indexes**:
+
+**Indexes**:
 - INDEX attachment_org_idx ON attachments(org_id, created_at)
 - INDEX attachment_ticket_idx ON attachments(ticket_id, created_at)
 - UNIQUE INDEX attachment_path_idx ON attachments(bucket, path)
-  **Security Policies**:
-- READ: Users can read attachments on tickets they can access
-- INSERT: Users can upload attachments to tickets they can access
-- UPDATE: No updates allowed after upload
+
+**Security Policies**:
+- READ: Users can read attachments in their organization
+- INSERT: System creates attachment records from emails
+- UPDATE: No updates allowed after creation
 - DELETE: Organization admins can delete attachments
-- NOTES: Virus scanning and file type restrictions applied
 
 ### Audit Logs
 
-**Purpose**: Tracks system changes
-**Key Attributes**:
+**Purpose**: Tracks system changes for compliance and debugging.
 
+**Description**: Maintains a comprehensive audit trail of all significant changes in the system. This is crucial for security, compliance, and debugging purposes. Each log entry captures the what, who, and when of changes.
+
+**Key Attributes**:
 - id: uuid PRIMARY KEY
 - org_id: uuid NOT NULL
-- action: varchar(50) NOT NULL
+- action: audit_log_action NOT NULL
 - entity_type: varchar(50) NOT NULL
 - entity_id: uuid NOT NULL
 - actor_id: uuid
 - changes: jsonb NOT NULL
 - created_at: timestamptz NOT NULL DEFAULT now()
-  **Relationships**:
+
+**Relationships**:
 - FOREIGN KEY (org_id) REFERENCES organizations(id)
-- FOREIGN KEY (actor_id) REFERENCES internal_users(id)
-  **Constraints**:
-- CHECK (action IN ('insert', 'update', 'delete', 'restore'))
-  **Indexes**:
+- FOREIGN KEY (actor_id) REFERENCES users(id)
+
+**Indexes**:
 - INDEX audit_org_idx ON audit_logs(org_id, created_at)
 - INDEX audit_entity_idx ON audit_logs(entity_type, entity_id)
-  **Security Policies**:
-- READ: Organization members can read audit logs
+
+**Security Policies**:
+- READ: Users can read audit logs in their organization
 - INSERT: System automatically creates audit logs
 - UPDATE: No updates allowed
 - DELETE: No deletion allowed
-- NOTES: Critical for compliance and debugging
 
 ## Notes
 
