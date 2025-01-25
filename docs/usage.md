@@ -7,8 +7,14 @@ A collection of usage examples for various components in this project.
 ## Database Types
 
 Import types from `@/lib/database.types`:
+
 ```typescript
-import type { Tables, TablesInsert, TablesUpdate, Enums } from '@/lib/database.types';
+import type {
+  Tables,
+  TablesInsert,
+  TablesUpdate,
+  Enums,
+} from '@/lib/database.types';
 
 // Row type (full database record)
 type Ticket = Tables<'tickets'>;
@@ -35,20 +41,20 @@ type TicketForm = Partial<TablesInsert<'tickets'>>;
 ## Supabase Clients
 
 ### Server Components
+
 ```tsx
 import { createClient } from '@/lib/supabase/server';
 
 export default async function PrivatePage() {
   const client = await createClient();
-  const { data: tickets } = await client
-    .from('tickets')
-    .select('*');
+  const { data: tickets } = await client.from('tickets').select('*');
 
   // ...
 }
 ```
 
 ### Client Components
+
 ```tsx
 import { createClient } from '@/lib/supabase/client';
 
@@ -68,7 +74,11 @@ CrabDesk supports two types of users: internal users (staff) and portal users (c
 ### Internal Users
 
 ```typescript
-import { getCurrentInternalUser, requireInternalUser, requireOrganizationAccess } from '@/lib/auth/internal/session';
+import {
+  getCurrentInternalUser,
+  requireInternalUser,
+  requireOrganizationAccess,
+} from '@/lib/auth/internal/session';
 
 // Get current user (if any)
 export default async function Page() {
@@ -86,7 +96,11 @@ export default async function ProtectedPage() {
 }
 
 // Require organization access
-export default async function OrgPage({ params }: { params: { orgId: string } }) {
+export default async function OrgPage({
+  params,
+}: {
+  params: { orgId: string };
+}) {
   const { user, organization } = await requireOrganizationAccess(params.orgId);
   // User is guaranteed to have access to this organization
 }
@@ -95,7 +109,11 @@ export default async function OrgPage({ params }: { params: { orgId: string } })
 ### Portal Users
 
 ```typescript
-import { getCurrentPortalUser, requirePortalUser, requirePortalAccess } from '@/lib/auth/portal/session';
+import {
+  getCurrentPortalUser,
+  requirePortalUser,
+  requirePortalAccess,
+} from '@/lib/auth/portal/session';
 
 // Get current user (if any)
 export default async function Page() {
@@ -113,7 +131,11 @@ export default async function ProtectedPage() {
 }
 
 // Require portal access
-export default async function OrgPage({ params }: { params: { orgId: string } }) {
+export default async function OrgPage({
+  params,
+}: {
+  params: { orgId: string };
+}) {
   const { user, contact } = await requirePortalAccess(params.orgId);
   // User is guaranteed to have access to this organization
 }
@@ -127,7 +149,7 @@ export default async function OrgPage({ params }: { params: { orgId: string } })
 import { useInternalAuth } from '@/lib/auth/internal/hooks';
 
 export function InternalComponent() {
-  const { 
+  const {
     user,              // The internal user data
     organization,      // Current organization
     organizations,     // List of accessible organizations
@@ -144,9 +166,9 @@ export function InternalComponent() {
     <div>
       <h1>Welcome {user.name}</h1>
       <h2>Organization: {organization?.name}</h2>
-      
+
       {/* Switch Organization */}
-      <select 
+      <select
         value={organization?.id}
         onChange={(e) => switchOrganization(e.target.value)}
       >
@@ -206,7 +228,10 @@ await signOut();
 The auth system is fully typed with TypeScript:
 
 ```typescript
-import type { InternalAuthContext, PortalAuthContext } from '@/lib/auth/common/types';
+import type {
+  InternalAuthContext,
+  PortalAuthContext,
+} from '@/lib/auth/common/types';
 
 // Internal user types
 type InternalUser = Tables<'internal_users'>;
@@ -220,6 +245,7 @@ type Contact = Tables<'contacts'>;
 ## Ticket System
 
 ### Using Ticket Hooks
+
 ```tsx
 // Fetch and display ticket list with filters
 function TicketList() {
@@ -228,16 +254,16 @@ function TicketList() {
     orderBy: [{ column: 'created_at', ascending: false }],
     includeRelations: true,
     limit: 10,
-  })
+  });
 
-  if (isLoading) return <div>Loading...</div>
-  return <DataTable data={data.data} count={data.count} />
+  if (isLoading) return <div>Loading...</div>;
+  return <DataTable data={data.data} count={data.count} />;
 }
 
 // Single ticket view with real-time updates
 function TicketDetails({ id }: { id: string }) {
-  const { data: ticket } = useTicket(id, true)
-  const { updateStatus, updateAssignee } = useTicketActions(id)
+  const { data: ticket } = useTicket(id, true);
+  const { updateStatus, updateAssignee } = useTicketActions(id);
 
   return (
     <div>
@@ -250,73 +276,82 @@ function TicketDetails({ id }: { id: string }) {
         onChange={(id) => updateAssignee(id)}
       />
     </div>
-  )
+  );
 }
 
 // Create new ticket
 function NewTicketForm() {
-  const createTicket = useCreateTicket()
-  
-  const onSubmit = async (data: TicketInsert) => {
-    await createTicket.mutateAsync(data)
-    // Handle success
-  }
+  const createTicket = useCreateTicket();
 
-  return <Form onSubmit={onSubmit} />
+  const onSubmit = async (data: TicketInsert) => {
+    await createTicket.mutateAsync(data);
+    // Handle success
+  };
+
+  return <Form onSubmit={onSubmit} />;
 }
 ```
 
 ### Direct Service Usage (Server-Side)
+
 ```tsx
-import { TicketService } from '@/lib/tickets/ticket-service'
-import { createClient } from '@/lib/supabase/server'
-import { getCurrentInternalUser } from '@/lib/auth/internal/session'
+import { TicketService } from '@/lib/tickets/ticket-service';
+import { createClient } from '@/lib/supabase/server';
+import { getCurrentInternalUser } from '@/lib/auth/internal/session';
 
 export async function GET(request: Request) {
-  const userData = await getCurrentInternalUser()
+  const userData = await getCurrentInternalUser();
   if (!userData) {
-    return new Response('Unauthorized', { status: 401 })
+    return new Response('Unauthorized', { status: 401 });
   }
 
-  const supabase = await createClient()
-  const ticketService = new TicketService(supabase, userData.organization.id)
+  const supabase = await createClient();
+  const ticketService = new TicketService(supabase, userData.organization.id);
 
   const { data, count } = await ticketService.getTickets({
     filters: { status: ['open'] },
     includeRelations: true,
-  })
+  });
 
-  return Response.json({ data, count })
+  return Response.json({ data, count });
 }
 ```
 
 ## Shared Components
 
 ### Status and Priority Badges
+
 ```tsx
-import { StatusBadge } from '@/components/tickets/status-badge'
-import { PriorityBadge } from '@/components/tickets/priority-badge'
+import { StatusBadge } from '@/components/tickets/status-badge';
+import { PriorityBadge } from '@/components/tickets/priority-badge';
 
 // Status badge with automatic styling
-function TicketHeader({ status, priority }: { status: Enums<'ticket_status'>, priority: Enums<'ticket_priority'> }) {
+function TicketHeader({
+  status,
+  priority,
+}: {
+  status: Enums<'ticket_status'>;
+  priority: Enums<'ticket_priority'>;
+}) {
   return (
-    <div className="flex gap-2">
+    <div className='flex gap-2'>
       <StatusBadge status={status} />
       <PriorityBadge priority={priority} />
     </div>
-  )
+  );
 }
 ```
 
 ## Portal Links
 
 ### Generating Portal Access Links
+
 ```typescript
 // Example usage in a route handler
 export async function POST(request: Request) {
   const { contactId, ticketId } = await request.json();
   const portalService = new PortalService();
-  
+
   try {
     const link = await portalService.generatePortalLink(contactId, ticketId);
     return Response.json({ link });

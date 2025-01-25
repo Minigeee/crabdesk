@@ -2,7 +2,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
+  const response = NextResponse.next({
     request: {
       headers: request.headers,
     },
@@ -42,7 +42,8 @@ export async function middleware(request: NextRequest) {
   if (
     !user &&
     (request.nextUrl.pathname.startsWith('/dashboard') ||
-      request.nextUrl.pathname.startsWith('/portal') && request.nextUrl.pathname !== '/portal/verify')
+      (request.nextUrl.pathname.startsWith('/portal') &&
+        request.nextUrl.pathname !== '/portal/verify'))
   ) {
     const redirectUrl = new URL('/login', request.url);
     // Add the current path as the next parameter

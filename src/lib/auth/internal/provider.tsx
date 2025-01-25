@@ -73,7 +73,9 @@ export function InternalAuthProvider({
         setOrganization(orgData);
         setOrganizations([orgData]);
       } catch (err) {
-        setError(err instanceof Error ? err : new Error('Failed to load user data'));
+        setError(
+          err instanceof Error ? err : new Error('Failed to load user data')
+        );
       } finally {
         setIsLoading(false);
       }
@@ -107,7 +109,9 @@ export function InternalAuthProvider({
           .eq('id', user.id);
       }
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to switch organization'));
+      setError(
+        err instanceof Error ? err : new Error('Failed to switch organization')
+      );
       throw err;
     }
   };
@@ -126,4 +130,4 @@ export function InternalAuthProvider({
       {children}
     </InternalAuthContext.Provider>
   );
-} 
+}

@@ -3,6 +3,7 @@
 ## Core Layout Components
 
 ### Root Layout (`/app/layout.tsx`)
+
 - **Purpose**: Provides global app configuration and providers
 - **Components**:
   - `AuthProvider`: Manages authentication state
@@ -12,16 +13,17 @@
 - **User Flow**: Wraps all routes, handles auth redirects
 
 ### Dashboard Layout (`/app/dashboard/layout.tsx`)
+
 - **Purpose**: Main authenticated app layout
 - **Components**:
   - `MainNav`: Primary navigation
   - `UserNav`: Profile, settings, logout
   - `CommandMenu`: Global command palette
   - `OrganizationSwitcher`: For users in multiple orgs
-- **Data Dependencies**: 
+- **Data Dependencies**:
   - Current user
   - Organization details
-- **Layout**: 
+- **Layout**:
   - Fixed sidebar with nav
   - Top header with actions
   - Main content area
@@ -29,6 +31,7 @@
 ## Main Views
 
 ### Dashboard (`/app/dashboard/page.tsx`)
+
 - **Purpose**: Role-based overview and quick actions
 - **Components**:
   - `TicketMetrics`: Key ticket statistics
@@ -44,6 +47,7 @@
   - Direct to relevant sections
 
 ### Ticket Queue (`/app/dashboard/tickets/page.tsx`)
+
 - **Purpose**: Main ticket management interface
 - **Components**:
   - `TicketFilters`: Status, priority, assignment filters
@@ -60,6 +64,7 @@
   - Click to open ticket
 
 ### Active Ticket (`/app/dashboard/tickets/[id]/page.tsx`)
+
 - **Purpose**: Single ticket management
 - **Components**:
   - `MessageThread`: Conversation history
@@ -78,6 +83,7 @@
   - Add internal notes
 
 ### Contact Management (`/app/dashboard/contacts/page.tsx`)
+
 - **Purpose**: Customer contact management
 - **Components**:
   - `ContactTable`: List of contacts
@@ -93,6 +99,7 @@
   - Update contact info
 
 ### Contact Details (`/app/dashboard/contacts/[id]/page.tsx`)
+
 - **Purpose**: Detailed contact view
 - **Components**:
   - `ContactProfile`: Basic information
@@ -110,6 +117,7 @@
   - Create new ticket
 
 ### Team Management (`/app/dashboard/teams/page.tsx`)
+
 - **Purpose**: Team organization and metrics
 - **Components**:
   - `TeamList`: Overview of teams
@@ -127,6 +135,7 @@
 ## Shared Components
 
 ### Data Display
+
 - `DataTable`: Reusable table with sorting/filtering
 - `StatusBadge`: Visual status indicators
 - `TimeAgo`: Relative time display
@@ -134,17 +143,20 @@
 - `Pagination`: Page navigation
 
 ### Forms and Inputs
+
 - `ComboBox`: Enhanced select with search
 - `TagInput`: Multiple tag selection
 - `RichTextEditor`: Enhanced text input
 - `SearchInput`: Global search component
 
 ### Dialogs and Modals
+
 - `ConfirmDialog`: Action confirmation
 - `FormDialog`: Reusable form modal
 - `SlideOver`: Side panel for details
 
 ### Loading States
+
 - `LoadingSpinner`: Loading indicator
 - `SkeletonLoader`: Content placeholder
 - `LoadingButton`: Action button states
@@ -152,6 +164,7 @@
 ## Customer Portal Components
 
 ### Portal Layout (`/app/portal/layout.tsx`)
+
 - **Purpose**: Customer-facing interface
 - **Components**:
   - `PortalNav`: Simplified navigation
@@ -164,6 +177,7 @@
   - Focus on self-service
 
 ### Ticket Management (`/app/portal/tickets/page.tsx`)
+
 - **Purpose**: Customer ticket interface
 - **Components**:
   - `TicketList`: Customer's tickets
@@ -180,6 +194,7 @@
 ## Core Workflows
 
 ### Email Processing (`/src/lib/email`)
+
 - **Purpose**: Convert incoming emails to tickets and maintain email threads
 - **Key Workflows**:
   1. Email to Ticket Creation:
@@ -193,6 +208,7 @@
      - Include ticket reference in subject
 
 ### Ticket Assignment (`/src/lib/tickets`)
+
 - **Purpose**: Efficiently distribute tickets to available agents
 - **Key Workflows**:
   1. Load Balancing:
@@ -205,6 +221,7 @@
      - Factor in language requirements
 
 ### Auto-categorization (`/src/lib/tickets`)
+
 - **Purpose**: Automatically categorize and tag incoming tickets
 - **Key Workflows**:
   1. Initial Classification:
@@ -214,10 +231,12 @@
   2. Learning from Actions:
      - Track manual tag changes by agents
      - Update classification patterns
-     - Improve accuracy over time 
+     - Improve accuracy over time
 
 ## Initial Build Focus
+
 For the MVP, we will focus on:
+
 1. Core authentication and layout
 2. Basic ticket management
 3. Essential contact handling
@@ -225,6 +244,7 @@ For the MVP, we will focus on:
 5. Fundamental portal features
 
 Later iterations will add:
+
 - Advanced filtering and search
 - Automation features
 - Analytics and reporting

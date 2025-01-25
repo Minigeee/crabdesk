@@ -1,4 +1,4 @@
-import { TablesInsert, Tables } from '@/lib/database.types';
+import { Tables, TablesInsert } from '@/lib/database.types';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
 import { nanoid } from 'nanoid';
@@ -15,8 +15,8 @@ export type PortalLink = {
 };
 
 export type PortalAccess = {
-  portalUser: Tables<"portal_users">;
-  contact: Tables<"contacts">;
+  portalUser: Tables<'portal_users'>;
+  contact: Tables<'contacts'>;
 };
 
 export class PortalService {
@@ -84,12 +84,14 @@ export class PortalService {
     const supabase = await this.getServiceClient();
     const { data } = await supabase
       .from('portal_links')
-      .select(`
+      .select(
+        `
         *,
         tickets:ticket_id (
           number
         )
-      `)
+      `
+      )
       .eq('token', token)
       .gt('expires_at', new Date().toISOString())
       .single();

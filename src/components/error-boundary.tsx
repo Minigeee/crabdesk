@@ -5,7 +5,6 @@ import { ErrorBoundary as ReactErrorBoundary } from 'react-error-boundary';
 
 function ErrorFallback({
   error,
-  resetErrorBoundary,
 }: {
   error: Error;
   resetErrorBoundary: () => void;

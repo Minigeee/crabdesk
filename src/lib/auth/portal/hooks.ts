@@ -8,4 +8,4 @@ export function usePortalAuth(): PortalAuthContext {
     throw new Error('usePortalAuth must be used within a PortalAuthProvider');
   }
   return context;
-} 
+}

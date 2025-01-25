@@ -3,7 +3,6 @@ import { cn } from '@/lib/utils';
 import { Upload } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Button } from './button';
 
 interface FileUploadProps {
   onFilesSelected: (files: File[]) => void;
@@ -64,7 +63,7 @@ export function FileUpload({
     <div
       {...getRootProps()}
       className={cn(
-        'relative rounded-lg border-2 border-dashed p-6 text-center hover:bg-muted cursor-pointer',
+        'relative cursor-pointer rounded-lg border-2 border-dashed p-6 text-center hover:bg-muted',
         isDragging || isDragActive
           ? 'border-primary bg-primary/5'
           : 'border-muted-foreground/25'

@@ -62,7 +62,9 @@ export class MessageService {
     const internalUserMap = new Map(
       internalUsers.map((user) => [user.id, user])
     );
-    const contactMap = new Map(contacts.map((contact) => [contact.id, contact]));
+    const contactMap = new Map(
+      contacts.map((contact) => [contact.id, contact])
+    );
 
     // Join the data
     return messages.map((message): MessageWithSender => {

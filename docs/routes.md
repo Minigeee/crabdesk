@@ -1,6 +1,7 @@
 # Route Structure
 
 ## Public Routes
+
 - `/` - Landing page
 - `/auth/login` - Login page
 - `/auth/signup` - Signup page
@@ -11,9 +12,11 @@
   - `/help/search` - Search results
 
 ## App Routes
+
 All authenticated routes are under `/app` with shared layout
 
 ### Support Agent Workspace
+
 - `/app/dashboard` - Agent dashboard
 - `/app/tickets` - Ticket queue
   - `/app/tickets/new` - Create ticket
@@ -25,6 +28,7 @@ All authenticated routes are under `/app` with shared layout
   - `/app/tickets/unassigned` - Unassigned queue
 
 ### Knowledge Base Management
+
 - `/app/kb` - Knowledge base dashboard
   - `/app/kb/articles` - Article listing
     - `/app/kb/articles/new` - Create article
@@ -35,6 +39,7 @@ All authenticated routes are under `/app` with shared layout
   - `/app/kb/analytics` - Content analytics
 
 ### Customer Portal (for logged-in customers)
+
 - `/app/portal` - Customer portal home
   - `/app/portal/tickets` - Customer's tickets
     - `/app/portal/tickets/new` - Submit ticket
@@ -44,6 +49,7 @@ All authenticated routes are under `/app` with shared layout
     - `/app/portal/organizations/[id]/members` - Member management
 
 ### Management Interface
+
 - `/app/manage` - Management dashboard
   - `/app/manage/team` - Team overview
     - `/app/manage/team/members` - Team member management
@@ -58,7 +64,9 @@ All authenticated routes are under `/app` with shared layout
     - `/app/manage/automation/macros` - Macro management
 
 ### Settings Routes
+
 - `/app/settings` - Personal settings
+
   - `/app/settings/profile` - Profile settings
   - `/app/settings/preferences` - Workspace preferences
   - `/app/settings/notifications` - Notification settings
@@ -72,6 +80,7 @@ All authenticated routes are under `/app` with shared layout
   - `/app/admin/audit` - Audit logs
 
 ## API Routes
+
 - `/api/v1` - API root
   - `/api/v1/tickets/*` - Ticket operations
   - `/api/v1/kb/*` - Knowledge base operations
@@ -80,41 +89,38 @@ All authenticated routes are under `/app` with shared layout
   - `/api/v1/analytics/*` - Analytics operations
 
 ## Layout Structure
+
 ```tsx
 // Root layout (app/layout.tsx)
-- RootLayout
-  - AuthProvider
-  - ThemeProvider
-  - ToastProvider
-
-// App layout (app/app/layout.tsx)
-- AppLayout
-  - AuthGuard
-  - SideNav
-  - Header
-  - NotificationCenter
-
-// Portal layout (app/app/portal/layout.tsx)
-- PortalLayout
-  - CustomerGuard
-  - CustomerNav
-
-// Management layout (app/app/manage/layout.tsx)
-- ManagementLayout
-  - AdminGuard
-  - AdminNav
-
-// Settings layout (app/app/settings/layout.tsx)
-- SettingsLayout
-  - SettingsNav
-
-// Admin layout (app/app/admin/layout.tsx)
-- AdminLayout
-  - AdminGuard
-  - AdminNav
+-RootLayout -
+  AuthProvider -
+  ThemeProvider -
+  ToastProvider -
+  // App layout (app/app/layout.tsx)
+  AppLayout -
+  AuthGuard -
+  SideNav -
+  Header -
+  NotificationCenter -
+  // Portal layout (app/app/portal/layout.tsx)
+  PortalLayout -
+  CustomerGuard -
+  CustomerNav -
+  // Management layout (app/app/manage/layout.tsx)
+  ManagementLayout -
+  AdminGuard -
+  AdminNav -
+  // Settings layout (app/app/settings/layout.tsx)
+  SettingsLayout -
+  SettingsNav -
+  // Admin layout (app/app/admin/layout.tsx)
+  AdminLayout -
+  AdminGuard -
+  AdminNav;
 ```
 
 ## Route Guards and Access Control
+
 - Public routes: No authentication required
 - `/app/*`: Requires authentication
 - `/app/manage/*`: Requires manager role
@@ -123,9 +129,11 @@ All authenticated routes are under `/app` with shared layout
 - `/app/portal/*`: Requires customer role
 
 ## Shared Components
+
 Each layout can access:
+
 - Global navigation
 - Search functionality
 - Notification system
 - User menu
-- Help widget 
+- Help widget

@@ -68,7 +68,9 @@ export function PortalAuthProvider({
 
         setContact(contactData);
       } catch (err) {
-        setError(err instanceof Error ? err : new Error('Failed to load user data'));
+        setError(
+          err instanceof Error ? err : new Error('Failed to load user data')
+        );
       } finally {
         setIsLoading(false);
       }
@@ -91,4 +93,4 @@ export function PortalAuthProvider({
       {children}
     </PortalAuthContext.Provider>
   );
-} 
+}

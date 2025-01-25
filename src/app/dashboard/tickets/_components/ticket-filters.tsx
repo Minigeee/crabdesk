@@ -183,9 +183,7 @@ export function TicketFilters() {
               >
                 Reset filters
               </Button>
-              <Button onClick={handleApply}>
-                Apply filters
-              </Button>
+              <Button onClick={handleApply}>Apply filters</Button>
             </div>
           </div>
         </PopoverContent>

@@ -2,7 +2,7 @@
 
 import { CreateTicketDialog } from '@/components/tickets/create-ticket-dialog';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Plus } from 'lucide-react';
 import { Suspense } from 'react';
@@ -12,7 +12,6 @@ import { TicketPagination } from './_components/ticket-pagination';
 import { TicketPreview } from './_components/ticket-preview';
 import { TicketQueueProvider } from './_components/ticket-queue-provider';
 import { TicketTable } from './_components/ticket-table';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function TicketsPage() {
   return (

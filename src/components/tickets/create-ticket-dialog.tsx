@@ -8,11 +8,11 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { useInternalAuth } from '@/lib/auth/internal/hooks';
+import type { FileAttachment } from '@/lib/tickets/ticket-service';
 import { useCreateTicket } from '@/lib/tickets/use-tickets';
 import { useState } from 'react';
 import { TicketForm, type TicketFormData } from './ticket-form';
-import type { FileAttachment } from '@/lib/tickets/ticket-service';
-import { useInternalAuth } from '@/lib/auth/internal/hooks';
 
 interface CreateTicketDialogProps {
   trigger?: React.ReactNode;
@@ -24,13 +24,16 @@ export function CreateTicketDialog({ trigger }: CreateTicketDialogProps) {
   const { toast } = useToast();
   const { organization } = useInternalAuth();
 
-  const handleSubmit = async (data: TicketFormData, attachments: FileAttachment[]) => {
+  const handleSubmit = async (
+    data: TicketFormData,
+    attachments: FileAttachment[]
+  ) => {
     if (!organization) return;
     try {
       const insertData = {
         ...data,
         org_id: organization.id,
-        source: 'portal' as 'portal', // Since this is from the dashboard
+        source: 'portal' as const, // Since this is from the dashboard
         assignee_id: data.assignee_id || undefined,
         metadata: {
           description: data.description,
@@ -50,6 +53,7 @@ export function CreateTicketDialog({ trigger }: CreateTicketDialogProps) {
 
       setOpen(false);
     } catch (error) {
+      console.error(error);
       toast({
         title: 'Error',
         description: 'Failed to create ticket. Please try again.',

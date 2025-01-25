@@ -97,6 +97,7 @@ npx supabase gen types typescript --project-id your-project-ref > src/lib/databa
 ## Environment Management
 
 ### Local Development
+
 - Uses Docker-based local Supabase (`supabase start`)
 - Database URL: `postgresql://postgres:postgres@localhost:54322/postgres`
 - API URL: `http://localhost:54321`
@@ -104,6 +105,7 @@ npx supabase gen types typescript --project-id your-project-ref > src/lib/databa
 - Service Role Key: Available in Studio UI
 
 ### Development Environment
+
 ```env
 NEXT_PUBLIC_SUPABASE_URL="https://your-dev-project.supabase.co"
 NEXT_PUBLIC_SUPABASE_ANON_KEY="your-dev-anon-key"
@@ -111,6 +113,7 @@ SUPABASE_SERVICE_ROLE_KEY="your-dev-service-role-key"
 ```
 
 ### Production Environment
+
 ```env
 NEXT_PUBLIC_SUPABASE_URL="https://your-prod-project.supabase.co"
 NEXT_PUBLIC_SUPABASE_ANON_KEY="your-prod-anon-key"
@@ -120,10 +123,12 @@ SUPABASE_SERVICE_ROLE_KEY="your-prod-service-role-key"
 ## Migration Best Practices
 
 1. **One Change Per Migration**
+
    - Each migration should do one logical change
    - Makes it easier to review and rollback if needed
 
 2. **Naming Conventions**
+
    ```
    [timestamp]_verb_noun.sql
    20240101123456_create_users_table.sql
@@ -131,17 +136,20 @@ SUPABASE_SERVICE_ROLE_KEY="your-prod-service-role-key"
    ```
 
 3. **Reversible Migrations**
+
    - When possible, make migrations reversible
    - Include `up` and `down` sections if needed
+
    ```sql
    -- up migration
    alter table users add column email text;
-   
+
    -- down migration
    alter table users drop column email;
    ```
 
 4. **Never Modify Existing Migrations**
+
    - Once a migration is pushed, treat it as immutable
    - Create new migrations for changes
    - Ensures consistency across environments
@@ -167,6 +175,7 @@ main (production)
 ## Common Issues and Solutions
 
 ### 1. Type Generation Errors
+
 ```bash
 # Regenerate types if they're out of sync
 npx supabase gen types typescript --local > src/lib/database.types.ts
@@ -176,6 +185,7 @@ npx supabase db reset
 ```
 
 ### 2. Migration Conflicts
+
 ```bash
 # Pull latest migrations
 npx supabase db pull
@@ -188,6 +198,7 @@ npx supabase migration new fix_conflict
 ```
 
 ### 3. Local Services Issues
+
 ```bash
 # Stop all services
 npx supabase stop
@@ -218,8 +229,9 @@ Add these to your `package.json`:
 ```
 
 Then use them like:
+
 ```bash
 npm run db:start
 npm run db:types
 npm run db:new add_users_table
-``` 
+```

@@ -43,12 +43,12 @@ export function LoginForm({ next = '/', token }: Props) {
   );
 
   return (
-    <Tabs defaultValue="login" className="w-full">
-      <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="login">Login</TabsTrigger>
-        <TabsTrigger value="register">Register</TabsTrigger>
+    <Tabs defaultValue='login' className='w-full'>
+      <TabsList className='grid w-full grid-cols-2'>
+        <TabsTrigger value='login'>Login</TabsTrigger>
+        <TabsTrigger value='register'>Register</TabsTrigger>
       </TabsList>
-      <TabsContent value="login">
+      <TabsContent value='login'>
         <Card>
           <CardHeader>
             <CardTitle>Login</CardTitle>
@@ -57,30 +57,30 @@ export function LoginForm({ next = '/', token }: Props) {
             </CardDescription>
           </CardHeader>
           <form action={loginAction}>
-            <CardContent className="space-y-4">
+            <CardContent className='space-y-4'>
               {loginState?.error && (
-                <Alert variant="destructive">
+                <Alert variant='destructive'>
                   <AlertDescription>{loginState.error}</AlertDescription>
                 </Alert>
               )}
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" name="email" type="email" required />
+              <div className='space-y-2'>
+                <Label htmlFor='email'>Email</Label>
+                <Input id='email' name='email' type='email' required />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input id="password" name="password" type="password" required />
+              <div className='space-y-2'>
+                <Label htmlFor='password'>Password</Label>
+                <Input id='password' name='password' type='password' required />
               </div>
             </CardContent>
             <CardFooter>
-              <Button type="submit" className="w-full">
+              <Button type='submit' className='w-full'>
                 Login
               </Button>
             </CardFooter>
           </form>
         </Card>
       </TabsContent>
-      <TabsContent value="register">
+      <TabsContent value='register'>
         <Card>
           <CardHeader>
             <CardTitle>Create an account</CardTitle>
@@ -89,27 +89,27 @@ export function LoginForm({ next = '/', token }: Props) {
             </CardDescription>
           </CardHeader>
           <form action={signupAction}>
-            <CardContent className="space-y-4">
+            <CardContent className='space-y-4'>
               {signupState?.error && (
-                <Alert variant="destructive">
+                <Alert variant='destructive'>
                   <AlertDescription>{signupState.error}</AlertDescription>
                 </Alert>
               )}
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input id="name" name="name" required />
+              <div className='space-y-2'>
+                <Label htmlFor='name'>Name</Label>
+                <Input id='name' name='name' required />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" name="email" type="email" required />
+              <div className='space-y-2'>
+                <Label htmlFor='email'>Email</Label>
+                <Input id='email' name='email' type='email' required />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input id="password" name="password" type="password" required />
+              <div className='space-y-2'>
+                <Label htmlFor='password'>Password</Label>
+                <Input id='password' name='password' type='password' required />
               </div>
             </CardContent>
             <CardFooter>
-              <Button type="submit" className="w-full">
+              <Button type='submit' className='w-full'>
                 Create account
               </Button>
             </CardFooter>

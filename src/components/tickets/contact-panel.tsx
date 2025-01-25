@@ -42,6 +42,7 @@ export function ContactPanel({
         description: 'The link has been copied to your clipboard.',
       });
     } catch (error) {
+      console.error(error)
       toast({
         title: 'Failed to generate link',
         description: 'Please try again later.',

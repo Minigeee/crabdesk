@@ -30,14 +30,6 @@ export function UserSelect({ value, onChange }: UserSelectProps) {
     [users, value]
   );
 
-  const initials = useMemo(() => {
-    return selectedUser?.name
-      ?.split(/\s+/)
-      .map((word) => word[0])
-      .join('')
-      .toUpperCase();
-  }, [selectedUser]);
-
   useEffect(() => {
     if (!open) {
       setChoosing(false);

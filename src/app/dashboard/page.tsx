@@ -1,10 +1,10 @@
-import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { TicketMetrics } from './_components/ticket-metrics';
-import { createClient } from '@/lib/supabase/server';
-import { DashboardService } from '@/lib/dashboard/dashboard-service';
-import { redirect } from 'next/navigation';
 import { getCurrentInternalUser } from '@/lib/auth/internal/session';
+import { DashboardService } from '@/lib/dashboard/dashboard-service';
+import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
+import { Suspense } from 'react';
+import { TicketMetrics } from './_components/ticket-metrics';
 
 function TicketMetricsSkeleton() {
   return (
@@ -24,7 +24,10 @@ async function getDashboardData() {
   if (!userData) redirect('/login');
 
   const supabase = await createClient();
-  const dashboardService = new DashboardService(supabase, userData.organization.id);
+  const dashboardService = new DashboardService(
+    supabase,
+    userData.organization.id
+  );
 
   const [statusMetrics, priorityMetrics, assignmentMetrics, trendData] =
     await Promise.all([

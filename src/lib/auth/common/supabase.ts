@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
+import { User } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { cache } from 'react';
-import { User } from '@supabase/supabase-js';
 
 export interface AuthUser extends Omit<User, 'user_metadata'> {
   user_metadata: {
@@ -56,4 +56,4 @@ export async function clearAuthCookies() {
   const cookieStore = await cookies();
   cookieStore.set('sb-access-token', '', { maxAge: 0 });
   cookieStore.set('sb-refresh-token', '', { maxAge: 0 });
-} 
+}

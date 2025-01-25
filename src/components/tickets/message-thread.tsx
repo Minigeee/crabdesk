@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import { useInternalAuth } from '@/lib/auth/internal/hooks';
 import { MessageWithSender } from '@/lib/messages/message-service';
 import { useMessages } from '@/lib/messages/use-messages';
 import { cn } from '@/lib/utils';
@@ -13,7 +14,6 @@ import { formatDistanceToNow } from 'date-fns';
 import { EyeOffIcon } from 'lucide-react';
 import { useState } from 'react';
 import { UserAvatar } from '../users/user-avatar';
-import { useInternalAuth } from '@/lib/auth/internal/hooks';
 
 interface MessageThreadProps {
   ticketId: string;

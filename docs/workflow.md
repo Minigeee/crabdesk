@@ -88,6 +88,7 @@ This document will set the vision and the direction for the project
   - Error handling system
 
 #### 2. Data Interface
+
 This section will describe how data will be fetched and mutated. Often times, it will always be the same between projects.
 
 - Always use an abstraction layer when doing any data fetching or mutations, for both client and server side
@@ -205,6 +206,7 @@ This is the view that will be the focus of the next steps
 #### Step 4: Split into tasks
 
 The goal of this step:
+
 - Choose one or a few pieces of the app structure to focus on
 - Split these pieces into tasks that need to be completed in order to implement the structure pieces
 - When splitting into tasks, consider:
@@ -214,12 +216,14 @@ The goal of this step:
   - What sub components will be needed to implement the feature or view? Can any of these be reused in other views?
 
 To do this:
+
 - First, think step by step about how you will create the tasks in a brainstorming phase.
 - Make sure you are aware of why every feature is needed, and how it fits into the overall product
 - When creating the task list, split them into sections
 - For each section, include a short description paragraph to offer context to the coder agent
 
 Considerations:
+
 - Order the tasks so that the features that others are dependent on are implemented first. This means that foundational features are often implemented first. This also means that the data interface layer should often be implemented first.
 - Do not include any specific code in the tasks, just the high level overview of what needs to be done
 - IMPORTANT: During the initial build up stage, try to limit feature sprawl. Don't add features just for the sake of it.

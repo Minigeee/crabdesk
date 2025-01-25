@@ -84,4 +84,4 @@ export async function requireOrganizationAccess(organizationId: string) {
   }
 
   return userData;
-} 
+}

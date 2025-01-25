@@ -25,7 +25,7 @@ export function useMessages(ticketId: string) {
 
     const subscription = messageService.subscribeToMessages(
       ticketId,
-      async (message) => {
+      async () => {
         // When we get a new message via subscription, we need to fetch its sender data
         const updatedMessages = await messageService.getMessages(ticketId);
         // Update the messages list in the cache with full sender data

@@ -1,6 +1,9 @@
 import type { Tables, TablesInsert, TablesUpdate } from '@/lib/database.types';
 import { Database } from '@/lib/database.types';
-import { SupabaseClient, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+import {
+  RealtimePostgresChangesPayload,
+  SupabaseClient,
+} from '@supabase/supabase-js';
 
 export type Ticket = Tables<'tickets'>;
 export type TicketInsert = TablesInsert<'tickets'>;
@@ -140,7 +143,7 @@ export class TicketService {
     id: string,
     includeRelations: Rels
   ): Promise<Rels extends true ? TicketWithRelations : Ticket> {
-    let query = this.supabase
+    const query = this.supabase
       .from('tickets')
       .select(
         includeRelations
@@ -168,7 +171,7 @@ export class TicketService {
     number: number,
     includeRelations: Rels
   ): Promise<Rels extends true ? TicketWithRelations : Ticket> {
-    let query = this.supabase
+    const query = this.supabase
       .from('tickets')
       .select(
         includeRelations
@@ -192,7 +195,10 @@ export class TicketService {
     return data as unknown as Rels extends true ? TicketWithRelations : Ticket;
   }
 
-  private async uploadFile(file: File, ticketId: string): Promise<Tables<'attachments'>> {
+  private async uploadFile(
+    file: File,
+    ticketId: string
+  ): Promise<Tables<'attachments'>> {
     const supabase = this.supabase;
     const filename = `${Date.now()}-${file.name}`;
     const path = `tickets/${ticketId}/${filename}`;
@@ -295,14 +301,14 @@ export class TicketService {
           filter: `id=eq.${ticketId} AND org_id=eq.${this.orgId}`,
         },
         (payload) => {
-          callback(payload)
+          callback(payload);
         }
       )
-      .subscribe()
+      .subscribe();
 
     return () => {
-      void this.supabase.removeChannel(channel)
-    }
+      void this.supabase.removeChannel(channel);
+    };
   }
 
   async subscribeToOrgTickets(
@@ -319,13 +325,13 @@ export class TicketService {
           filter: `org_id=eq.${this.orgId}`,
         },
         (payload) => {
-          callback(payload)
+          callback(payload);
         }
       )
-      .subscribe()
+      .subscribe();
 
     return () => {
-      void this.supabase.removeChannel(channel)
-    }
+      void this.supabase.removeChannel(channel);
+    };
   }
 }

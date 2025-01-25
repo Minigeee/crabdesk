@@ -72,11 +72,14 @@ export function TicketQueueProvider({
   const page = Number(searchParams.get('page')) || 1;
   const pageSize = Number(searchParams.get('size')) || 25;
   const status = searchParams.getAll('status') as Enums<'ticket_status'>[];
-  const priority = searchParams.getAll('priority') as Enums<'ticket_priority'>[];
+  const priority = searchParams.getAll(
+    'priority'
+  ) as Enums<'ticket_priority'>[];
   const assignee = searchParams.get('assignee') || undefined;
   const team = searchParams.get('team') || undefined;
   const search = searchParams.get('search') || undefined;
-  const sortColumn = searchParams.get('sort') as keyof Tables<'tickets'> || 'created_at';
+  const sortColumn =
+    (searchParams.get('sort') as keyof Tables<'tickets'>) || 'created_at';
   const sortAsc = searchParams.get('asc') === 'true';
 
   // Construct filters object

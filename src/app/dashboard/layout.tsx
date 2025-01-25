@@ -1,8 +1,8 @@
+import { ErrorBoundary } from '@/components/error-boundary';
 import { Header } from '@/components/layout/header';
 import { MainNav } from '@/components/layout/main-nav';
 import { MobileNav } from '@/components/layout/mobile-nav';
 import { InternalAuthProvider } from '@/lib/auth/internal/provider';
-import { ErrorBoundary } from '@/components/error-boundary';
 
 export default function DashboardLayout({
   children,

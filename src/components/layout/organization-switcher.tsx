@@ -1,6 +1,5 @@
 'use client';
 
-import { useInternalAuth } from '@/lib/auth/internal/hooks';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -12,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Icons } from '@/components/ui/icons';
+import { useInternalAuth } from '@/lib/auth/internal/hooks';
 
 export function OrganizationSwitcher() {
   const { organization, organizations, switchOrganization } = useInternalAuth();
