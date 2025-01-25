@@ -9,6 +9,7 @@ export interface AuthUser extends Omit<User, 'user_metadata'> {
   };
   app_metadata: {
     org_id?: string;
+    org_roles?: Record<string, string>;
   };
 }
 

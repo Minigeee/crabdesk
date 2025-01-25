@@ -27,6 +27,7 @@ export const getCurrentPortalUser = cache(
       .select('*')
       .eq('auth_user_id', authUser.id)
       .single();
+    // console.log('portalUser', portalUser, authUser.id, userError);
 
     if (userError || !portalUser) {
       console.error('Error getting portal user:', userError?.message);
@@ -84,4 +85,4 @@ export async function requirePortalAccess(organizationId: string) {
   }
 
   return userData;
-} 
+}
