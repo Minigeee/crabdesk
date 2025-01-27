@@ -14,6 +14,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import * as React from 'react';
 import { useMemo } from 'react';
+import { useContact } from '@/lib/contacts/use-contacts';
 
 const pathToLabel: Record<string, string> = {
   dashboard: 'Dashboard',
@@ -30,7 +31,22 @@ function getBreadcrumbs(pathname: string) {
   return paths.map((path, index) => ({
     label: pathToLabel[path] || path,
     href: '/' + paths.slice(0, index + 1).join('/'),
+    path,
   }));
+}
+
+function BreadcrumbLabel({ item }: { item: ReturnType<typeof getBreadcrumbs>[0] }) {
+  // If this is a contact ID, fetch the contact name
+  if (item.path === 'contacts') return <>{item.label}</>;
+  
+  const isContactRoute = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item.path);
+  const { data: contact } = useContact(isContactRoute ? item.path : '');
+
+  if (isContactRoute && contact) {
+    return <>{contact.name || contact.email}</>;
+  }
+
+  return <>{item.label}</>;
 }
 
 export function Breadcrumbs() {
@@ -63,9 +79,13 @@ export function Breadcrumbs() {
               <BreadcrumbSeparator />
               <BreadcrumbItem>
                 {index < breadcrumbs.length - 2 ? (
-                  <BreadcrumbLink href={item.href}>{item.label}</BreadcrumbLink>
+                  <BreadcrumbLink href={item.href}>
+                    <BreadcrumbLabel item={item} />
+                  </BreadcrumbLink>
                 ) : (
-                  <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                  <BreadcrumbPage>
+                    <BreadcrumbLabel item={item} />
+                  </BreadcrumbPage>
                 )}
               </BreadcrumbItem>
             </React.Fragment>

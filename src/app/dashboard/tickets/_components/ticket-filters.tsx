@@ -9,9 +9,10 @@ import {
 } from '@/components/ui/popover';
 import { SearchBar } from '@/components/ui/search-bar';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/lib/auth/hooks';
 import type { Enums } from '@/lib/database.types';
 import { cn } from '@/lib/utils';
-import { CheckIcon, FilterIcon, XCircle } from 'lucide-react';
+import { CheckIcon, FilterIcon, UserIcon, XCircle } from 'lucide-react';
 import { useState } from 'react';
 import { useTicketQueue } from './ticket-queue-provider';
 
@@ -31,14 +32,14 @@ const PRIORITY_OPTIONS: { label: string; value: Enums<'ticket_priority'> }[] = [
 
 export function TicketFilters() {
   const { filters, setFilters } = useTicketQueue();
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [localFilters, setLocalFilters] = useState(filters);
 
-  // Count active filters
+  // Count active filters (excluding assignee since it's now separate)
   const activeFilterCount = [
     localFilters.status?.length || 0,
     localFilters.priority?.length || 0,
-    localFilters.assignee_id ? 1 : 0,
     localFilters.team_id ? 1 : 0,
     localFilters.dateRange ? 1 : 0,
   ].reduce((a, b) => a + b, 0);
@@ -65,6 +66,16 @@ export function TicketFilters() {
       ...prev,
       priority: updated.length > 0 ? updated : undefined,
     }));
+  };
+
+  const handleAssigneeToggle = () => {
+    // Directly update filters for immediate effect
+    const newFilters = {
+      ...filters,
+      assignee_id: filters.assignee_id ? undefined : user?.id,
+    };
+    setFilters(newFilters);
+    setLocalFilters(newFilters);
   };
 
   const handleApply = () => {
@@ -101,104 +112,121 @@ export function TicketFilters() {
         className='w-[300px]'
       />
 
-      <Popover open={isOpen} onOpenChange={setIsOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant='outline'
-            className={cn(
-              'border-dashed',
-              activeFilterCount > 0 && 'border-primary'
-            )}
-          >
-            <FilterIcon className='mr-2 h-4 w-4' />
-            Filters
-            {activeFilterCount > 0 && (
-              <Badge
-                variant='secondary'
-                className='ml-2 rounded-sm px-1 font-normal'
-              >
-                {activeFilterCount}
-              </Badge>
-            )}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className='w-[340px] p-4' align='start'>
-          <div className='space-y-4'>
-            {/* Status filters */}
-            <div className='space-y-2'>
-              <h4 className='text-sm font-medium'>Status</h4>
-              <div className='flex flex-wrap gap-2'>
-                {STATUS_OPTIONS.map((status) => (
-                  <Button
-                    key={status.value}
-                    variant='outline'
-                    className={cn(
-                      'justify-start',
-                      localFilters.status?.includes(status.value) &&
-                        'border-primary bg-primary/10'
-                    )}
-                    onClick={() => handleStatusToggle(status.value)}
-                  >
-                    {localFilters.status?.includes(status.value) && (
-                      <CheckIcon className='mr-2 h-4 w-4' />
-                    )}
-                    {status.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Priority filters */}
-            <div className='space-y-2'>
-              <h4 className='text-sm font-medium'>Priority</h4>
-              <div className='flex flex-wrap gap-2'>
-                {PRIORITY_OPTIONS.map((priority) => (
-                  <Button
-                    key={priority.value}
-                    variant='outline'
-                    className={cn(
-                      'justify-start',
-                      localFilters.priority?.includes(priority.value) &&
-                        'border-primary bg-primary/10'
-                    )}
-                    onClick={() => handlePriorityToggle(priority.value)}
-                  >
-                    {localFilters.priority?.includes(priority.value) && (
-                      <CheckIcon className='mr-2 h-4 w-4' />
-                    )}
-                    {priority.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            {/* Action buttons */}
-            <div className='flex items-center justify-between pt-4'>
-              <Button
-                variant='ghost'
-                onClick={handleReset}
-                className='text-muted-foreground'
-              >
-                Reset filters
-              </Button>
-              <Button onClick={handleApply}>Apply filters</Button>
-            </div>
-          </div>
-        </PopoverContent>
-      </Popover>
-
-      {activeFilterCount > 0 && (
+      <div className='flex items-center gap-2'>
         <Button
-          variant='ghost'
-          size='sm'
-          className='h-8 px-2 text-muted-foreground hover:text-foreground'
-          onClick={handleReset}
+          variant='outline'
+          className={cn(
+            'gap-2',
+            filters.assignee_id === user?.id && 'border-primary bg-primary/10'
+          )}
+          onClick={handleAssigneeToggle}
         >
-          <XCircle className='h-4 w-4' />
+          {filters.assignee_id === user?.id && (
+            <CheckIcon className='h-4 w-4' />
+          )}
+          <UserIcon className='h-4 w-4' />
+          <span>My tickets</span>
         </Button>
-      )}
+
+        <Popover open={isOpen} onOpenChange={setIsOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant='outline'
+              className={cn(
+                'border-dashed',
+                activeFilterCount > 0 && 'border-primary'
+              )}
+            >
+              <FilterIcon className='mr-2 h-4 w-4' />
+              Filters
+              {activeFilterCount > 0 && (
+                <Badge
+                  variant='secondary'
+                  className='ml-2 rounded-sm px-1 font-normal'
+                >
+                  {activeFilterCount}
+                </Badge>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className='w-[340px] p-4' align='start'>
+            <div className='space-y-4'>
+              {/* Status filters */}
+              <div className='space-y-2'>
+                <h4 className='text-sm font-medium'>Status</h4>
+                <div className='flex flex-wrap gap-2'>
+                  {STATUS_OPTIONS.map((status) => (
+                    <Button
+                      key={status.value}
+                      variant='outline'
+                      className={cn(
+                        'justify-start',
+                        localFilters.status?.includes(status.value) &&
+                          'border-primary bg-primary/10'
+                      )}
+                      onClick={() => handleStatusToggle(status.value)}
+                    >
+                      {localFilters.status?.includes(status.value) && (
+                        <CheckIcon className='mr-2 h-4 w-4' />
+                      )}
+                      {status.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Priority filters */}
+              <div className='space-y-2'>
+                <h4 className='text-sm font-medium'>Priority</h4>
+                <div className='flex flex-wrap gap-2'>
+                  {PRIORITY_OPTIONS.map((priority) => (
+                    <Button
+                      key={priority.value}
+                      variant='outline'
+                      className={cn(
+                        'justify-start',
+                        localFilters.priority?.includes(priority.value) &&
+                          'border-primary bg-primary/10'
+                      )}
+                      onClick={() => handlePriorityToggle(priority.value)}
+                    >
+                      {localFilters.priority?.includes(priority.value) && (
+                        <CheckIcon className='mr-2 h-4 w-4' />
+                      )}
+                      {priority.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div className='flex items-center justify-between pt-4'>
+                <Button
+                  variant='ghost'
+                  onClick={handleReset}
+                  className='text-muted-foreground'
+                >
+                  Reset filters
+                </Button>
+                <Button onClick={handleApply}>Apply filters</Button>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        {(activeFilterCount > 0 || filters.assignee_id) && (
+          <Button
+            variant='ghost'
+            size='sm'
+            className='h-8 px-2 text-muted-foreground hover:text-foreground'
+            onClick={handleReset}
+          >
+            <XCircle className='h-4 w-4' />
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

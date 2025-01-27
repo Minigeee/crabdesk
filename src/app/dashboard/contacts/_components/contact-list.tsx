@@ -1,5 +1,6 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -8,14 +9,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
 import { useContacts } from '@/lib/contacts/use-contacts';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { COLUMNS } from './columns';
-import { ArrowDown, ArrowUp, ArrowUpDown, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { useCallback } from 'react';
 import type { Tables } from '@/lib/database.types';
+import { cn } from '@/lib/utils';
+import { ArrowDown, ArrowUp, ArrowUpDown, Loader2 } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useCallback } from 'react';
+import { COLUMNS } from './columns';
 
 type SortButtonProps = {
   active: boolean;
@@ -57,7 +57,8 @@ export function ContactList() {
   const searchParams = useSearchParams();
   const query = searchParams.get('query') || '';
   const page = Number(searchParams.get('page')) || 1;
-  const sortColumn = (searchParams.get('sort') as keyof Tables<'contacts'>) || 'last_seen_at';
+  const sortColumn =
+    (searchParams.get('sort') as keyof Tables<'contacts'>) || 'last_seen_at';
   const sortAscending = searchParams.get('order') === 'asc';
   const limit = 20;
 
@@ -104,8 +105,13 @@ export function ContactList() {
               <TableHead
                 key={column.id}
                 style={{ width: column.width }}
-                className={column.sortable ? 'cursor-pointer select-none' : undefined}
-                onClick={() => column.sortable && handleSort(column.id as keyof Tables<'contacts'>)}
+                className={
+                  column.sortable ? 'cursor-pointer select-none' : undefined
+                }
+                onClick={() =>
+                  column.sortable &&
+                  handleSort(column.id as keyof Tables<'contacts'>)
+                }
               >
                 <div className='flex items-center space-x-2'>
                   <span>{column.label}</span>
@@ -113,7 +119,9 @@ export function ContactList() {
                     <SortButton
                       active={sortColumn === column.id}
                       ascending={sortAscending}
-                      onSort={() => handleSort(column.id as keyof Tables<'contacts'>)}
+                      onSort={() =>
+                        handleSort(column.id as keyof Tables<'contacts'>)
+                      }
                     />
                   )}
                 </div>
@@ -126,14 +134,18 @@ export function ContactList() {
             <TableRow>
               <TableCell colSpan={COLUMNS.length} className='h-24 text-center'>
                 <div className='flex items-center justify-center space-x-2'>
-                  <Loader2 className='h-4 w-4 animate-spin mr-2' />
+                  <Loader2 className='mr-2 h-6 w-6 animate-spin' />
                   Loading...
                 </div>
               </TableCell>
             </TableRow>
           ) : (
             data?.data.map((contact) => (
-              <TableRow key={contact.id}>
+              <TableRow
+                key={contact.id}
+                onClick={() => router.push(`/dashboard/contacts/${contact.id}`)}
+                className='cursor-pointer'
+              >
                 {COLUMNS.map((column) => (
                   <TableCell key={column.id}>{column.cell(contact)}</TableCell>
                 ))}

@@ -31,7 +31,11 @@ export function ContactPanel({
           )}
         </div>
 
-        <div className='mb-4 flex items-center gap-3'>
+        <Link href={`/dashboard/contacts/${contact.id}`} passHref>
+          <Button
+            variant='outline'
+            className='mb-4 flex items-center justify-start text-left gap-3 w-full h-fit'
+        >
           <Avatar>
             <AvatarFallback>
               {contact.name?.[0] ?? contact.email[0].toUpperCase()}
@@ -39,9 +43,10 @@ export function ContactPanel({
           </Avatar>
           <div>
             <div className='font-medium'>{contact.name ?? 'No Name'}</div>
-            <div className='text-sm text-muted-foreground'>{contact.email}</div>
-          </div>
-        </div>
+              <div className='text-sm text-muted-foreground'>{contact.email}</div>
+            </div>
+          </Button>
+        </Link>
 
         <div className='space-y-2 text-sm'>
           <div className='flex justify-between text-muted-foreground'>

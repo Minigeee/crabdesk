@@ -16,9 +16,10 @@ import { TicketForm, type TicketFormData } from './ticket-form';
 
 interface CreateTicketDialogProps {
   trigger?: React.ReactNode;
+  initialContactId?: string;
 }
 
-export function CreateTicketDialog({ trigger }: CreateTicketDialogProps) {
+export function CreateTicketDialog({ trigger, initialContactId }: CreateTicketDialogProps) {
   const [open, setOpen] = useState(false);
   const createTicket = useCreateTicket();
   const { toast } = useToast();
@@ -77,6 +78,7 @@ export function CreateTicketDialog({ trigger }: CreateTicketDialogProps) {
         <TicketForm
           onSubmit={handleSubmit}
           isSubmitting={createTicket.isPending}
+          defaultValues={initialContactId ? { contact_id: initialContactId } : undefined}
         />
       </DialogContent>
     </Dialog>

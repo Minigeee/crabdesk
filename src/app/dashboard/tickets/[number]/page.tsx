@@ -7,10 +7,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getCurrentUser } from '@/lib/auth/session';
 import { createClient } from '@/lib/supabase/server';
 import { TicketService } from '@/lib/tickets/ticket-service';
-import { EyeOffIcon, MailIcon, MessageCircleIcon } from 'lucide-react';
+import { EyeOffIcon, MailIcon, MessageCircleIcon, StickyNoteIcon } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { EmailThreadView } from '../_components/email-thread-view';
 import { TicketViewProvider } from '../_components/ticket-view-provider';
+import { NotesList } from '@/components/notes/notes-list';
 
 interface PageProps {
   params: Promise<{
@@ -107,7 +108,11 @@ export default async function TicketPage({ params }: PageProps) {
               </TabsTrigger>
               <TabsTrigger value='internal' className='gap-2'>
                 <EyeOffIcon className='h-4 w-4' />
-                Internal Notes
+                Team Messages
+              </TabsTrigger>
+              <TabsTrigger value='notes' className='gap-2'>
+                <StickyNoteIcon className='h-4 w-4' />
+                Notes
               </TabsTrigger>
             </TabsList>
 
@@ -129,6 +134,14 @@ export default async function TicketPage({ params }: PageProps) {
                 className='m-0 h-full data-[state=inactive]:hidden'
               >
                 <EmailThreadView ticketId={ticket.id} />
+              </TabsContent>
+              <TabsContent
+                value='notes'
+                className='m-0 h-full data-[state=inactive]:hidden'
+              >
+                <div className='p-6'>
+                  <NotesList entityType="ticket" entityId={ticket.id} title="Ticket Notes" />
+                </div>
               </TabsContent>
             </div>
           </Tabs>

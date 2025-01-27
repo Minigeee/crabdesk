@@ -546,8 +546,7 @@ CREATE POLICY notes_delete
   FOR DELETE
   TO authenticated
   USING (
-    public.has_org_access(org_id) AND
-    (author_id = auth.uid() OR public.is_org_admin(org_id))
+    public.has_org_access(org_id)
   );
 
 -------------------------------------------------------------------------------

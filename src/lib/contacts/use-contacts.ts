@@ -2,13 +2,33 @@ import { useAuth } from '@/lib/auth/hooks';
 import { createClient } from '@/lib/supabase/client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  Contact,
   ContactService,
   type ContactInsert,
   type ContactSearchParams,
 } from './contact-service';
-import { searchContacts } from './actions';
 
 export { type Contact } from './contact-service';
+
+async function searchContacts(params: ContactSearchParams): Promise<{
+  data: Contact[];
+  error: string | null;
+}> {
+  const response = await fetch('/api/contacts/search', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(params),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to search contacts');
+  }
+
+  return response.json();
+}
 
 export function useContacts(params: ContactSearchParams = {}) {
   const { organization } = useAuth();

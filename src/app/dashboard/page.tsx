@@ -1,8 +1,4 @@
 import { Skeleton } from '@/components/ui/skeleton';
-import { getCurrentUser } from '@/lib/auth/session';
-import { DashboardService } from '@/lib/dashboard/dashboard-service';
-import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { TicketMetrics } from './_components/ticket-metrics';
 
@@ -19,35 +15,7 @@ function TicketMetricsSkeleton() {
   );
 }
 
-async function getDashboardData() {
-  const userData = await getCurrentUser();
-  if (!userData) redirect('/login');
-
-  const supabase = await createClient();
-  const dashboardService = new DashboardService(
-    supabase,
-    userData.organization.id
-  );
-
-  const [statusMetrics, priorityMetrics, assignmentMetrics, trendData] =
-    await Promise.all([
-      dashboardService.getTicketStatusMetrics(),
-      dashboardService.getTicketPriorityMetrics(),
-      dashboardService.getTicketAssignmentMetrics(),
-      dashboardService.getTicketTrend(),
-    ]);
-
-  return {
-    statusMetrics,
-    priorityMetrics,
-    assignmentMetrics,
-    trendData,
-  };
-}
-
-export default async function DashboardPage() {
-  const data = await getDashboardData();
-
+export default function DashboardPage() {
   return (
     <div className='container space-y-8 p-8'>
       <div className='flex items-center justify-between'>
@@ -55,7 +23,7 @@ export default async function DashboardPage() {
       </div>
 
       <Suspense fallback={<TicketMetricsSkeleton />}>
-        <TicketMetrics {...data} />
+        <TicketMetrics />
       </Suspense>
     </div>
   );

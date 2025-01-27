@@ -3,12 +3,11 @@
 import { PriorityBadge } from '@/components/tickets/priority-badge';
 import { StatusBadge } from '@/components/tickets/status-badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import type {
-  TicketAssignmentMetrics,
-  TicketPriorityMetrics,
-  TicketStatusMetrics,
-  TicketTrendPoint,
-} from '@/lib/dashboard/dashboard-service';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/lib/auth/hooks';
+import { DashboardService } from '@/lib/dashboard/dashboard-service';
+import { createClient } from '@/lib/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import {
   CartesianGrid,
@@ -20,23 +19,90 @@ import {
   YAxis,
 } from 'recharts';
 
-type TicketMetricsProps = {
-  statusMetrics: TicketStatusMetrics[];
-  priorityMetrics: TicketPriorityMetrics[];
-  assignmentMetrics: TicketAssignmentMetrics;
-  trendData: TicketTrendPoint[];
-};
+// Initialize supabase client
+const supabase = createClient();
 
-export function TicketMetrics({
-  statusMetrics,
-  priorityMetrics,
-  assignmentMetrics,
-  trendData,
-}: TicketMetricsProps) {
-  const totalActive = useMemo(
-    () => statusMetrics.reduce((sum, { count }) => sum + count, 0),
-    [statusMetrics]
+function TicketMetricsSkeleton() {
+  return (
+    <div className='space-y-4'>
+      <div className='grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4'>
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Card key={i}>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+              <CardTitle className='text-sm font-medium'>
+                <Skeleton className='h-4 w-[100px]' />
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Skeleton className='h-7 w-16 mb-4' />
+              <div className='space-y-2'>
+                <Skeleton className='h-5 w-full' />
+                <Skeleton className='h-5 w-full' />
+                <Skeleton className='h-5 w-full' />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            <Skeleton className='h-6 w-[100px]' />
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Skeleton className='h-[350px]' />
+        </CardContent>
+      </Card>
+    </div>
   );
+}
+
+export function TicketMetrics() {
+  const { organization } = useAuth();
+
+  const { data, isLoading, isPending } = useQuery({
+    queryKey: ['dashboard-metrics', organization?.id],
+    queryFn: async () => {
+      if (!organization?.id) throw new Error('No organization ID');
+
+      const dashboardService = new DashboardService(supabase, organization.id);
+      const [statusMetrics, priorityMetrics, assignmentMetrics, trendData] =
+        await Promise.all([
+          dashboardService.getTicketStatusMetrics(),
+          dashboardService.getTicketPriorityMetrics(),
+          dashboardService.getTicketAssignmentMetrics(),
+          dashboardService.getTicketTrend(),
+        ]);
+
+      return {
+        statusMetrics,
+        priorityMetrics,
+        assignmentMetrics,
+        trendData,
+      };
+    },
+    enabled: !!organization?.id,
+  });
+
+  const totalActive = useMemo(
+    () => data?.statusMetrics.reduce((sum, { count }) => sum + count, 0) ?? 0,
+    [data?.statusMetrics]
+  );
+
+  if (isLoading || isPending) {
+    return <TicketMetricsSkeleton />;
+  }
+
+  if (!data) {
+    return (
+      <div className='flex h-[500px] w-full items-center justify-center'>
+        <p className='text-lg text-muted-foreground'>Error loading dashboard data</p>
+      </div>
+    );
+  }
+
+  const { statusMetrics, priorityMetrics, assignmentMetrics, trendData } = data;
 
   return (
     <div className='space-y-4'>

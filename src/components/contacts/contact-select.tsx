@@ -19,10 +19,10 @@ export function ContactSelect({ value, onChange }: ContactSelectProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [autofocus, setAutofocus] = useState(false);
-  const { data: contacts = [] } = useContacts(search);
+  const { data: contacts } = useContacts({ query: search });
 
   const selectedContact = useMemo(
-    () => contacts.find((contact) => contact.id === value),
+    () => contacts?.data.find((contact) => contact.id === value),
     [contacts, value]
   );
 
@@ -59,13 +59,13 @@ export function ContactSelect({ value, onChange }: ContactSelectProps) {
             align='start'
             className='pointer-events-auto max-h-[300px] overflow-y-auto p-2'
           >
-            {contacts.length === 0 ? (
+            {contacts?.data.length === 0 ? (
               <p className='p-2 text-sm text-muted-foreground'>
                 No contacts found.
               </p>
             ) : (
               <div className='space-y-1'>
-                {contacts.map((contact) => (
+                {contacts?.data.map((contact) => (
                   <Button
                     key={contact.id}
                     variant='ghost'
