@@ -430,6 +430,54 @@ export type Database = {
           },
         ]
       }
+      notes: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notes_author_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notes_org_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           branding: Json
@@ -795,6 +843,20 @@ export type Database = {
           p_raw_payload?: Json
         }
         Returns: Json
+      }
+      search_contacts: {
+        Args: {
+          p_org_id: string
+          p_query?: string
+          p_limit?: number
+          p_offset?: number
+          p_order_by?: string
+          p_ascending?: boolean
+        }
+        Returns: {
+          contacts: Json
+          total_count: number
+        }[]
       }
     }
     Enums: {

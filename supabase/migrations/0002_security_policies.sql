@@ -508,6 +508,49 @@ CREATE POLICY attachments_delete
   );
 
 -------------------------------------------------------------------------------
+-- Notes
+-------------------------------------------------------------------------------
+CREATE POLICY notes_read
+  ON public.notes
+  FOR SELECT
+  TO authenticated
+  USING (
+    public.has_org_access(org_id)
+  );
+
+CREATE POLICY notes_insert
+  ON public.notes
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    public.has_org_access(org_id)
+  );
+
+CREATE POLICY notes_update
+  ON public.notes
+  FOR UPDATE
+  TO authenticated
+  USING (
+    public.has_org_access(org_id) AND
+    author_id = auth.uid() AND
+    created_at > now() - interval '5 minutes'
+  )
+  WITH CHECK (
+    public.has_org_access(org_id) AND
+    author_id = auth.uid() AND
+    created_at > now() - interval '5 minutes'
+  );
+
+CREATE POLICY notes_delete
+  ON public.notes
+  FOR DELETE
+  TO authenticated
+  USING (
+    public.has_org_access(org_id) AND
+    (author_id = auth.uid() OR public.is_org_admin(org_id))
+  );
+
+-------------------------------------------------------------------------------
 -- Audit Logs
 -------------------------------------------------------------------------------
 CREATE POLICY audit_logs_read

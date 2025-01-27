@@ -219,6 +219,7 @@ To do this:
 
 - First, think step by step about how you will create the tasks in a brainstorming phase.
 - Make sure you are aware of why every feature is needed, and how it fits into the overall product
+- If you run into an implementation detail that can be solved in many valid ways, choose the best one or ask me for clarification to make sure the decision aligns with the vision for the product
 - When creating the task list, split them into sections
 - For each section, include a short description paragraph to offer context to the coder agent
 

@@ -543,6 +543,44 @@ CrabDesk is a CRM system designed for organizations to manage their customer int
 - UPDATE: No updates allowed after creation
 - DELETE: Organization admins can delete email messages
 
+### Notes
+
+**Purpose**: Enables adding plain text notes to various entities (contacts, tickets, etc.).
+
+**Description**: A flexible notes system that allows users to attach plain text notes to different entities within the system. Each note tracks its author and target entity, making it easy to maintain a history of manual annotations across the system.
+
+**Key Attributes**:
+
+- id: uuid PRIMARY KEY
+- org_id: uuid NOT NULL
+- entity_type: varchar(50) NOT NULL
+- entity_id: uuid NOT NULL
+- content: text NOT NULL
+- author_id: uuid NOT NULL
+- created_at: timestamptz NOT NULL DEFAULT now()
+- updated_at: timestamptz NOT NULL DEFAULT now()
+
+**Relationships**:
+
+- FOREIGN KEY (org_id) REFERENCES organizations(id)
+- FOREIGN KEY (author_id) REFERENCES users(id)
+
+**Constraints**:
+
+- CHECK (entity_type IN ('contact', 'ticket'))
+
+**Indexes**:
+
+- INDEX notes_entity_idx ON notes(org_id, entity_type, entity_id)
+- INDEX notes_author_idx ON notes(author_id, created_at)
+
+**Security Policies**:
+
+- READ: Users can read notes in their organization
+- INSERT: Users can create notes for entities they can access
+- UPDATE: Note authors can update their notes within a time window
+- DELETE: Note authors and org admins can delete notes
+
 ## Notes
 
 - All UUIDs should be generated using gen_random_uuid()

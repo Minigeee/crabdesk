@@ -333,6 +333,29 @@ CREATE INDEX attachment_ticket_idx ON attachments(ticket_id, created_at);
 CREATE UNIQUE INDEX attachment_path_idx ON attachments(bucket, path);
 
 --------------------------------------------------------------------------------
+-- Table: notes
+--------------------------------------------------------------------------------
+CREATE TABLE public.notes (
+  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  org_id      uuid NOT NULL,
+  entity_type varchar(50) NOT NULL,
+  entity_id   uuid NOT NULL,
+  content     text NOT NULL,
+  author_id   uuid NOT NULL,
+  created_at  timestamptz NOT NULL DEFAULT now(),
+  updated_at  timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT notes_org_fkey
+    FOREIGN KEY (org_id) REFERENCES public.organizations (id),
+  CONSTRAINT notes_author_fkey
+    FOREIGN KEY (author_id) REFERENCES public.users (id),
+  CONSTRAINT notes_entity_type_check CHECK (entity_type IN ('contact', 'ticket'))
+);
+
+-- Indexes
+CREATE INDEX notes_entity_idx ON notes(org_id, entity_type, entity_id);
+CREATE INDEX notes_author_idx ON notes(author_id, created_at);
+
+--------------------------------------------------------------------------------
 -- Table: audit_logs
 --------------------------------------------------------------------------------
 CREATE TABLE public.audit_logs (

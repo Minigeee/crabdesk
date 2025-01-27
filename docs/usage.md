@@ -396,3 +396,60 @@ const response = await fetch('/api/webhooks/email', {
 
 const result = await response.json();
 ```
+
+## Contact Management
+
+### Server-Side (Contact Service)
+
+```typescript
+// Initialize service
+const supabase = await createClient();
+const service = new ContactService(supabase, organizationId);
+
+// Search contacts
+const { data, count } = await service.searchContacts({
+  query: 'john@example',
+  orderBy: { column: 'last_seen_at', ascending: false }
+});
+
+// Get single contact
+const contact = await service.getContactByEmail('john@example.com');
+
+// Create contact
+const newContact = await service.createContact({
+  email: 'jane@example.com',
+  name: 'Jane Doe'
+});
+
+// Update contact
+const updated = await service.updateContact(contactId, { name: 'Jane Smith' });
+```
+
+### Client-Side (React Hooks)
+
+```typescript
+// List/search contacts
+const { data } = useContacts({
+  query: 'john',
+  limit: 20,
+  orderBy: { column: 'name', ascending: true }
+});
+
+// Get single contact
+const { data: contact } = useContact(contactId);
+
+// Mutations
+const { createContact, updateContact } = useContactMutations();
+
+// Create new contact
+await createContact.mutateAsync({
+  email: 'john@example.com',
+  name: 'John Doe'
+});
+
+// Update contact
+await updateContact.mutateAsync({
+  id: contactId,
+  updates: { name: 'John Smith' }
+});
+```
