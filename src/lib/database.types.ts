@@ -247,6 +247,7 @@ export type Database = {
         Row: {
           bcc_emails: string[] | null
           cc_emails: string[] | null
+          content_embedding: string | null
           created_at: string
           from_email: string
           from_name: string | null
@@ -265,6 +266,7 @@ export type Database = {
         Insert: {
           bcc_emails?: string[] | null
           cc_emails?: string[] | null
+          content_embedding?: string | null
           created_at?: string
           from_email: string
           from_name?: string | null
@@ -283,6 +285,7 @@ export type Database = {
         Update: {
           bcc_emails?: string[] | null
           cc_emails?: string[] | null
+          content_embedding?: string | null
           created_at?: string
           from_email?: string
           from_name?: string | null
@@ -432,32 +435,41 @@ export type Database = {
       }
       notes: {
         Row: {
-          author_id: string
+          author_id: string | null
           content: string
+          content_embedding: string | null
           created_at: string
           entity_id: string
           entity_type: string
           id: string
+          managed: boolean
+          metadata: Json
           org_id: string
           updated_at: string
         }
         Insert: {
-          author_id: string
+          author_id?: string | null
           content: string
+          content_embedding?: string | null
           created_at?: string
           entity_id: string
           entity_type: string
           id?: string
+          managed?: boolean
+          metadata?: Json
           org_id: string
           updated_at?: string
         }
         Update: {
-          author_id?: string
+          author_id?: string | null
           content?: string
+          content_embedding?: string | null
           created_at?: string
           entity_id?: string
           entity_type?: string
           id?: string
+          managed?: boolean
+          metadata?: Json
           org_id?: string
           updated_at?: string
         }
@@ -799,6 +811,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      binary_quantize:
+        | {
+            Args: {
+              "": string
+            }
+            Returns: unknown
+          }
+        | {
+            Args: {
+              "": unknown
+            }
+            Returns: unknown
+          }
       current_user_id: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -815,11 +840,59 @@ export type Database = {
         }
         Returns: string
       }
+      halfvec_avg: {
+        Args: {
+          "": number[]
+        }
+        Returns: unknown
+      }
+      halfvec_out: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      halfvec_send: {
+        Args: {
+          "": unknown
+        }
+        Returns: string
+      }
+      halfvec_typmod_in: {
+        Args: {
+          "": unknown[]
+        }
+        Returns: number
+      }
       has_org_access: {
         Args: {
           _org_id: string
         }
         Returns: boolean
+      }
+      hnsw_bit_support: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      hnsw_halfvec_support: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      hnsw_sparsevec_support: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      hnswhandler: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
       }
       is_org_admin: {
         Args: {
@@ -827,6 +900,56 @@ export type Database = {
         }
         Returns: boolean
       }
+      ivfflat_bit_support: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      ivfflat_halfvec_support: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      ivfflathandler: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      l2_norm:
+        | {
+            Args: {
+              "": unknown
+            }
+            Returns: number
+          }
+        | {
+            Args: {
+              "": unknown
+            }
+            Returns: number
+          }
+      l2_normalize:
+        | {
+            Args: {
+              "": string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              "": unknown
+            }
+            Returns: unknown
+          }
+        | {
+            Args: {
+              "": unknown
+            }
+            Returns: unknown
+          }
       process_email: {
         Args: {
           p_org_id: string
@@ -841,6 +964,7 @@ export type Database = {
           p_text_body?: string
           p_html_body?: string
           p_raw_payload?: Json
+          p_content_embedding?: string
         }
         Returns: Json
       }
@@ -857,6 +981,96 @@ export type Database = {
           contacts: Json
           total_count: number
         }[]
+      }
+      search_email_messages: {
+        Args: {
+          query_embedding: string
+          match_threshold: number
+          match_count: number
+          p_org_id: string
+        }
+        Returns: {
+          id: string
+          thread_id: string
+          content: string
+          similarity: number
+        }[]
+      }
+      search_notes: {
+        Args: {
+          query_embedding: string
+          match_threshold: number
+          match_count: number
+          p_org_id: string
+        }
+        Returns: {
+          id: string
+          entity_type: string
+          entity_id: string
+          content: string
+          similarity: number
+        }[]
+      }
+      sparsevec_out: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      sparsevec_send: {
+        Args: {
+          "": unknown
+        }
+        Returns: string
+      }
+      sparsevec_typmod_in: {
+        Args: {
+          "": unknown[]
+        }
+        Returns: number
+      }
+      vector_avg: {
+        Args: {
+          "": number[]
+        }
+        Returns: string
+      }
+      vector_dims:
+        | {
+            Args: {
+              "": string
+            }
+            Returns: number
+          }
+        | {
+            Args: {
+              "": unknown
+            }
+            Returns: number
+          }
+      vector_norm: {
+        Args: {
+          "": string
+        }
+        Returns: number
+      }
+      vector_out: {
+        Args: {
+          "": string
+        }
+        Returns: unknown
+      }
+      vector_send: {
+        Args: {
+          "": string
+        }
+        Returns: string
+      }
+      vector_typmod_in: {
+        Args: {
+          "": unknown[]
+        }
+        Returns: number
       }
     }
     Enums: {

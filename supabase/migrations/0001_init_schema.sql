@@ -341,7 +341,9 @@ CREATE TABLE public.notes (
   entity_type varchar(50) NOT NULL,
   entity_id   uuid NOT NULL,
   content     text NOT NULL,
-  author_id   uuid NOT NULL,
+  author_id   uuid,
+  managed     boolean NOT NULL DEFAULT false,
+  metadata    jsonb NOT NULL DEFAULT '{}',
   created_at  timestamptz NOT NULL DEFAULT now(),
   updated_at  timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT notes_org_fkey

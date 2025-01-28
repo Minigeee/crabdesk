@@ -453,3 +453,52 @@ await updateContact.mutateAsync({
   updates: { name: 'John Smith' }
 });
 ```
+
+## Vector Search
+
+### Using Embedding Service
+
+```typescript
+import { createClient } from '@/lib/supabase/server';
+import { EmbeddingService } from '@/lib/embeddings/service';
+
+// Initialize service
+const supabase = await createClient();
+const embeddingService = new EmbeddingService(supabase, organizationId);
+
+// Update embeddings when content changes
+await embeddingService.updateEmailMessageEmbeddings(messageId);
+await embeddingService.updateNoteEmbeddings(noteId);
+
+// Search similar content
+const similarEmails = await embeddingService.searchEmailMessages(
+  'How do I reset my password?',
+  { threshold: 0.8, limit: 5 }
+);
+
+const similarNotes = await embeddingService.searchNotes(
+  'customer feedback about new feature',
+  { threshold: 0.7, limit: 3 }
+);
+```
+
+### Direct Database Functions
+
+```sql
+-- Search similar email messages
+select * from search_email_messages(
+  query_embedding := '[0.1,0.2,...]'::vector(1536),
+  match_threshold := 0.7,
+  match_count := 5,
+  p_org_id := 'org-id-here'
+);
+
+-- Search similar notes
+select * from search_notes(
+  query_embedding := '[0.1,0.2,...]'::vector(1536),
+  match_threshold := 0.7,
+  match_count := 5,
+  p_org_id := 'org-id-here'
+);
+```
+

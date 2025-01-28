@@ -8,8 +8,9 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/lib/auth/hooks';
 import { useNotes, type EntityType } from '@/lib/notes/use-notes';
 import { formatDistanceToNow } from 'date-fns';
-import { Loader2, Plus, Trash } from 'lucide-react';
+import { BotIcon, Loader2, Plus, Trash, UserIcon } from 'lucide-react';
 import { useCallback, useState } from 'react';
+import Markdown from 'react-markdown';
 
 interface NotesListProps {
   entityType: EntityType;
@@ -17,11 +18,18 @@ interface NotesListProps {
   title?: string;
 }
 
-export function NotesList({ entityType, entityId, title = 'Notes' }: NotesListProps) {
+export function NotesList({
+  entityType,
+  entityId,
+  title = 'Notes',
+}: NotesListProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [newNote, setNewNote] = useState('');
-  const { notes, isLoading, addNote, deleteNote } = useNotes(entityType, entityId);
+  const { notes, isLoading, addNote, deleteNote } = useNotes(
+    entityType,
+    entityId
+  );
 
   const handleSubmit = useCallback(() => {
     if (!newNote.trim()) return;
@@ -43,23 +51,26 @@ export function NotesList({ entityType, entityId, title = 'Notes' }: NotesListPr
     });
   }, [newNote, addNote, toast]);
 
-  const handleDelete = useCallback((noteId: string) => {
-    deleteNote.mutate(noteId, {
-      onSuccess: () => {
-        toast({
-          title: 'Note deleted',
-          description: 'The note has been deleted successfully.',
-        });
-      },
-      onError: () => {
-        toast({
-          title: 'Error',
-          description: 'Failed to delete note. Please try again.',
-          variant: 'destructive',
-        });
-      },
-    });
-  }, [deleteNote, toast]);
+  const handleDelete = useCallback(
+    (noteId: string) => {
+      deleteNote.mutate(noteId, {
+        onSuccess: () => {
+          toast({
+            title: 'Note deleted',
+            description: 'The note has been deleted successfully.',
+          });
+        },
+        onError: () => {
+          toast({
+            title: 'Error',
+            description: 'Failed to delete note. Please try again.',
+            variant: 'destructive',
+          });
+        },
+      });
+    },
+    [deleteNote, toast]
+  );
 
   return (
     <Card>
@@ -106,13 +117,21 @@ export function NotesList({ entityType, entityId, title = 'Notes' }: NotesListPr
               >
                 <Avatar className='h-8 w-8'>
                   <AvatarFallback>
-                    {note.author?.name?.[0]?.toUpperCase() || 'U'}
+                    {note.managed ? (
+                      <BotIcon className='h-4 w-4' />
+                    ) : (
+                      (note.author?.name?.[0]?.toUpperCase() ?? (
+                        <UserIcon className='h-4 w-4' />
+                      ))
+                    )}
                   </AvatarFallback>
                 </Avatar>
                 <div className='flex-1 space-y-1'>
                   <div className='flex items-center justify-between'>
                     <div className='text-sm font-medium'>
-                      {note.author?.name || 'Unknown User'}
+                      {note.managed
+                        ? 'System'
+                        : note.author?.name || 'Unknown User'}
                     </div>
                     <div className='flex items-center space-x-2'>
                       <div className='text-xs text-muted-foreground'>
@@ -133,7 +152,7 @@ export function NotesList({ entityType, entityId, title = 'Notes' }: NotesListPr
                       )}
                     </div>
                   </div>
-                  <div className='text-sm max-w-[65ch]'>{note.content}</div>
+                  <Markdown className='prose text-sm'>{note.content}</Markdown>
                 </div>
               </div>
             ))}
@@ -142,4 +161,4 @@ export function NotesList({ entityType, entityId, title = 'Notes' }: NotesListPr
       </CardContent>
     </Card>
   );
-} 
+}

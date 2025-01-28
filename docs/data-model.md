@@ -522,6 +522,7 @@ CrabDesk is a CRM system designed for organizations to manage their customer int
 - headers: jsonb NOT NULL DEFAULT '{}'
 - metadata: jsonb NOT NULL DEFAULT '{}'
 - created_at: timestamptz NOT NULL DEFAULT now()
+- content_embedding: vector
 
 **Relationships**:
 
@@ -556,9 +557,12 @@ CrabDesk is a CRM system designed for organizations to manage their customer int
 - entity_type: varchar(50) NOT NULL
 - entity_id: uuid NOT NULL
 - content: text NOT NULL
-- author_id: uuid NOT NULL
+- author_id: uuid
+- managed: boolean NOT NULL DEFAULT false
+- metadata: jsonb NOT NULL DEFAULT '{}'
 - created_at: timestamptz NOT NULL DEFAULT now()
 - updated_at: timestamptz NOT NULL DEFAULT now()
+- content_embedding: vector
 
 **Relationships**:
 

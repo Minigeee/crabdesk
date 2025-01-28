@@ -1,3 +1,6 @@
+-- Enable the pgvector extension
+create extension if not exists vector;
+
 -- Create email processing function
 CREATE OR REPLACE FUNCTION public.process_email(
   p_org_id uuid,
@@ -11,7 +14,8 @@ CREATE OR REPLACE FUNCTION public.process_email(
   p_headers jsonb DEFAULT '{}'::jsonb,
   p_text_body text DEFAULT '',
   p_html_body text DEFAULT '',
-  p_raw_payload jsonb DEFAULT '{}'::jsonb
+  p_raw_payload jsonb DEFAULT '{}'::jsonb,
+  p_content_embedding vector(1536) DEFAULT NULL
 ) RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -164,6 +168,7 @@ BEGIN
     text_body,
     html_body,
     headers,
+    content_embedding,
     created_at
   )
   VALUES (
@@ -178,6 +183,7 @@ BEGIN
     p_text_body,
     p_html_body,
     p_headers,
+    p_content_embedding,
     v_now
   )
   RETURNING id INTO v_message_id;
