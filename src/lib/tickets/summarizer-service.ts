@@ -2,6 +2,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { ChatOpenAI } from '@langchain/openai';
 import { PromptTemplate } from '@langchain/core/prompts';
 import { StringOutputParser } from '@langchain/core/output_parsers';
+import { z } from 'zod';
 import type { Database } from '@/lib/database.types';
 import { EmbeddingService } from '@/lib/embeddings/service';
 
@@ -10,9 +11,6 @@ Your summaries should be concise but informative, following the following format
 <format>
 **Main Issue/Request**
 *main_issue*
-
-**Current Status**
-*current_status*
 
 **Key Details**
 *key_details*
@@ -34,9 +32,30 @@ Below is the thread so far:
 
 Summary:`;
 
+const PRIORITY_PROMPT = `You are a helpful assistant that classifies the priority of customer support tickets.
+Based on the content, classify this ticket's priority as one of: low, normal, high, urgent
+
+Consider these guidelines:
+- urgent: Critical system outages, security incidents, or issues blocking entire business operations
+- high: Significant business impact, major feature not working, or multiple users affected
+- normal: Standard questions, minor issues, or individual user problems
+- low: Information requests, feature suggestions, or non-critical feedback
+
+Below is the message content:
+
+<content>
+{content}
+</content>
+
+Respond with ONLY the priority level (low, normal, high, or urgent) and nothing else.`;
+
+const prioritySchema = z.enum(['low', 'normal', 'high', 'urgent']);
+type TicketPriority = z.infer<typeof prioritySchema>;
+
 export class TicketSummarizerService {
   private readonly llm: ChatOpenAI;
   private readonly summaryPrompt: PromptTemplate;
+  private readonly priorityPrompt: PromptTemplate;
   private readonly embeddings: EmbeddingService;
 
   constructor(
@@ -50,6 +69,7 @@ export class TicketSummarizerService {
     });
 
     this.summaryPrompt = PromptTemplate.fromTemplate(SUMMARY_PROMPT);
+    this.priorityPrompt = PromptTemplate.fromTemplate(PRIORITY_PROMPT);
     this.embeddings = new EmbeddingService(supabase, orgId);
   }
 
@@ -95,6 +115,24 @@ export class TicketSummarizerService {
         return `[${timestamp}] ${sender}:\n${msg.text_body}\n`;
       })
       .join('\n---\n');
+  }
+
+  async classifyPriority(content: string): Promise<TicketPriority> {
+    const chain = this.priorityPrompt
+      .pipe(this.llm)
+      .pipe(new StringOutputParser());
+
+    const result = await chain.invoke({
+      content,
+    });
+
+    // Parse and validate the priority
+    try {
+      return prioritySchema.parse(result.toLowerCase().trim());
+    } catch (error) {
+      console.warn('Invalid priority classification:', result);
+      return 'normal'; // Default to normal if parsing fails
+    }
   }
 
   async updateTicketSummary(ticketId: string) {

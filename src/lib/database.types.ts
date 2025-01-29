@@ -965,6 +965,7 @@ export type Database = {
           p_html_body?: string
           p_raw_payload?: Json
           p_content_embedding?: string
+          p_priority?: string
         }
         Returns: Json
       }

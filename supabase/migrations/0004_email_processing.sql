@@ -15,7 +15,8 @@ CREATE OR REPLACE FUNCTION public.process_email(
   p_text_body text DEFAULT '',
   p_html_body text DEFAULT '',
   p_raw_payload jsonb DEFAULT '{}'::jsonb,
-  p_content_embedding vector(1536) DEFAULT NULL
+  p_content_embedding vector(1536) DEFAULT NULL,
+  p_priority text DEFAULT 'normal'
 ) RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -31,6 +32,11 @@ DECLARE
 BEGIN
   -- Start transaction
   v_now := now();
+
+  -- Validate priority
+  IF p_priority NOT IN ('low', 'normal', 'high', 'urgent') THEN
+    p_priority := 'normal';
+  END IF;
 
   -- Find or create contact
   INSERT INTO public.contacts (
@@ -86,7 +92,7 @@ BEGIN
       v_contact_id,
       p_subject,
       'open',
-      'normal',
+      p_priority::ticket_priority,
       'email',
       v_now,
       v_now

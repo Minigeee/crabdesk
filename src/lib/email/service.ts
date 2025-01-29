@@ -18,9 +18,12 @@ export class EmailProcessingService {
   }
 
   async processEmail(data: ProcessedEmailData): Promise<EmailProcessingResult> {
-    // Generate embedding for the new message
+    // Generate embedding and classify priority concurrently
     const content = data.textBody || data.htmlBody || '';
-    const embedding = await this.embeddings.generateEmbedding(content);
+    const [embedding, priority] = await Promise.all([
+      this.embeddings.generateEmbedding(content),
+      this.summarizer.classifyPriority(content)
+    ]);
 
     // Start a transaction
     const { data: result, error } = await this.supabase.rpc('process_email', {
@@ -37,6 +40,7 @@ export class EmailProcessingService {
       p_html_body: data.htmlBody ?? '',
       p_raw_payload: JSON.parse(JSON.stringify(data)) as Json,
       p_content_embedding: this.embeddings.embedToString(embedding),
+      p_priority: priority,
     });
 
     if (error) {
