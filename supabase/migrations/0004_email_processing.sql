@@ -61,11 +61,12 @@ BEGIN
   -- Check if this is a reply to an existing thread
   SELECT EXISTS (
     SELECT 1
-    FROM public.email_threads
-    WHERE org_id = p_org_id
+    FROM public.email_messages em
+    JOIN public.email_threads et ON et.id = em.thread_id
+    WHERE et.org_id = p_org_id
     AND (
-      (p_in_reply_to IS NOT NULL AND message_id = p_in_reply_to)
-      OR (p_reference_ids IS NOT NULL AND provider_message_ids && p_reference_ids)
+      (p_in_reply_to IS NOT NULL AND em.message_id = p_in_reply_to)
+      OR (p_reference_ids IS NOT NULL AND et.provider_message_ids && p_reference_ids)
     )
   ) INTO v_thread_exists;
 
@@ -97,9 +98,10 @@ BEGIN
     SELECT t.id INTO v_ticket_id
     FROM public.tickets t
     JOIN public.email_threads et ON et.ticket_id = t.id
+    JOIN public.email_messages em ON em.thread_id = et.id
     WHERE et.org_id = p_org_id
     AND (
-      (p_in_reply_to IS NOT NULL AND et.message_id = p_in_reply_to)
+      (p_in_reply_to IS NOT NULL AND em.message_id = p_in_reply_to)
       OR (p_reference_ids IS NOT NULL AND et.provider_message_ids && p_reference_ids)
     )
     LIMIT 1;
@@ -110,50 +112,69 @@ BEGIN
     WHERE id = v_ticket_id;
   END IF;
 
-  -- Create or update thread
-  INSERT INTO public.email_threads (
-    org_id,
-    ticket_id,
-    provider_thread_id,
-    provider_message_ids,
-    from_email,
-    to_email,
-    subject,
-    last_message_at,
-    message_id,
-    in_reply_to,
-    reference_ids,
-    headers,
-    raw_payload,
-    created_at,
-    updated_at
-  )
-  VALUES (
-    p_org_id,
-    v_ticket_id,
-    CASE 
-      WHEN p_in_reply_to IS NOT NULL AND p_in_reply_to != '' THEN p_in_reply_to 
-      ELSE p_message_id 
-    END,
-    ARRAY[p_message_id],
-    p_from_email,
-    p_to_email,
-    p_subject,
-    v_now,
-    p_message_id,
-    NULLIF(p_in_reply_to, ''),
-    p_reference_ids,
-    p_headers,
-    p_raw_payload,
-    v_now,
-    v_now
-  )
-  ON CONFLICT (org_id, provider_thread_id) DO UPDATE
-  SET
-    provider_message_ids = array_append(email_threads.provider_message_ids, p_message_id),
-    last_message_at = v_now,
-    updated_at = v_now
-  RETURNING id INTO v_thread_id;
+  -- Get existing thread ID if this is a reply
+  IF p_in_reply_to IS NOT NULL THEN
+    SELECT et.id INTO v_thread_id
+    FROM public.email_threads et
+    JOIN public.email_messages em ON em.thread_id = et.id
+    WHERE et.org_id = p_org_id
+    AND em.message_id = p_in_reply_to;
+  END IF;
+
+  -- Create or update thread only if not a reply
+  IF v_thread_id IS NULL THEN
+    INSERT INTO public.email_threads (
+      org_id,
+      ticket_id,
+      provider_thread_id,
+      provider_message_ids,
+      from_email,
+      to_email,
+      subject,
+      last_message_at,
+      message_id,
+      in_reply_to,
+      reference_ids,
+      headers,
+      raw_payload,
+      created_at,
+      updated_at
+    )
+    VALUES (
+      p_org_id,
+      v_ticket_id,
+      CASE 
+        WHEN p_in_reply_to IS NOT NULL AND p_in_reply_to != '' THEN p_in_reply_to 
+        ELSE p_message_id 
+      END,
+      ARRAY[p_message_id],
+      p_from_email,
+      p_to_email,
+      p_subject,
+      v_now,
+      p_message_id,
+      NULLIF(p_in_reply_to, ''),
+      p_reference_ids,
+      p_headers,
+      p_raw_payload,
+      v_now,
+      v_now
+    )
+    ON CONFLICT (org_id, provider_thread_id) DO UPDATE
+    SET
+      provider_message_ids = array_append(email_threads.provider_message_ids, p_message_id),
+      last_message_at = v_now,
+      updated_at = v_now
+    RETURNING id INTO v_thread_id;
+  ELSE
+    -- Update existing thread's timestamps and message IDs
+    UPDATE public.email_threads
+    SET
+      provider_message_ids = array_append(provider_message_ids, p_message_id),
+      last_message_at = v_now,
+      updated_at = v_now
+    WHERE id = v_thread_id;
+  END IF;
 
   -- Create message
   INSERT INTO public.email_messages (

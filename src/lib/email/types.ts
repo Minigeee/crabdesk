@@ -69,7 +69,7 @@ export interface ProcessedEmailData extends EmailContent {}
 
 export interface EmailThread extends Tables<'email_threads'> {
   ticket?: Tables<'tickets'>;
-  messages?: Tables<'email_messages'>[];
+  messages?: Partial<Tables<'email_messages'>>[];
 }
 
 export interface EmailMessage extends Tables<'email_messages'> {}

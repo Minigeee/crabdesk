@@ -1,67 +1,29 @@
 'use client';
 
-import * as React from 'react';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/lib/auth/hooks';
-import { Tables } from '@/lib/database.types';
 import { cn } from '@/lib/utils';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { formatDistanceToNow } from 'date-fns';
-import { ChevronDown, ChevronRight, Loader2, Mail, Reply, Star } from 'lucide-react';
-import { getEmailThreads, sendEmailReply, gradeEmailResponse } from '../actions';
-import { useTicketView } from './ticket-view-provider';
-import type { ResponseGrade } from '@/lib/tickets/grader-service';
+import { Loader2 } from 'lucide-react';
+import * as React from 'react';
 import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from '@/components/ui/hover-card';
-
-const templates = [
-  {
-    id: 'technical-issue',
-    title: 'Technical Issue Response',
-    description: 'Response template for technical problems and API issues',
-    body: "I understand you're experiencing technical difficulties with [specific feature/API]. I'm looking into this right now.\n\nTo help expedite the resolution:\n1. I've checked our system logs\n2. [Additional steps taken]\n\nIn the meantime, you can try [workaround if applicable].\n\nI'll keep you updated on our progress.\n\nBest regards,\n[Your name]",
-  },
-  {
-    id: 'billing-inquiry',
-    title: 'Billing Question',
-    description: 'Handle billing, invoicing, and plan upgrade inquiries',
-    body: "Thank you for your billing inquiry. I'd be happy to help clarify this for you.\n\n[Billing explanation/steps for upgrade]\n\nFor your reference:\n- Invoice details: [specifics]\n- Payment options: [list options]\n\nPlease let me know if you need any clarification.\n\nBest regards,\n[Your name]",
-  },
-  {
-    id: 'feature-request',
-    title: 'Feature Request Response',
-    description: 'Acknowledge and respond to feature suggestions',
-    body: "Thank you for taking the time to suggest this feature. We really value this kind of feedback from our users.\n\nI've documented your request for [feature] and shared it with our product team. Here's what you should know:\n- Current status: [status]\n- Similar features: [alternatives if any]\n\nWe'll keep you updated on any developments.\n\nBest regards,\n[Your name]",
-  },
-  {
-    id: 'account-setup',
-    title: 'Account Setup Help',
-    description: 'Guide users through account setup and configuration',
-    body: "Welcome! I'll help you get your account set up properly.\n\nHere are the key steps:\n1. [First step]\n2. [Second step]\n3. [Third step]\n\nPro tip: [Helpful suggestion]\n\nIf you need any clarification, don't hesitate to ask.\n\nBest regards,\n[Your name]",
-  },
-  {
-    id: 'integration-support',
-    title: 'Integration Support',
-    description: 'Help with API integration and technical implementation',
-    body: "I understand you're working on integrating with our [API/service]. Let me help you with that.\n\nRegarding your implementation:\n1. Documentation reference: [link]\n2. Best practices: [key points]\n3. Common pitfalls: [what to avoid]\n\nWould you like me to clarify any of these points?\n\nBest regards,\n[Your name]",
-  }
-];
-
-type EmailThread = Tables<'email_threads'> & {
-  messages: Tables<'email_messages'>[];
-};
+  approveDraft,
+  getDrafts,
+  getEmailThreads,
+  gradeEmailResponse,
+  modifyDraft,
+  rejectDraft,
+  sendEmailReply,
+} from '../actions';
+import { useTicketView } from './ticket-view-provider';
+import { DraftResponse } from './email-thread/draft-response';
+import { EmailMessage } from './email-thread/email-message';
+import { ReplyPanel } from './email-thread/reply-panel';
+import { shouldShowDraft } from './email-thread/utils';
+import type { Draft, EmailThread } from './email-thread/types';
+import type { ResponseGrade } from '@/lib/tickets/grader-service';
+import type { Tables } from '@/lib/database.types';
 
 export function EmailThreadView({ ticketId }: { ticketId: string }) {
   const { toast } = useToast();
@@ -76,33 +38,83 @@ export function EmailThreadView({ ticketId }: { ticketId: string }) {
   } = useTicketView();
   const { organization } = useAuth();
 
-  // Fetch email threads
+  // Add ref for scroll area viewport
+  const viewportRef = React.useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
+
+  // Add scroll to bottom effect
+  const scrollToBottom = React.useCallback(() => {
+    if (viewportRef.current) {
+      viewportRef.current.scrollTo({
+        top: viewportRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
+    }
+  }, []);
+
+  // Add state for grade
+  const [grade, setGrade] = React.useState<ResponseGrade | null>(null);
+
+  // Add state for drafts
+  const [selectedDraft, setSelectedDraft] =
+    React.useState<Tables<'response_drafts'> | null>(null);
+
+  // Add state for tracking which draft is being approved
+  const [approvingDraftId, setApprovingDraftId] = React.useState<string | null>(
+    null
+  );
+
+  // Fetch email threads with drafts
   const {
     data: threads = [],
     isLoading,
     error,
   } = useQuery({
     queryKey: ['email-threads', ticketId],
-    queryFn: () => getEmailThreads(ticketId),
+    queryFn: async () => {
+      const threads = await getEmailThreads(ticketId);
+      // Fetch drafts for each thread
+      const threadsWithDrafts = await Promise.all(
+        threads.map(async (thread) => {
+          const drafts = await getDrafts(thread.id);
+          // Parse grade JSON for each draft
+          const parsedDrafts = drafts.map((draft) => ({
+            ...draft,
+            grade: draft.grade ? (draft.grade as ResponseGrade) : null,
+          }));
+          return { ...thread, drafts: parsedDrafts };
+        })
+      );
+      return threadsWithDrafts;
+    },
   });
 
-  // Add state for grade
-  const [grade, setGrade] = React.useState<ResponseGrade | null>(null);
+  // Add scroll to bottom effect after threads are loaded
+  React.useEffect(() => {
+    scrollToBottom();
+  }, [scrollToBottom, threads]);
 
   // Send reply mutation
   const { mutate: sendReply, isPending: isSending } = useMutation({
     mutationFn: async (textBody: string) => {
       if (!replyContext) throw new Error('No message selected to reply to');
-      return sendEmailReply({
+      const response = await sendEmailReply({
         threadId: replyContext.threadId,
         textBody,
         inReplyTo: replyContext.inReplyTo,
       });
+
+      // If this was from a draft, update its status
+      if (selectedDraft) {
+        await modifyDraft(selectedDraft.id, textBody);
+      }
+
+      return response;
     },
     onSuccess: () => {
       setEmailReplyText('');
       setIsEmailReplyOpen(false);
       setReplyContext(null);
+      setSelectedDraft(null);
       queryClient.invalidateQueries({ queryKey: ['email-threads', ticketId] });
       toast({
         title: 'Reply Sent',
@@ -144,6 +156,98 @@ export function EmailThreadView({ ticketId }: { ticketId: string }) {
     },
   });
 
+  // Add mutations for draft actions
+  const { mutate: approveDraftMutation } = useMutation({
+    mutationFn: async ({
+      draftId,
+      content,
+    }: {
+      draftId: string;
+      content: string;
+    }) => {
+      setApprovingDraftId(draftId);
+      try {
+        // Find the thread and draft
+        const thread = threads.find((t) =>
+          t.drafts?.some((d) => d.id === draftId)
+        );
+        const draft = thread?.drafts?.find((d) => d.id === draftId);
+        if (!thread || !draft) throw new Error('Draft not found');
+
+        // First approve the draft
+        await approveDraft(draftId);
+
+        // Then send the email with the updated content
+        await sendEmailReply({
+          threadId: thread.id,
+          textBody: content, // Use the updated content with placeholders applied
+          inReplyTo: thread.messages[thread.messages.length - 1].message_id,
+        });
+      } finally {
+        setApprovingDraftId(null);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['email-threads', ticketId] });
+      toast({
+        title: 'Draft Approved and Sent',
+        description: 'The draft has been approved and sent successfully',
+      });
+    },
+    onError: (error) => {
+      console.error('Error approving and sending draft:', error);
+      toast({
+        title: 'Error',
+        description:
+          error instanceof Error ? error.message : 'Failed to approve and send draft',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const { mutate: modifyDraftMutation } = useMutation({
+    mutationFn: async ({
+      draftId,
+      content,
+    }: {
+      draftId: string;
+      content: string;
+    }) => {
+      await modifyDraft(draftId, content);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['email-threads', ticketId] });
+    },
+  });
+
+  const { mutate: rejectDraftMutation } = useMutation({
+    mutationFn: async ({
+      draftId,
+      feedback,
+    }: {
+      draftId: string;
+      feedback: string;
+    }) => {
+      await rejectDraft(draftId, feedback);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['email-threads', ticketId] });
+      toast({
+        title: 'Draft Rejected',
+        description: 'The draft has been rejected successfully',
+      });
+    },
+    onError: (error) => {
+      console.error('Error rejecting draft:', error);
+      toast({
+        title: 'Error',
+        description:
+          error instanceof Error ? error.message : 'Failed to reject draft',
+        variant: 'destructive',
+      });
+    },
+  });
+
   const handleReplyToMessage = (
     thread: EmailThread,
     message: Tables<'email_messages'>
@@ -156,6 +260,33 @@ export function EmailThreadView({ ticketId }: { ticketId: string }) {
     setIsEmailReplyOpen(true);
   };
 
+  const handleDraftAction = (
+    thread: EmailThread,
+    draft: Draft,
+    action: 'edit' | 'approve' | 'reject'
+  ) => {
+    switch (action) {
+      case 'approve':
+        approveDraftMutation({ draftId: draft.id, content: draft.content });
+        break;
+      case 'reject':
+        rejectDraftMutation({ draftId: draft.id, feedback: draft.feedback || '' });
+        break;
+      case 'edit':
+        // For edit action, open the reply window
+        const lastMessage = thread.messages[thread.messages.length - 1];
+        setReplyContext({
+          threadId: thread.id,
+          inReplyTo: lastMessage.message_id,
+          originalMessage: lastMessage,
+        });
+        setEmailReplyText(draft.content);
+        setSelectedDraft(draft);
+        setIsEmailReplyOpen(true);
+        break;
+    }
+  };
+
   const handleSendReply = () => {
     if (!emailReplyText.trim()) return;
     sendReply(emailReplyText);
@@ -164,30 +295,6 @@ export function EmailThreadView({ ticketId }: { ticketId: string }) {
   const handleGradeResponse = () => {
     if (!emailReplyText.trim()) return;
     gradeReply();
-  };
-
-  // Helper function to get grade color
-  const getGradeColor = (grade: number) => {
-    switch (grade) {
-      case 1: return 'text-destructive';
-      case 2: return 'text-orange-500';
-      case 3: return 'text-yellow-500';
-      case 4: return 'text-green-500';
-      case 5: return 'text-blue-500';
-      default: return 'text-muted-foreground';
-    }
-  };
-
-  // Helper function to get grade label
-  const getGradeLabel = (grade: number) => {
-    switch (grade) {
-      case 1: return 'Bad';
-      case 2: return 'Poor';
-      case 3: return 'Acceptable';
-      case 4: return 'Good';
-      case 5: return 'Great';
-      default: return 'Unknown';
-    }
   };
 
   if (isLoading) {
@@ -225,43 +332,32 @@ export function EmailThreadView({ ticketId }: { ticketId: string }) {
           isEmailReplyOpen ? 'w-[60%]' : 'w-full'
         )}
       >
-        <ScrollArea className='flex-1'>
-          <div className='space-y-6 p-4'>
-            {threads.map((thread) =>
-              thread.messages.map((message) => (
-                <div key={message.id} className='w-full space-y-2'>
-                  <div className='flex items-start justify-between'>
-                    <div>
-                      <div className='font-medium'>
-                        {message.from_name} ({message.from_email})
-                      </div>
-                      <div className='text-sm text-muted-foreground'>
-                        To: {message.to_emails.join(', ')}
-                      </div>
-                    </div>
-                    <div className='flex items-center gap-2'>
-                      <div className='text-xs text-muted-foreground'>
-                        {formatDistanceToNow(new Date(message.created_at), {
-                          addSuffix: true,
-                        })}
-                      </div>
-                      <Button
-                        variant='ghost'
-                        size='icon'
-                        onClick={() => handleReplyToMessage(thread, message)}
-                      >
-                        <Reply className='h-4 w-4' />
-                      </Button>
-                    </div>
-                  </div>
-                  <div className='border-l-2 pl-4'>
-                    <div className='whitespace-pre-wrap rounded-md bg-muted p-3 text-sm'>
-                      <div className='max-w-[65ch]'>{message.text_body}</div>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
+        <ScrollArea className='flex-1' viewportRef={viewportRef}>
+          <div className='space-y-6 p-4 pb-16'>
+            {threads.map((thread) => (
+              <div key={thread.id} className='space-y-4'>
+                {/* Render messages */}
+                {thread.messages.map((message) => (
+                  <EmailMessage
+                    key={message.id}
+                    thread={thread}
+                    message={message}
+                    onReply={handleReplyToMessage}
+                  />
+                ))}
+
+                {/* Render auto-generated drafts */}
+                {thread.drafts?.filter(shouldShowDraft).map((draft: Draft) => (
+                  <DraftResponse
+                    key={draft.id}
+                    thread={thread}
+                    draft={draft}
+                    onDraftAction={handleDraftAction}
+                    isApproving={approvingDraftId === draft.id}
+                  />
+                ))}
+              </div>
+            ))}
           </div>
         </ScrollArea>
       </div>
@@ -273,167 +369,22 @@ export function EmailThreadView({ ticketId }: { ticketId: string }) {
           isEmailReplyOpen ? 'w-[40%]' : 'w-0 border-l-0'
         )}
       >
-        {isEmailReplyOpen && replyContext && (
-          <ScrollArea className='flex h-full flex-col'>
-            <div className='flex h-14 items-center justify-between border-b px-4 py-2'>
-              <h3 className='font-semibold'>New Reply</h3>
-              <Button
-                variant='ghost'
-                size='icon'
-                onClick={() => {
-                  setIsEmailReplyOpen(false);
-                  setReplyContext(null);
-                }}
-              >
-                <ChevronRight className='h-4 w-4' />
-              </Button>
-            </div>
-
-            <div className='border-b bg-muted/50 px-4 py-3 text-sm'>
-              <div className='space-y-2'>
-                <div className='flex items-start gap-2'>
-                  <span className='w-16 font-medium'>From:</span>
-                  <div>{`Support Team <support@${organization?.domain}>`}</div>
-                </div>
-                <div className='flex items-start gap-2'>
-                  <span className='w-16 font-medium'>To:</span>
-                  <div>
-                    {`${replyContext.originalMessage.from_name} <${replyContext.originalMessage.from_email}>`}
-                  </div>
-                </div>
-                <div className='flex items-start gap-2'>
-                  <span className='w-16 font-medium'>Subject:</span>
-                  <div>{replyContext.originalMessage.subject}</div>
-                </div>
-                <div className='mt-2 rounded-md bg-muted p-3 text-xs text-muted-foreground'>
-                  <div className='mb-1 font-medium'>In Reply To:</div>
-                  <div className='line-clamp-3 opacity-70'>
-                    {replyContext.originalMessage.text_body}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className='flex-1 space-y-4 p-4'>
-              <div className='flex items-center justify-between'>
-                <h4 className='text-sm font-medium'>Email Template</h4>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant='outline'
-                      className='w-[200px] justify-between'
-                    >
-                      Select template
-                      <ChevronDown className='ml-2 h-4 w-4' />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className='w-[200px]'>
-                    {templates.map((template) => (
-                      <DropdownMenuItem
-                        key={template.id}
-                        onSelect={() => setEmailReplyText(template.body)}
-                        className='flex flex-col items-start py-3'
-                      >
-                        <div className='font-medium'>{template.title}</div>
-                        <div className='text-xs text-muted-foreground'>
-                          {template.description}
-                        </div>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-
-              <Textarea
-                value={emailReplyText}
-                onChange={(e) => setEmailReplyText(e.target.value)}
-                placeholder='Type your reply...'
-                className='min-h-[300px] flex-1 resize-none'
-              />
-
-              {grade && (
-                <div className='rounded-md border bg-muted/50 p-3'>
-                  <div className='mb-2 flex items-center gap-2'>
-                    <Star className={cn('h-4 w-4', getGradeColor(grade.grade))} />
-                    <span className='font-medium'>
-                      Grade: {getGradeLabel(grade.grade)}
-                    </span>
-                  </div>
-                  <p className='text-sm text-muted-foreground'>{grade.summary}</p>
-                  {(grade.strengths.length > 0 || grade.improvements.length > 0) && (
-                    <HoverCard>
-                      <HoverCardTrigger asChild>
-                        <Button variant='link' className='mt-2 h-auto p-0 text-xs'>
-                          View Details
-                        </Button>
-                      </HoverCardTrigger>
-                      <HoverCardContent className='w-80'>
-                        {grade.strengths.length > 0 && (
-                          <div className='prose mb-3'>
-                            <div className='mb-1 font-medium'>Strengths:</div>
-                            <ul className='text-sm text-muted-foreground'>
-                              {grade.strengths.map((strength, i) => (
-                                <li key={i}>{strength}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                        {grade.improvements.length > 0 && (
-                          <div className='prose'>
-                            <div className='mb-1 font-medium'>
-                              Areas for Improvement:
-                            </div>
-                            <ul className='text-sm text-muted-foreground'>
-                              {grade.improvements.map((improvement, i) => (
-                                <li key={i}>{improvement}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </HoverCardContent>
-                    </HoverCard>
-                  )}
-                </div>
-              )}
-
-              <div className='flex justify-end gap-2'>
-                <Button
-                  variant='outline'
-                  onClick={handleGradeResponse}
-                  disabled={isGrading || !emailReplyText.trim()}
-                >
-                  {isGrading ? (
-                    <>
-                      <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                      Grading...
-                    </>
-                  ) : (
-                    <>
-                      <Star className='mr-2 h-4 w-4' />
-                      Grade Response
-                    </>
-                  )}
-                </Button>
-                <Button
-                  onClick={handleSendReply}
-                  disabled={isSending || !emailReplyText.trim()}
-                >
-                  {isSending ? (
-                    <>
-                      <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                      Sending...
-                    </>
-                  ) : (
-                    <>
-                      <Mail className='mr-2 h-4 w-4' />
-                      Send Reply
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          </ScrollArea>
-        )}
+        <ReplyPanel
+          isOpen={isEmailReplyOpen}
+          replyContext={replyContext}
+          emailReplyText={emailReplyText}
+          onEmailReplyTextChange={setEmailReplyText}
+          onClose={() => {
+            setIsEmailReplyOpen(false);
+            setReplyContext(null);
+          }}
+          onSendReply={handleSendReply}
+          onGradeResponse={handleGradeResponse}
+          isSending={isSending}
+          isGrading={isGrading}
+          grade={grade}
+          orgDomain={organization?.domain || ''}
+        />
       </div>
     </div>
   );

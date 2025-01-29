@@ -5,6 +5,7 @@ import { StringOutputParser } from '@langchain/core/output_parsers';
 import { z } from 'zod';
 import type { Database } from '@/lib/database.types';
 import { EmbeddingService } from '@/lib/embeddings/service';
+import { EmailThread } from '../email/types';
 
 const SUMMARY_PROMPT = `You are a helpful assistant that summarizes customer support ticket threads.
 Your summaries should be concise but informative, following the following format:
@@ -73,38 +74,26 @@ export class TicketSummarizerService {
     this.embeddings = new EmbeddingService(supabase, orgId);
   }
 
-  private async getEmailThread(ticketId: string) {
-    const { data: threads, error } = await this.supabase
-      .from('email_threads')
-      .select(`
-        *,
-        messages: email_messages (
-          message_id,
-          from_email,
-          from_name,
-          text_body,
-          created_at
-        )
-      `)
-      .eq('ticket_id', ticketId)
-      .order('last_message_at', { ascending: true })
-      .single();
-
-    if (error) throw error;
-    return threads;
-  }
-
-  private async findExistingSummaryNote(ticketId: string) {
+  // Make this method public for shared data access
+  async findExistingSummaryNote(ticketId: string): Promise<{ id: string; content: string; content_embedding: string; } | undefined> {
     const { data: note, error } = await this.supabase
       .from('notes')
-      .select('*')
+      .select('id, content, content_embedding')
       .eq('entity_type', 'ticket')
       .eq('entity_id', ticketId)
       .eq('managed', true)
       .single();
 
     if (error && error.code !== 'PGRST116') throw error; // Ignore not found error
-    return note;
+    
+    // Return undefined if note is null or content_embedding is null
+    if (!note || !note.content_embedding) return undefined;
+    
+    return {
+      id: note.id,
+      content: note.content,
+      content_embedding: note.content_embedding
+    };
   }
 
   private formatThreadForSummary(thread: any) {
@@ -135,10 +124,14 @@ export class TicketSummarizerService {
     }
   }
 
-  async updateTicketSummary(ticketId: string) {
-    // Get the email thread and messages
-    const thread = await this.getEmailThread(ticketId);
-    if (!thread || !thread.messages.length) return;
+  async updateTicketSummary(
+    ticketId: string,
+    thread: EmailThread,
+    options?: {
+      existingNote?: { id: string; content: string; content_embedding: string; };
+    }
+  ) {
+    if (!thread || !thread.messages || !thread.messages.length) return;
 
     // Format thread for summarization
     const threadText = this.formatThreadForSummary(thread);
@@ -155,8 +148,8 @@ export class TicketSummarizerService {
     // Generate embedding for the summary
     const embedding = await this.embeddings.generateEmbedding(summary);
 
-    // Find existing summary note or create new one
-    const existingNote = await this.findExistingSummaryNote(ticketId);
+    // Find existing summary note or create new one if not provided
+    const existingNote = options?.existingNote || await this.findExistingSummaryNote(ticketId);
 
     if (existingNote) {
       // Update existing note

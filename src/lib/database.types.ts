@@ -526,6 +526,86 @@ export type Database = {
         }
         Relationships: []
       }
+      response_drafts: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          content: string
+          created_at: string
+          feedback: string | null
+          grade: Json | null
+          id: string
+          metadata: Json
+          modified_content: string | null
+          org_id: string
+          status: Database["public"]["Enums"]["draft_status"]
+          thread_id: string
+          ticket_id: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          content: string
+          created_at?: string
+          feedback?: string | null
+          grade?: Json | null
+          id?: string
+          metadata?: Json
+          modified_content?: string | null
+          org_id: string
+          status?: Database["public"]["Enums"]["draft_status"]
+          thread_id: string
+          ticket_id: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          content?: string
+          created_at?: string
+          feedback?: string | null
+          grade?: Json | null
+          id?: string
+          metadata?: Json
+          modified_content?: string | null
+          org_id?: string
+          status?: Database["public"]["Enums"]["draft_status"]
+          thread_id?: string
+          ticket_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "response_drafts_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "response_drafts_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "response_drafts_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "email_threads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "response_drafts_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       skills: {
         Row: {
           created_at: string
@@ -965,7 +1045,6 @@ export type Database = {
           p_html_body?: string
           p_raw_payload?: Json
           p_content_embedding?: string
-          p_priority?: string
         }
         Returns: Json
       }
@@ -1077,6 +1156,7 @@ export type Database = {
     Enums: {
       article_status: "draft" | "published" | "archived"
       audit_log_action: "insert" | "update" | "delete" | "restore"
+      draft_status: "pending" | "approved" | "rejected" | "modified"
       message_content_type: "text" | "html" | "markdown"
       message_sender_type: "contact" | "user" | "system"
       ticket_priority: "low" | "normal" | "high" | "urgent"

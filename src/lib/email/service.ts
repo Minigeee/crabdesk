@@ -4,10 +4,12 @@ import type { EmailProcessingResult, ProcessedEmailData } from './types';
 import type { Json } from '@/lib/database.types';
 import { TicketSummarizerService } from '@/lib/tickets/summarizer-service';
 import { EmbeddingService } from '@/lib/embeddings/service';
+import { AutoResponderService } from '@/lib/tickets/auto-responder-service';
 
 export class EmailProcessingService {
   private readonly summarizer: TicketSummarizerService;
   private readonly embeddings: EmbeddingService;
+  private readonly autoResponder: AutoResponderService;
 
   constructor(
     private readonly supabase: SupabaseClient<Database>,
@@ -15,6 +17,28 @@ export class EmailProcessingService {
   ) {
     this.summarizer = new TicketSummarizerService(supabase, orgId);
     this.embeddings = new EmbeddingService(supabase, orgId);
+    this.autoResponder = new AutoResponderService(supabase, orgId);
+  }
+
+  private async getEmailThread(threadId: string) {
+    const { data: thread, error } = await this.supabase
+      .from('email_threads')
+      .select(`
+        *,
+        messages: email_messages (
+          message_id,
+          from_email,
+          from_name,
+          text_body,
+          created_at
+        )
+      `)
+      .eq('id', threadId)
+      .order('created_at', { ascending: true })
+      .single();
+
+    if (error) throw error;
+    return thread;
   }
 
   private async handlePostProcessing(
@@ -22,26 +46,55 @@ export class EmailProcessingService {
     content: string
   ): Promise<void> {
     try {
+      // Get the full thread with messages for LLM operations
+      const thread = await this.getEmailThread(result.thread.id);
+      if (!thread) {
+        throw new Error('Thread not found');
+      }
+
       // Check if this created a new ticket by looking at the thread's message count
       const isNewTicket = result.thread.provider_message_ids.length === 1;
 
-      if (isNewTicket) {
-        // Classify priority for new tickets
-        const priority = await this.summarizer.classifyPriority(content);
-        
-        // Update the ticket priority
-        const { error: updateError } = await this.supabase
-          .from('tickets')
-          .update({ priority })
-          .eq('id', result.ticket.id);
+      // Get shared data for all services
+      const [notes, orgSettings, existingNote] = await Promise.all([
+        this.autoResponder.getRelevantNotes(result.ticket.id, thread),
+        this.autoResponder.getOrgSettings(),
+        this.summarizer.findExistingSummaryNote(result.ticket.id),
+      ]);
 
-        if (updateError) {
-          console.error('Error updating ticket priority:', updateError);
-        }
+      // Run LLM operations in parallel
+      // Only classify priority for new tickets, but always generate responses and update summary
+      const operations = [
+        this.autoResponder.generateDraftResponse(thread, result.ticket.id, {
+          notes,
+          orgSettings,
+        }),
+        this.summarizer.updateTicketSummary(result.ticket.id, thread, {
+          existingNote,
+        }),
+      ];
+
+      // Only classify priority for new tickets
+      if (isNewTicket) {
+        operations.push(this.summarizer.classifyPriority(content));
       }
 
-      // Update the ticket summary
-      await this.summarizer.updateTicketSummary(result.ticket.id);
+      const results = await Promise.all(operations);
+
+      // Update the ticket priority if this is a new ticket
+      if (isNewTicket) {
+        const priority = results[2]; // Priority is the last item in results for new tickets
+        if (priority && ['low', 'normal', 'high', 'urgent'].includes(priority as string)) {
+          const { error: updateError } = await this.supabase
+            .from('tickets')
+            .update({ priority: priority as 'low' | 'normal' | 'high' | 'urgent' })
+            .eq('id', result.ticket.id);
+
+          if (updateError) {
+            console.error('Error updating ticket priority:', updateError);
+          }
+        }
+      }
     } catch (error) {
       // Log errors but don't throw since this is background processing
       console.error('Error in post-processing tasks:', error);
@@ -163,16 +216,11 @@ export class EmailProcessingService {
 
     if (threadError) throw threadError;
 
-    // Get ticket ID from thread to update summary
-    const { data: thread } = await this.supabase
-      .from('email_threads')
-      .select('ticket_id')
-      .eq('id', threadId)
-      .single();
-
+    // Get the full thread to update summary
+    const thread = await this.getEmailThread(threadId);
     if (thread) {
       try {
-        await this.summarizer.updateTicketSummary(thread.ticket_id);
+        await this.summarizer.updateTicketSummary(thread.ticket_id, thread);
       } catch (summaryError) {
         console.error('Error updating ticket summary:', summaryError);
       }

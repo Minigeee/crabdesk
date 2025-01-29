@@ -5,6 +5,8 @@ import { createServiceClient } from '@/lib/supabase/service';
 import { EmailProcessingService } from '@/lib/email/service';
 import { revalidatePath } from 'next/cache';
 import { ResponseGraderService } from '@/lib/tickets/grader-service';
+import { createClient } from '@/lib/supabase/server';
+import { AutoResponderService } from '@/lib/tickets/auto-responder-service';
 
 /**
  * NOTE: In production, these actions would interact with a real email service API.
@@ -116,4 +118,59 @@ export async function gradeEmailResponse(threadId: string, response: string) {
   
   const graderService = new ResponseGraderService(supabase);
   return graderService.gradeResponse(threadId, response);
+}
+
+export async function getDrafts(threadId: string) {
+  const supabase = await createClient();
+  const { data: drafts, error } = await supabase
+    .from('response_drafts')
+    .select('*')
+    .eq('thread_id', threadId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return drafts;
+}
+
+export async function approveDraft(draftId: string) {
+  const supabase = await createClient();
+  const userData = await getCurrentUser();
+  if (!userData) throw new Error('Not authenticated');
+
+  const { error } = await supabase
+    .from('response_drafts')
+    .update({
+      status: 'approved',
+      approved_at: new Date().toISOString(),
+      approved_by: userData.user.id
+    })
+    .eq('id', draftId);
+
+  if (error) throw error;
+}
+
+export async function modifyDraft(draftId: string, modifiedContent: string) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('response_drafts')
+    .update({
+      status: 'modified',
+      modified_content: modifiedContent
+    })
+    .eq('id', draftId);
+
+  if (error) throw error;
+}
+
+export async function rejectDraft(draftId: string, feedback: string) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('response_drafts')
+    .update({
+      status: 'rejected',
+      feedback
+    })
+    .eq('id', draftId);
+
+  if (error) throw error;
 } 
