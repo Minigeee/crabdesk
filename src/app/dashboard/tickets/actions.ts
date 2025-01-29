@@ -4,6 +4,7 @@ import { getCurrentUser } from '@/lib/auth/session';
 import { createServiceClient } from '@/lib/supabase/service';
 import { EmailProcessingService } from '@/lib/email/service';
 import { revalidatePath } from 'next/cache';
+import { ResponseGraderService } from '@/lib/tickets/grader-service';
 
 /**
  * NOTE: In production, these actions would interact with a real email service API.
@@ -103,4 +104,16 @@ export async function sendEmailReply({
 
   revalidatePath(`/dashboard/tickets/${thread.ticket_id}`);
   return message;
+}
+
+export async function gradeEmailResponse(threadId: string, response: string) {
+  const supabase = createServiceClient();
+  const userData = await getCurrentUser();
+  
+  if (!userData) {
+    throw new Error('Not authenticated');
+  }
+  
+  const graderService = new ResponseGraderService(supabase);
+  return graderService.gradeResponse(threadId, response);
 } 

@@ -17,13 +17,41 @@ export class EmailProcessingService {
     this.embeddings = new EmbeddingService(supabase, orgId);
   }
 
+  private async handlePostProcessing(
+    result: EmailProcessingResult,
+    content: string
+  ): Promise<void> {
+    try {
+      // Check if this created a new ticket by looking at the thread's message count
+      const isNewTicket = result.thread.provider_message_ids.length === 1;
+
+      if (isNewTicket) {
+        // Classify priority for new tickets
+        const priority = await this.summarizer.classifyPriority(content);
+        
+        // Update the ticket priority
+        const { error: updateError } = await this.supabase
+          .from('tickets')
+          .update({ priority })
+          .eq('id', result.ticket.id);
+
+        if (updateError) {
+          console.error('Error updating ticket priority:', updateError);
+        }
+      }
+
+      // Update the ticket summary
+      await this.summarizer.updateTicketSummary(result.ticket.id);
+    } catch (error) {
+      // Log errors but don't throw since this is background processing
+      console.error('Error in post-processing tasks:', error);
+    }
+  }
+
   async processEmail(data: ProcessedEmailData): Promise<EmailProcessingResult> {
-    // Generate embedding and classify priority concurrently
+    // Generate embedding for the new message
     const content = data.textBody || data.htmlBody || '';
-    const [embedding, priority] = await Promise.all([
-      this.embeddings.generateEmbedding(content),
-      this.summarizer.classifyPriority(content)
-    ]);
+    const embedding = await this.embeddings.generateEmbedding(content);
 
     // Start a transaction
     const { data: result, error } = await this.supabase.rpc('process_email', {
@@ -40,7 +68,6 @@ export class EmailProcessingService {
       p_html_body: data.htmlBody ?? '',
       p_raw_payload: JSON.parse(JSON.stringify(data)) as Json,
       p_content_embedding: this.embeddings.embedToString(embedding),
-      p_priority: priority,
     });
 
     if (error) {
@@ -54,13 +81,9 @@ export class EmailProcessingService {
 
     const typedResult = result as unknown as EmailProcessingResult;
 
-    // After processing the email, update the ticket summary
-    try {
-      await this.summarizer.updateTicketSummary(typedResult.ticket.id);
-    } catch (summaryError) {
-      console.error('Error updating ticket summary:', summaryError);
-      // Don't throw here - we don't want to fail email processing if summarization fails
-    }
+    // Start post-processing tasks in the background
+    // We use void to explicitly indicate we're not waiting for the promise
+    void this.handlePostProcessing(typedResult, content);
 
     return typedResult;
   }

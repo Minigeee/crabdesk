@@ -1,5 +1,6 @@
 'use client';
 
+import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -15,9 +16,15 @@ import { Tables } from '@/lib/database.types';
 import { cn } from '@/lib/utils';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
-import { ChevronDown, ChevronRight, Loader2, Mail, Reply } from 'lucide-react';
-import { getEmailThreads, sendEmailReply } from '../actions';
+import { ChevronDown, ChevronRight, Loader2, Mail, Reply, Star } from 'lucide-react';
+import { getEmailThreads, sendEmailReply, gradeEmailResponse } from '../actions';
 import { useTicketView } from './ticket-view-provider';
+import type { ResponseGrade } from '@/lib/tickets/grader-service';
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from '@/components/ui/hover-card';
 
 const templates = [
   {
@@ -79,6 +86,9 @@ export function EmailThreadView({ ticketId }: { ticketId: string }) {
     queryFn: () => getEmailThreads(ticketId),
   });
 
+  // Add state for grade
+  const [grade, setGrade] = React.useState<ResponseGrade | null>(null);
+
   // Send reply mutation
   const { mutate: sendReply, isPending: isSending } = useMutation({
     mutationFn: async (textBody: string) => {
@@ -110,6 +120,30 @@ export function EmailThreadView({ ticketId }: { ticketId: string }) {
     },
   });
 
+  // Add grade mutation
+  const { mutate: gradeReply, isPending: isGrading } = useMutation({
+    mutationFn: async () => {
+      if (!replyContext) throw new Error('No message selected to reply to');
+      return gradeEmailResponse(replyContext.threadId, emailReplyText);
+    },
+    onSuccess: (data) => {
+      setGrade(data);
+      toast({
+        title: 'Response Graded',
+        description: data.summary,
+      });
+    },
+    onError: (error) => {
+      console.error('Error grading response:', error);
+      toast({
+        title: 'Error',
+        description:
+          error instanceof Error ? error.message : 'Failed to grade response',
+        variant: 'destructive',
+      });
+    },
+  });
+
   const handleReplyToMessage = (
     thread: EmailThread,
     message: Tables<'email_messages'>
@@ -125,6 +159,35 @@ export function EmailThreadView({ ticketId }: { ticketId: string }) {
   const handleSendReply = () => {
     if (!emailReplyText.trim()) return;
     sendReply(emailReplyText);
+  };
+
+  const handleGradeResponse = () => {
+    if (!emailReplyText.trim()) return;
+    gradeReply();
+  };
+
+  // Helper function to get grade color
+  const getGradeColor = (grade: number) => {
+    switch (grade) {
+      case 1: return 'text-destructive';
+      case 2: return 'text-orange-500';
+      case 3: return 'text-yellow-500';
+      case 4: return 'text-green-500';
+      case 5: return 'text-blue-500';
+      default: return 'text-muted-foreground';
+    }
+  };
+
+  // Helper function to get grade label
+  const getGradeLabel = (grade: number) => {
+    switch (grade) {
+      case 1: return 'Bad';
+      case 2: return 'Poor';
+      case 3: return 'Acceptable';
+      case 4: return 'Good';
+      case 5: return 'Great';
+      default: return 'Unknown';
+    }
   };
 
   if (isLoading) {
@@ -288,7 +351,69 @@ export function EmailThreadView({ ticketId }: { ticketId: string }) {
                 className='min-h-[300px] flex-1 resize-none'
               />
 
-              <div className='flex justify-end'>
+              {grade && (
+                <div className='rounded-md border bg-muted/50 p-3'>
+                  <div className='mb-2 flex items-center gap-2'>
+                    <Star className={cn('h-4 w-4', getGradeColor(grade.grade))} />
+                    <span className='font-medium'>
+                      Grade: {getGradeLabel(grade.grade)}
+                    </span>
+                  </div>
+                  <p className='text-sm text-muted-foreground'>{grade.summary}</p>
+                  {(grade.strengths.length > 0 || grade.improvements.length > 0) && (
+                    <HoverCard>
+                      <HoverCardTrigger asChild>
+                        <Button variant='link' className='mt-2 h-auto p-0 text-xs'>
+                          View Details
+                        </Button>
+                      </HoverCardTrigger>
+                      <HoverCardContent className='w-80'>
+                        {grade.strengths.length > 0 && (
+                          <div className='prose mb-3'>
+                            <div className='mb-1 font-medium'>Strengths:</div>
+                            <ul className='text-sm text-muted-foreground'>
+                              {grade.strengths.map((strength, i) => (
+                                <li key={i}>{strength}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {grade.improvements.length > 0 && (
+                          <div className='prose'>
+                            <div className='mb-1 font-medium'>
+                              Areas for Improvement:
+                            </div>
+                            <ul className='text-sm text-muted-foreground'>
+                              {grade.improvements.map((improvement, i) => (
+                                <li key={i}>{improvement}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </HoverCardContent>
+                    </HoverCard>
+                  )}
+                </div>
+              )}
+
+              <div className='flex justify-end gap-2'>
+                <Button
+                  variant='outline'
+                  onClick={handleGradeResponse}
+                  disabled={isGrading || !emailReplyText.trim()}
+                >
+                  {isGrading ? (
+                    <>
+                      <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                      Grading...
+                    </>
+                  ) : (
+                    <>
+                      <Star className='mr-2 h-4 w-4' />
+                      Grade Response
+                    </>
+                  )}
+                </Button>
                 <Button
                   onClick={handleSendReply}
                   disabled={isSending || !emailReplyText.trim()}
