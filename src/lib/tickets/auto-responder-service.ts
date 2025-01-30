@@ -7,6 +7,7 @@ import type { Database } from '@/lib/database.types';
 import { EmailThread } from '../email/types';
 import { EmbeddingService } from '../embeddings/service';
 import type { AutoResponseSettings } from '@/lib/settings/types';
+import { getEmailThread, getSemanticallySimilarNotes, getSemanticallySimilarArticleChunks } from './utils';
 
 const RESPONDER_PROMPT = `You are an expert customer support agent. Your task is to draft a response to a customer email thread.
 Use the provided context to ensure accuracy and alignment with organizational goals.
@@ -61,7 +62,7 @@ export class AutoResponderService {
     });
 
     this.responderPrompt = PromptTemplate.fromTemplate(RESPONDER_PROMPT);
-    this.graderService = new ResponseGraderService(supabase);
+    this.graderService = new ResponseGraderService(supabase, orgId);
     this.embeddings = new EmbeddingService(supabase, orgId);
   }
 
@@ -96,7 +97,7 @@ export class AutoResponderService {
   }
 
   // Make these methods public for shared data access
-  async getRelevantNotes(ticketId: string, thread?: EmailThread) {
+  async getRelevantContext(ticketId: string, thread?: EmailThread) {
     // If no thread provided, get the ticket's contact_id for basic note retrieval
     if (!thread?.messages?.length) {
       const { data: ticket } = await this.supabase
@@ -119,60 +120,109 @@ export class AutoResponderService {
         .limit(5);
 
       if (error) throw error;
-      return notes;
+      return {
+        notes: notes || [],
+        articleChunks: []
+      };
     }
 
     // Use thread messages for semantic search
     // Combine the last few messages to create a meaningful search context
-    const searchContext = thread.messages
-      .slice(-3) // Use last 3 messages
+    const messages = thread.messages.slice(-2); // Use last 2 messages
+    const searchTexts = messages
       .map(msg => msg.text_body)
-      .filter(Boolean)
-      .join('\n\n');
+      .filter(Boolean) as string[];
 
-    if (!searchContext) {
-      return []; // No valid text content to search with
+    if (!searchTexts.length) {
+      return {
+        notes: [],
+        articleChunks: []
+      };
     }
 
-    // Perform semantic search using embeddings
-    const searchResults = await this.embeddings.searchNotes(searchContext, {
-      threshold: 0.6, // Lower threshold for more results
-      limit: 5 // Limit to top 5 most relevant notes
-    });
+    // Get semantically similar notes and article chunks
+    const [notes, articleChunks] = await Promise.all([
+      getSemanticallySimilarNotes(this.embeddings, searchTexts),
+      getSemanticallySimilarArticleChunks(this.supabase, this.orgId, searchTexts)
+    ]);
 
-    // Transform search results to match expected format
-    return (searchResults || []).map(result => ({
-      content: result.content,
-      // Use a consistent timestamp since search results don't include created_at
-      created_at: new Date().toISOString()
-    }));
+    // console.log('notes', notes);
+    // console.log('articleChunks', articleChunks);
+
+    return {
+      notes: notes || [],
+      articleChunks: articleChunks || []
+    };
   }
 
-  private formatThreadForResponse(thread: any) {
-    return thread.messages
-      .map((msg: any) => {
+  private formatThreadForResponse(thread: EmailThread) {
+    return (thread.messages || [])
+      .map((msg) => {
         const sender = msg.from_name || msg.from_email;
-        const timestamp = new Date(msg.created_at).toISOString();
+        const timestamp = msg.created_at ? new Date(msg.created_at).toISOString() : new Date().toISOString();
         return `[${timestamp}] ${sender}:\n${msg.text_body}\n`;
       })
       .join('\n---\n');
   }
 
-  private formatNotesForContext(notes: any[]) {
-    if (!notes?.length) return 'No relevant notes found.';
-    return notes
-      .map(note => {
-        const timestamp = new Date(note.created_at).toISOString();
-        return `[${timestamp}] ${note.content}`;
-      })
-      .join('\n\n');
+  private formatContextForResponse(
+    notes: Array<{
+      id?: string;
+      entity_type?: string;
+      entity_id?: string;
+      content: string;
+      created_at?: string;
+      similarity?: number;
+    }> | null,
+    articleChunks: Array<{
+      chunk_id: string;
+      article_id: string;
+      article_title: string;
+      chunk_content: string;
+      chunk_index: number;
+      similarity: number;
+    }> | null
+  ) {
+    const formattedNotes = notes?.length
+      ? notes
+          .map(note => {
+            const timestamp = note.created_at ? new Date(note.created_at).toISOString() : new Date().toISOString();
+            return `[Note ${timestamp}] ${note.content}`;
+          })
+          .join('\n\n')
+      : 'No relevant notes found.';
+
+    const formattedArticles = articleChunks?.length
+      ? articleChunks
+          .map(chunk => `[Article: ${chunk.article_title}]\n${chunk.chunk_content}`)
+          .join('\n\n')
+      : 'No relevant articles found.';
+
+    return `Notes:\n${formattedNotes}\n\nKnowledge Base Articles:\n${formattedArticles}`;
   }
 
   async generateDraftResponse(
     thread: EmailThread,
     ticketId: string,
     options?: {
-      notes?: { content: string; created_at: string }[];
+      context?: {
+        notes: Array<{
+          id?: string;
+          entity_type?: string;
+          entity_id?: string;
+          content: string;
+          created_at?: string;
+          similarity?: number;
+        }>;
+        articleChunks: Array<{
+          chunk_id: string;
+          article_id: string;
+          article_title: string;
+          chunk_content: string;
+          chunk_index: number;
+          similarity: number;
+        }>;
+      };
       settings?: AutoResponseSettings;
     }
   ): Promise<string | null> {
@@ -188,12 +238,12 @@ export class AutoResponderService {
       return null;
     }
 
-    // Get relevant notes if not provided
-    const notes = options?.notes || await this.getRelevantNotes(ticketId, thread);
+    // Get relevant context if not provided
+    const context = options?.context || await this.getRelevantContext(ticketId, thread);
 
     // Format all context for the prompt
     const threadText = this.formatThreadForResponse(thread);
-    const notesText = this.formatNotesForContext(notes);
+    const contextText = this.formatContextForResponse(context.notes, context.articleChunks);
 
     // Generate response using LangChain
     const chain = this.responderPrompt
@@ -202,7 +252,7 @@ export class AutoResponderService {
 
     const draftResponse = await chain.invoke({
       thread: threadText,
-      relevantNotes: notesText,
+      relevantNotes: contextText,
       tone: settings.tone,
       language: settings.language,
       responseGuidelines: settings.responseGuidelines,
@@ -212,7 +262,7 @@ export class AutoResponderService {
     // Grade the response
     const grade = await this.graderService.gradeResponse(thread.id, draftResponse, {
       thread,
-      context: notes,
+      context,
     });
 
     // Store the draft and grade
@@ -227,7 +277,8 @@ export class AutoResponderService {
         status: 'pending',
         metadata: {
           context_used: {
-            had_notes: notes?.length > 0,
+            had_notes: context.notes.length > 0,
+            had_articles: context.articleChunks.length > 0,
             message_count: thread.messages.length,
           }
         }

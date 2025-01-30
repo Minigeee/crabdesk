@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     }
 
     // Process email
-    const emailService = new EmailProcessingService(supabase, org.id);
+    const emailService = new EmailProcessingService(org.id);
     const result = await emailService.processEmail(processedData);
 
     // Return success response

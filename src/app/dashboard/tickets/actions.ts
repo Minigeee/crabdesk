@@ -35,7 +35,7 @@ export async function getEmailThreads(ticketId: string) {
     throw new Error('Not authorized to access this ticket');
   }
 
-  const emailService = new EmailProcessingService(supabase, userData.organization.id);
+  const emailService = new EmailProcessingService(userData.organization.id);
   const threads = await emailService.getThreadsForTicket(ticketId);
   return threads;
 }
@@ -91,7 +91,7 @@ export async function sendEmailReply({
 
   const supportEmail = `support@${organization.domain}`;
 
-  const emailService = new EmailProcessingService(supabase, userData.organization.id);
+  const emailService = new EmailProcessingService(userData.organization.id);
 
   const message = await emailService.writeEmailReply({
     threadId,
@@ -116,7 +116,7 @@ export async function gradeEmailResponse(threadId: string, response: string) {
     throw new Error('Not authenticated');
   }
   
-  const graderService = new ResponseGraderService(supabase);
+  const graderService = new ResponseGraderService(supabase, userData.organization.id);
   return graderService.gradeResponse(threadId, response);
 }
 

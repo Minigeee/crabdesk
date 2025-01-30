@@ -354,8 +354,7 @@ import { createClient } from '@/lib/supabase/server';
 
 // Process incoming email
 async function handleIncomingEmail(orgId: string, emailData: ProcessedEmailData) {
-  const supabase = await createClient();
-  const emailService = new EmailProcessingService(supabase, orgId);
+  const emailService = new EmailProcessingService(orgId);
   
   try {
     const result = await emailService.processEmail(emailData);

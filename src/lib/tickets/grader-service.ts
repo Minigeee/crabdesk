@@ -5,6 +5,8 @@ import { StringOutputParser } from '@langchain/core/output_parsers';
 import { z } from 'zod';
 import type { Database } from '@/lib/database.types';
 import { EmailThread } from '../email/types';
+import { getEmailThread, getSemanticallySimilarNotes, getSemanticallySimilarArticleChunks } from './utils';
+import { EmbeddingService } from '../embeddings/service';
 
 const GRADER_PROMPT = `You are an expert customer support quality analyst. Your task is to quickly assess a customer support response on two key factors:
 
@@ -64,9 +66,11 @@ export type ResponseGrade = z.infer<typeof gradeSchema>;
 export class ResponseGraderService {
   private readonly llm: ChatOpenAI;
   private readonly graderPrompt: PromptTemplate;
+  private readonly embeddings: EmbeddingService;
 
   constructor(
-    private readonly supabase: SupabaseClient<Database>
+    private readonly supabase: SupabaseClient<Database>,
+    private readonly orgId: string
   ) {
     this.llm = new ChatOpenAI({
       modelName: 'gpt-4o-mini', // Do not change this
@@ -75,52 +79,32 @@ export class ResponseGraderService {
     });
 
     this.graderPrompt = PromptTemplate.fromTemplate(GRADER_PROMPT);
+    this.embeddings = new EmbeddingService(supabase, orgId);
   }
 
-  private async getEmailThread(threadId: string) {
-    const { data: thread, error } = await this.supabase
-      .from('email_threads')
-      .select(`
-        *,
-        messages: email_messages (
-          message_id,
-          from_email,
-          from_name,
-          text_body,
-          created_at
-        )
-      `)
-      .eq('id', threadId)
-      .order('created_at', { ascending: true })
-      .single();
-
-    if (error) throw error;
-    return thread;
-  }
-
-  private async getRelevantContext(ticketId: string) {
-    // First get the contact_id for the ticket
-    const { data: ticket } = await this.supabase
-      .from('tickets')
-      .select('contact_id')
-      .eq('id', ticketId)
-      .single();
-
-    // Get notes related to the ticket and contact
-    const entityIds = [ticketId];
-    if (ticket?.contact_id) {
-      entityIds.push(ticket.contact_id);
+  private async getRelevantContext(ticketId: string, thread: EmailThread, proposedResponse: string) {
+    // Get the latest message and proposed response for semantic search
+    const messages = thread.messages || [];
+    const latestMessage = messages[messages.length - 1];
+    if (!latestMessage?.text_body) {
+      return {
+        notes: [],
+        articleChunks: []
+      };
     }
 
-    const { data: notes, error } = await this.supabase
-      .from('notes')
-      .select('content, created_at')
-      .in('entity_id', entityIds)
-      .order('created_at', { ascending: false })
-      .limit(5);
+    const searchTexts = [latestMessage.text_body, proposedResponse].filter(Boolean) as string[];
 
-    if (error) throw error;
-    return notes;
+    // Get semantically similar notes and article chunks in parallel
+    const [notes, articleChunks] = await Promise.all([
+      getSemanticallySimilarNotes(this.embeddings, searchTexts),
+      getSemanticallySimilarArticleChunks(this.supabase, this.orgId, searchTexts)
+    ]);
+
+    return {
+      notes,
+      articleChunks
+    };
   }
 
   private async getOrgSettings() {
@@ -152,14 +136,40 @@ export class ResponseGraderService {
       .join('\n---\n');
   }
 
-  private formatContextForGrading(notes: any[]) {
-    if (!notes?.length) return 'No relevant context found.';
-    return notes
-      .map(note => {
-        const timestamp = new Date(note.created_at).toISOString();
-        return `[${timestamp}] ${note.content}`;
-      })
-      .join('\n\n');
+  private formatContextForGrading(
+    notes: Array<{
+      id?: string;
+      entity_type?: string;
+      entity_id?: string;
+      content: string;
+      created_at?: string;
+      similarity?: number;
+    }> | null,
+    articleChunks: Array<{
+      chunk_id: string;
+      article_id: string;
+      article_title: string;
+      chunk_content: string;
+      chunk_index: number;
+      similarity: number;
+    }> | null
+  ) {
+    const formattedNotes = notes?.length
+      ? notes
+          .map(note => {
+            const timestamp = note.created_at ? new Date(note.created_at).toISOString() : new Date().toISOString();
+            return `[Note ${timestamp}] ${note.content}`;
+          })
+          .join('\n\n')
+      : 'No relevant notes found.';
+
+    const formattedArticles = articleChunks?.length
+      ? articleChunks
+          .map(chunk => `[Article: ${chunk.article_title}]\n${chunk.chunk_content}`)
+          .join('\n\n')
+      : 'No relevant articles found.';
+
+    return `Notes:\n${formattedNotes}\n\nKnowledge Base Articles:\n${formattedArticles}`;
   }
 
   async gradeResponse(
@@ -167,7 +177,24 @@ export class ResponseGraderService {
     proposedResponse: string,
     options?: {
       thread?: EmailThread;
-      context?: { content: string; created_at: string }[];
+      context?: {
+        notes: Array<{
+          id?: string;
+          entity_type?: string;
+          entity_id?: string;
+          content: string;
+          created_at?: string;
+          similarity?: number;
+        }>;
+        articleChunks: Array<{
+          chunk_id: string;
+          article_id: string;
+          article_title: string;
+          chunk_content: string;
+          chunk_index: number;
+          similarity: number;
+        }>;
+      };
       orgSettings?: {
         tone: string;
         language: string;
@@ -177,20 +204,20 @@ export class ResponseGraderService {
     }
   ): Promise<ResponseGrade> {
     // Get the thread if not provided
-    const thread = options?.thread || await this.getEmailThread(threadId);
+    const thread = options?.thread || await getEmailThread(this.supabase, threadId);
     if (!thread || !thread.messages || !thread.messages.length) {
       throw new Error('Thread not found or empty');
     }
 
-    // Get additional context using the thread's ticket_id if not provided
-    const [context, orgSettings] = await Promise.all([
-      options?.context || this.getRelevantContext(thread.ticket_id),
-      options?.orgSettings || this.getOrgSettings(),
-    ]);
+    // Get additional context using semantic search if not provided
+    const context = options?.context || await this.getRelevantContext(thread.ticket_id, thread, proposedResponse);
+
+    // Get org settings
+    const orgSettings = options?.orgSettings || await this.getOrgSettings();
 
     // Format all context for grading
     const threadText = this.formatThreadForGrading(thread);
-    const contextText = this.formatContextForGrading(context);
+    const contextText = this.formatContextForGrading(context.notes, context.articleChunks);
     const settingsText = JSON.stringify(orgSettings, null, 2);
 
     // Generate grade using LangChain

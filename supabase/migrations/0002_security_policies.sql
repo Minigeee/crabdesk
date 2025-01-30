@@ -549,6 +549,50 @@ CREATE POLICY notes_delete
     public.has_org_access(org_id)
   );
 
+  
+-------------------------------------------------------------------------------
+-- Articles
+-------------------------------------------------------------------------------
+CREATE POLICY articles_read
+  ON public.articles
+
+  FOR SELECT
+  TO authenticated
+  USING (
+    public.has_org_access(org_id)
+  );
+
+CREATE POLICY articles_insert
+  ON public.articles
+  FOR INSERT
+  TO authenticated
+
+  WITH CHECK (
+    public.has_org_access(org_id)
+  );
+
+CREATE POLICY articles_update
+  ON public.articles
+  FOR UPDATE
+  TO authenticated
+
+  USING (
+    public.has_org_access(org_id)
+  )
+  WITH CHECK (
+    public.has_org_access(org_id)
+  );
+
+CREATE POLICY articles_delete
+  ON public.articles
+  FOR DELETE
+  TO authenticated
+
+  USING (
+    public.has_org_access(org_id)
+  );
+
+
 -------------------------------------------------------------------------------
 -- Audit Logs
 -------------------------------------------------------------------------------

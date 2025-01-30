@@ -34,6 +34,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      article_chunks: {
+        Row: {
+          article_id: string
+          chunk_index: number
+          content: string
+          created_at: string
+          embedding: string | null
+          id: string
+          metadata: Json
+        }
+        Insert: {
+          article_id: string
+          chunk_index: number
+          content: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          metadata?: Json
+        }
+        Update: {
+          article_id?: string
+          chunk_index?: number
+          content?: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          metadata?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_chunks_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       articles: {
         Row: {
           author_id: string
@@ -974,6 +1012,12 @@ export type Database = {
         }
         Returns: unknown
       }
+      increment_article_version: {
+        Args: {
+          article_id: string
+        }
+        Returns: number
+      }
       is_org_admin: {
         Args: {
           _org_id: string
@@ -1047,6 +1091,22 @@ export type Database = {
           p_content_embedding?: string
         }
         Returns: Json
+      }
+      search_article_chunks: {
+        Args: {
+          query_embedding: string
+          match_threshold: number
+          match_count: number
+          p_org_id: string
+        }
+        Returns: {
+          chunk_id: string
+          article_id: string
+          article_title: string
+          chunk_content: string
+          chunk_index: number
+          similarity: number
+        }[]
       }
       search_contacts: {
         Args: {

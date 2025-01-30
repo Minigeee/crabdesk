@@ -49,9 +49,11 @@ export function DraftResponse({ thread, draft, onDraftAction, isApproving }: Dra
   return (
     <div
       className={cn(
-        'w-full space-y-2 rounded-md border p-4',
-        draft.status === 'pending' && 'border-yellow-200 bg-yellow-50',
-        draft.status === 'rejected' && 'border-red-200 bg-red-50'
+        'w-full space-y-2 rounded-md border p-4 transition-colors duration-200',
+        // Light mode - warmer sand color for pending, keep primary for rejected
+        draft.status === 'pending' && 'border-[hsl(60,20%,75%)] bg-[hsl(60,20%,95%)] dark:border-[hsl(60,25%,45%)]/30 dark:bg-[hsl(60,25%,45%)]/10',
+        draft.status === 'rejected' && 'border-primary/30 bg-primary/5 dark:border-primary/20 dark:bg-primary/10'
+
       )}
     >
       <div className='flex items-center justify-between'>
@@ -59,8 +61,13 @@ export function DraftResponse({ thread, draft, onDraftAction, isApproving }: Dra
           <Button
             variant='ghost'
             size='icon'
+            className={cn(
+              "hover:bg-secondary/10 dark:hover:bg-secondary/20",
+              draft.status === 'pending' && "hover:bg-[hsl(60,20%,75%)]/20 dark:hover:bg-[hsl(60,25%,45%)]/20"
+            )}
             onClick={() => setIsExpanded(!isExpanded)}
           >
+
             {isExpanded ? (
               <ChevronDown className='h-4 w-4' />
             ) : (
@@ -94,7 +101,7 @@ export function DraftResponse({ thread, draft, onDraftAction, isApproving }: Dra
                 Reject
               </Button>
               <Button
-                variant='default'
+                variant='secondary'
                 size='sm'
                 onClick={() => handleAction('approve')}
                 disabled={isApproving}
@@ -115,8 +122,13 @@ export function DraftResponse({ thread, draft, onDraftAction, isApproving }: Dra
 
       {isExpanded && (
         <>
-          <div className='border-l-2 pl-4'>
-            <div className='whitespace-pre-wrap rounded-md bg-background p-3 text-sm'>
+          <div className={cn(
+            'border-l-2 pl-4',
+            draft.status === 'pending' 
+              ? 'border-[hsl(35,30%,75%)] dark:border-[hsl(35,30%,45%)]/50' 
+              : 'border-secondary/30 dark:border-secondary/20'
+          )}>
+            <div className='whitespace-pre-wrap rounded-md bg-background/80 p-3 text-sm shadow-sm'>
               <div className='max-w-[65ch]'>{draftContent}</div>
             </div>
           </div>
@@ -168,9 +180,9 @@ export function DraftResponse({ thread, draft, onDraftAction, isApproving }: Dra
           )}
 
           {draft.status === 'rejected' && draft.feedback && (
-            <div className='mt-2 rounded-md bg-red-100 p-3 text-sm'>
-              <div className='font-medium text-red-800'>Rejection Feedback:</div>
-              <div className='mt-1 text-red-700'>{draft.feedback}</div>
+            <div className='mt-2 rounded-md bg-primary/5 dark:bg-primary/10 border border-primary/20 p-3 text-sm'>
+              <div className='font-medium text-primary dark:text-primary/90'>Rejection Feedback:</div>
+              <div className='mt-1 text-primary/80 dark:text-primary/70'>{draft.feedback}</div>
             </div>
           )}
         </>
