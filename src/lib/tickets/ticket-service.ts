@@ -22,6 +22,7 @@ export type TicketQueryFilters = {
   team_id?: string;
   contact_id?: string;
   search?: string;
+  includeClosed?: boolean;
 };
 
 export type TicketOrderBy = {
@@ -58,11 +59,14 @@ export class TicketService {
 
     // Apply filters
     if (filters) {
-      const { status, priority, assignee_id, team_id, contact_id, search } =
-        filters;
+      const { status, priority, assignee_id, team_id, contact_id, search, includeClosed } = filters;
 
+      // Handle status filter with closed tickets logic
       if (status?.length) {
         query = query.in('status', status);
+      } else if (!includeClosed) {
+        // If no status filter and closed tickets not included, exclude closed tickets
+        query = query.neq('status', 'closed');
       }
 
       if (priority?.length) {
@@ -84,6 +88,9 @@ export class TicketService {
       if (search) {
         query = query.ilike('subject', `%${search}%`);
       }
+    } else {
+      // If no filters at all, still exclude closed tickets by default
+      query = query.neq('status', 'closed');
     }
 
     // Apply ordering

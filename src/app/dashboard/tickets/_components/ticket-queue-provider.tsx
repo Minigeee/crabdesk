@@ -23,6 +23,7 @@ type TicketFilters = {
     start: Date;
     end: Date;
   };
+  includeClosed?: boolean;
 };
 
 type TicketSort = {
@@ -81,6 +82,7 @@ export function TicketQueueProvider({
   const sortColumn =
     (searchParams.get('sort') as keyof Tables<'tickets'>) || 'created_at';
   const sortAsc = searchParams.get('asc') === 'true';
+  const includeClosed = searchParams.get('includeClosed') === 'true';
 
   // Construct filters object
   const filters: TicketFilters = useMemo(
@@ -90,8 +92,9 @@ export function TicketQueueProvider({
       assignee_id: assignee,
       team_id: team,
       search,
+      includeClosed,
     }),
-    [status, priority, assignee, team, search]
+    [status, priority, assignee, team, search, includeClosed]
   );
 
   // Fetch tickets with current filters
@@ -136,6 +139,7 @@ export function TicketQueueProvider({
         priority: newFilters.priority || null,
         assignee: newFilters.assignee_id || null,
         team: newFilters.team_id || null,
+        includeClosed: newFilters.includeClosed ? 'true' : null,
         page: '1', // Reset to first page on filter change
       });
     },

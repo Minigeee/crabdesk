@@ -1,6 +1,8 @@
 'use client';
 
 import { AuditLogList } from '@/components/audit/audit-log-list';
+import { PriorityBadge } from '@/components/tickets/priority-badge';
+import { StatusBadge } from '@/components/tickets/status-badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -13,14 +15,21 @@ import {
 } from '@/components/ui/select';
 import { UserSelect } from '@/components/users/user-select';
 import { auditKeys } from '@/lib/audit/use-audit-logs';
-import type { Enums } from '@/lib/database.types';
+import type { Enums, Tables } from '@/lib/database.types';
 import { TicketWithRelations } from '@/lib/tickets/ticket-service';
 import { useTicket, useTicketActions } from '@/lib/tickets/use-tickets';
 import { useQueryClient } from '@tanstack/react-query';
+import { approvalQueueKeys } from '@/lib/tickets/use-approval-queue';
+import type { ApprovalQueueTicket } from '@/lib/tickets/use-approval-queue';
+import { useRouter } from 'next/navigation';
+import { AutoResponderService } from '@/lib/tickets/auto-responder-service';
+import { createClient } from '@/lib/supabase/client';
+import { useAuth } from '@/lib/auth/hooks';
 
 interface TicketActionsProps {
   ticket: TicketWithRelations;
   onMergeTicket?: () => void;
+  hideAuditLog?: boolean;
 }
 
 const TICKET_STATUSES: Enums<'ticket_status'>[] = [
@@ -39,7 +48,10 @@ const TICKET_PRIORITIES: Enums<'ticket_priority'>[] = [
 export function TicketActions({
   ticket: initialTicket,
   onMergeTicket,
+  hideAuditLog,
 }: TicketActionsProps) {
+  const { organization } = useAuth();
+  const router = useRouter();
   const queryClient = useQueryClient();
   // Use hook for optimistic update
   const { data: ticket } = useTicket(initialTicket.id, true, {
@@ -72,6 +84,53 @@ export function TicketActions({
     await invalidateAuditLogs();
   };
 
+  // Get next ticket in approval queue
+  const handleNextTicket = async () => {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from('tickets')
+      .select(`
+        *,
+        latest_draft:response_drafts(
+          *,
+          created_at
+        )
+      `)
+      .eq('status', 'open')
+      .order('created_at', { ascending: true });
+
+    if (!data) return;
+
+    // Filter to only tickets with drafts awaiting approval
+    const approvalQueue = data
+      .filter(ticket => {
+        const draft = Array.isArray(ticket.latest_draft) 
+          ? ticket.latest_draft[0] 
+          : ticket.latest_draft;
+        return draft?.status === 'pending';
+      })
+      .map(ticket => ({
+        ...ticket,
+        latest_draft: Array.isArray(ticket.latest_draft) 
+          ? ticket.latest_draft[0] 
+          : ticket.latest_draft
+      })) as ApprovalQueueTicket[];
+
+    // Find the next ticket
+    const currentIndex = approvalQueue.findIndex(t => t.id === initialTicket.id);
+    const nextTicket = currentIndex === -1 || currentIndex === approvalQueue.length - 1 
+      ? null 
+      : approvalQueue[currentIndex + 1];
+
+    // Navigate to next ticket if available
+    if (nextTicket) {
+      router.push(`/dashboard/tickets/${nextTicket.number}`);
+    } else {
+      // No more tickets to review, go back to list
+      router.push('/dashboard/tickets');
+    }
+  };
+
   return (
     <div className='space-y-6'>
       <Card className='p-4'>
@@ -86,12 +145,14 @@ export function TicketActions({
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder='Select status' />
+                  <SelectValue>
+                    {ticket?.status && <StatusBadge status={ticket.status} />}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {TICKET_STATUSES.map((status) => (
                     <SelectItem key={status} value={status}>
-                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                      <StatusBadge status={status} />
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -109,12 +170,14 @@ export function TicketActions({
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder='Select priority' />
+                  <SelectValue>
+                    {ticket?.priority && <PriorityBadge priority={ticket.priority} />}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {TICKET_PRIORITIES.map((priority) => (
                     <SelectItem key={priority} value={priority}>
-                      {priority.charAt(0).toUpperCase() + priority.slice(1)}
+                      <PriorityBadge priority={priority} />
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -144,10 +207,12 @@ export function TicketActions({
         </div>
       </Card>
 
-      <Card className='p-4'>
-        <h3 className='mb-4 font-medium'>Activity Log</h3>
-        <AuditLogList entityType='ticket' entityId={initialTicket.id} />
-      </Card>
+      {!hideAuditLog && (
+        <Card className='p-4'>
+          <h3 className='mb-4 font-medium'>Activity Log</h3>
+          <AuditLogList entityType='ticket' entityId={initialTicket.id} />
+        </Card>
+      )}
     </div>
   );
 }

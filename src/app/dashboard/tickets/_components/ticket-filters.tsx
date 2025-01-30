@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/popover';
 import { SearchBar } from '@/components/ui/search-bar';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/lib/auth/hooks';
 import type { Enums } from '@/lib/database.types';
 import { cn } from '@/lib/utils';
@@ -16,11 +17,11 @@ import { CheckIcon, FilterIcon, UserIcon, XCircle } from 'lucide-react';
 import { useState } from 'react';
 import { useTicketQueue } from './ticket-queue-provider';
 
-const STATUS_OPTIONS: { label: string; value: Enums<'ticket_status'> }[] = [
+// Separate closed status for special handling
+const OPEN_STATUS_OPTIONS: { label: string; value: Enums<'ticket_status'> }[] = [
   { label: 'Open', value: 'open' },
   { label: 'Pending', value: 'pending' },
   { label: 'Resolved', value: 'resolved' },
-  { label: 'Closed', value: 'closed' },
 ];
 
 const PRIORITY_OPTIONS: { label: string; value: Enums<'ticket_priority'> }[] = [
@@ -53,6 +54,13 @@ export function TicketFilters() {
     setLocalFilters((prev) => ({
       ...prev,
       status: updated.length > 0 ? updated : undefined,
+    }));
+  };
+
+  const handleShowClosedToggle = (checked: boolean) => {
+    setLocalFilters((prev) => ({
+      ...prev,
+      includeClosed: checked,
     }));
   };
 
@@ -90,6 +98,7 @@ export function TicketFilters() {
       assignee_id: undefined,
       team_id: undefined,
       dateRange: undefined,
+      includeClosed: false,
     };
     setLocalFilters(resetFilters);
     setFilters(resetFilters);
@@ -155,7 +164,7 @@ export function TicketFilters() {
               <div className='space-y-2'>
                 <h4 className='text-sm font-medium'>Status</h4>
                 <div className='flex flex-wrap gap-2'>
-                  {STATUS_OPTIONS.map((status) => (
+                  {OPEN_STATUS_OPTIONS.map((status) => (
                     <Button
                       key={status.value}
                       variant='outline'
@@ -172,6 +181,15 @@ export function TicketFilters() {
                       {status.label}
                     </Button>
                   ))}
+                </div>
+                <div className='flex items-center space-x-2 pt-2'>
+                  <Switch
+                    checked={localFilters.includeClosed || false}
+                    onCheckedChange={handleShowClosedToggle}
+                  />
+                  <span className='text-sm text-muted-foreground'>
+                    Show closed tickets
+                  </span>
                 </div>
               </div>
 

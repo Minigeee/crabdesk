@@ -1,6 +1,7 @@
 'use client';
 
 import { PriorityBadge } from '@/components/tickets/priority-badge';
+import { ResponseStatusBadge } from '@/components/tickets/response-status-badge';
 import { StatusBadge } from '@/components/tickets/status-badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -59,7 +60,7 @@ function SortButton({ active, ascending, onSort }: SortButtonProps) {
 }
 
 type ColumnDef = {
-  id: keyof Tables<'tickets'>;
+  id: keyof Tables<'tickets'> | 'response_status';
   label: string;
   sortable?: boolean;
   width?: number;
@@ -86,6 +87,13 @@ const COLUMNS: ColumnDef[] = [
     sortable: true,
     width: 120,
     cell: (ticket) => <StatusBadge status={ticket.status} />,
+  },
+  {
+    id: 'response_status',
+    label: 'Response',
+    sortable: true,
+    width: 160,
+    cell: (ticket) => <ResponseStatusBadge ticket={ticket} />,
   },
   {
     id: 'priority',
@@ -224,15 +232,15 @@ export function TicketTable() {
                 key={column.id}
                 style={{ width: column.width }}
                 className={cn(column.sortable && 'cursor-pointer select-none')}
-                onClick={() => column.sortable && handleSort(column.id)}
+                onClick={() => column.sortable && handleSort(column.id as keyof Tables<'tickets'>)}
               >
                 <div className='flex items-center space-x-2'>
                   <span>{column.label}</span>
                   {column.sortable && (
                     <SortButton
-                      active={sort.column === column.id}
+                      active={sort.column === column.id as keyof Tables<'tickets'>}
                       ascending={sort.ascending}
-                      onSort={() => handleSort(column.id)}
+                      onSort={() => handleSort(column.id as keyof Tables<'tickets'>)}
                     />
                   )}
                 </div>

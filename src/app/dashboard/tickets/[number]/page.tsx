@@ -12,6 +12,7 @@ import { notFound } from 'next/navigation';
 import { EmailThreadView } from '../_components/email-thread-view';
 import { TicketViewProvider } from '../_components/ticket-view-provider';
 import { NotesList } from '@/components/notes/notes-list';
+import { TicketHeader } from './_components/ticket-header';
 
 interface PageProps {
   params: Promise<{
@@ -84,23 +85,17 @@ export default async function TicketPage({ params }: PageProps) {
 
         {/* Main content */}
         <div className='flex min-w-0 flex-1 flex-col'>
-          <div className='border-b bg-background p-4'>
-            <div className='flex items-center'>
-              <Badge variant='outline' className='-mt-1 mr-2 text-sm'>
-                #{ticket.number}
-              </Badge>
-              <h1 className='mb-1 text-xl font-semibold'>{ticket.subject}</h1>
-            </div>
-            <div className='text-sm text-muted-foreground'>
-              Opened by {ticket.contact.name ?? ticket.contact.email}
-            </div>
-          </div>
+          <TicketHeader ticket={ticket} />
 
           <Tabs defaultValue='email' className='flex h-0 flex-1 flex-col'>
             <TabsList className='justify-start rounded-none border-b py-5'>
               <TabsTrigger value='email' className='gap-2'>
                 <MailIcon className='h-4 w-4' />
                 Emails
+              </TabsTrigger>
+              <TabsTrigger value='notes' className='gap-2'>
+                <StickyNoteIcon className='h-4 w-4' />
+                Notes
               </TabsTrigger>
               <TabsTrigger value='public' className='gap-2'>
                 <MessageCircleIcon className='h-4 w-4' />
@@ -109,10 +104,6 @@ export default async function TicketPage({ params }: PageProps) {
               <TabsTrigger value='internal' className='gap-2'>
                 <EyeOffIcon className='h-4 w-4' />
                 Team Messages
-              </TabsTrigger>
-              <TabsTrigger value='notes' className='gap-2'>
-                <StickyNoteIcon className='h-4 w-4' />
-                Notes
               </TabsTrigger>
             </TabsList>
 
