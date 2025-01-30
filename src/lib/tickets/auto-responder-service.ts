@@ -6,42 +6,41 @@ import { ResponseGraderService } from './grader-service';
 import type { Database } from '@/lib/database.types';
 import { EmailThread } from '../email/types';
 import { EmbeddingService } from '../embeddings/service';
+import type { AutoResponseSettings } from '@/lib/settings/types';
 
 const RESPONDER_PROMPT = `You are an expert customer support agent. Your task is to draft a response to a customer email thread.
 Use the provided context to ensure accuracy and alignment with organizational goals.
 
 <context>
-Organization Settings:
-{orgSettings}
+Auto-Response Settings:
+Tone: {tone}
+Language: {language}
+
+Response Guidelines:
+{responseGuidelines}
+
+Compliance Requirements:
+{complianceRequirements}
 
 Relevant Notes and Context:
 {relevantNotes}
-
-Email Thread:
-{thread}
 </context>
+
+<thread>
+{thread}
+</thread>
 
 Draft a response that:
 1. Addresses all questions and concerns
 2. Uses accurate information from the provided context
-3. Aligns with organizational tone and policies
+3. Aligns with the specified tone and language
 4. Is professional and empathetic
 5. Provides clear next steps or resolution
-
-Important: Only use placeholders in square brackets [like this] when the information is not available in the provided context. If the information exists in the context, use it directly instead of a placeholder.
+6. Follows all response guidelines and compliance requirements
 
 Placeholder Guidelines:
-1. Make placeholders as specific as possible (e.g., [API documentation link] instead of just [link])
-2. When multiple similar items are needed, make each placeholder unique and descriptive:
-   - Links: [API docs link], [feedback form link], [status page link]
-   - Features: [requested feature name], [alternative feature name]
-   - Products: [current product tier], [suggested product tier]
-   - Dates: [maintenance start date], [maintenance end date]
-   - Numbers: [current user count], [upgraded user limit]
-
-3. Always include descriptive context in the placeholder name:
-   Bad: [name], [link], [date]
-   Good: [agent name], [knowledge base link], [expected resolution date]
+- Only use placeholders in square brackets when the information is not available in the provided context.
+  Ex: "Check out our api documentation at [api documentation link]"
 
 Response should be in plain text format suitable for email. Do not include subject line or any other metadata.`;
 
@@ -57,13 +56,43 @@ export class AutoResponderService {
   ) {
     this.llm = new ChatOpenAI({
       modelName: 'gpt-4o-mini', // Do not change this
-      temperature: 0.7,
+      temperature: 0.8,
       openAIApiKey: process.env.OPENAI_API_KEY,
     });
 
     this.responderPrompt = PromptTemplate.fromTemplate(RESPONDER_PROMPT);
     this.graderService = new ResponseGraderService(supabase);
     this.embeddings = new EmbeddingService(supabase, orgId);
+  }
+
+  async getAutoResponseSettings(): Promise<AutoResponseSettings> {
+    const { data, error } = await this.supabase
+      .from('organizations')
+      .select('settings')
+      .eq('id', this.orgId)
+      .single();
+
+    if (error) throw error;
+
+    const defaultSettings: AutoResponseSettings = {
+      enabled: true,
+      tone: 'Professional and friendly',
+      language: 'English',
+      responseGuidelines: 'Begin with a greeting, acknowledge the issue, provide clear next steps or solutions, and end with a professional closing.',
+      complianceRequirements: 'Include data privacy disclaimer when discussing sensitive information. Never share customer data or internal system details.',
+    };
+
+    const settings = data.settings as any;
+    const orgSettings = settings?.autoResponse || {};
+
+    // Merge with defaults, using org settings when available
+    return {
+      enabled: orgSettings.enabled ?? defaultSettings.enabled,
+      tone: orgSettings.tone || defaultSettings.tone,
+      language: orgSettings.language || defaultSettings.language,
+      responseGuidelines: orgSettings.responseGuidelines || defaultSettings.responseGuidelines,
+      complianceRequirements: orgSettings.complianceRequirements || defaultSettings.complianceRequirements,
+    };
   }
 
   // Make these methods public for shared data access
@@ -119,26 +148,6 @@ export class AutoResponderService {
     }));
   }
 
-  async getOrgSettings() {
-    // TODO: Implement knowledge base and org settings retrieval
-    // For now, return basic settings
-    return {
-      tone: 'professional and friendly',
-      language: 'en',
-      responseGuidelines: [
-        'Always verify customer identity',
-        'Provide clear next steps',
-        'Include relevant documentation links',
-        'Respond as the support team',
-      ],
-      complianceRequirements: [
-        'Do not share sensitive information',
-        'Include required disclaimers',
-        'Follow data protection guidelines'
-      ]
-    };
-  }
-
   private formatThreadForResponse(thread: any) {
     return thread.messages
       .map((msg: any) => {
@@ -164,28 +173,27 @@ export class AutoResponderService {
     ticketId: string,
     options?: {
       notes?: { content: string; created_at: string }[];
-      orgSettings?: {
-        tone: string;
-        language: string;
-        responseGuidelines: string[];
-        complianceRequirements: string[];
-      };
+      settings?: AutoResponseSettings;
     }
-  ): Promise<string> {
+  ): Promise<string | null> {
     if (!thread || !thread.messages || !thread.messages.length) {
       throw new Error('Thread not found or empty');
     }
 
-    // Get all necessary context if not provided
-    const [notes, orgSettings] = await Promise.all([
-      options?.notes || this.getRelevantNotes(ticketId, thread),
-      options?.orgSettings || this.getOrgSettings(),
-    ]);
+    // Get auto-response settings
+    const settings = options?.settings || await this.getAutoResponseSettings();
+
+    // Check if auto-response is enabled
+    if (!settings.enabled) {
+      return null;
+    }
+
+    // Get relevant notes if not provided
+    const notes = options?.notes || await this.getRelevantNotes(ticketId, thread);
 
     // Format all context for the prompt
     const threadText = this.formatThreadForResponse(thread);
     const notesText = this.formatNotesForContext(notes);
-    const settingsText = JSON.stringify(orgSettings, null, 2);
 
     // Generate response using LangChain
     const chain = this.responderPrompt
@@ -195,14 +203,16 @@ export class AutoResponderService {
     const draftResponse = await chain.invoke({
       thread: threadText,
       relevantNotes: notesText,
-      orgSettings: settingsText,
+      tone: settings.tone,
+      language: settings.language,
+      responseGuidelines: settings.responseGuidelines,
+      complianceRequirements: settings.complianceRequirements,
     });
 
     // Grade the response
     const grade = await this.graderService.gradeResponse(thread.id, draftResponse, {
       thread,
       context: notes,
-      orgSettings,
     });
 
     // Store the draft and grade
@@ -214,6 +224,7 @@ export class AutoResponderService {
         ticket_id: ticketId,
         content: draftResponse,
         grade,
+        status: 'pending',
         metadata: {
           context_used: {
             had_notes: notes?.length > 0,

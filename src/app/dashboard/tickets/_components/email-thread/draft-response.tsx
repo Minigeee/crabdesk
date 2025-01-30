@@ -154,6 +154,11 @@ export function DraftResponse({ thread, draft, onDraftAction, isApproving }: Dra
                   </span>
                 </div>
               </div>
+              {draft.grade.summary && (
+                <div className='text-sm text-muted-foreground'>
+                  <strong>Summary:</strong> {draft.grade.summary}
+                </div>
+              )}
               {draft.grade.concerns.length > 0 && (
                 <div className='text-sm text-muted-foreground'>
                   <strong>Concerns:</strong> {draft.grade.concerns.join(', ')}

@@ -63,7 +63,8 @@ export function useNextApprovalTicket(currentTicketId?: string) {
     if (!queue?.length || !currentTicketId) return null;
 
     const currentIndex = queue.findIndex((t) => t.id === currentTicketId);
-    if (currentIndex === -1) return null;
+    if (currentIndex === -1 || (queue.length === 1 && currentIndex === 0))
+      return null;
 
     return queue[(currentIndex + 1) % queue.length];
   }, [queue, currentTicketId]);

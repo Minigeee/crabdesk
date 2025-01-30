@@ -117,10 +117,10 @@ CREATE POLICY organizations_update
   FOR UPDATE
   TO authenticated
   USING (
-    public.is_org_admin(id)
+    public.has_org_access(id)
   )
   WITH CHECK (
-    public.is_org_admin(id)
+    public.has_org_access(id)
   );
 
 CREATE POLICY organizations_delete

@@ -6,6 +6,7 @@ import { z } from 'zod';
 import type { Database } from '@/lib/database.types';
 import { EmbeddingService } from '@/lib/embeddings/service';
 import { EmailThread } from '../email/types';
+import type { PriorityCriteria } from '@/lib/settings/types';
 
 const SUMMARY_PROMPT = `You are a helpful assistant that summarizes customer support ticket threads.
 Your summaries should be concise but informative, following the following format:
@@ -34,19 +35,31 @@ Below is the thread so far:
 Summary:`;
 
 const PRIORITY_PROMPT = `You are a helpful assistant that classifies the priority of customer support tickets.
-Based on the content, classify this ticket's priority as one of: low, normal, high, urgent
+Based on the content and the organization's priority criteria, classify this ticket's priority as one of: low, normal, high, urgent
 
-Consider these guidelines:
-- urgent: Critical system outages, security incidents, or issues blocking entire business operations
-- high: Significant business impact, major feature not working, or multiple users affected
-- normal: Standard questions, minor issues, or individual user problems
-- low: Information requests, feature suggestions, or non-critical feedback
+<priority_criteria>
+Urgent Priority:
+{urgentCriteria}
+
+High Priority:
+{highCriteria}
+
+Normal Priority:
+{normalCriteria}
+
+Low Priority:
+{lowCriteria}
+</priority_criteria>
 
 Below is the message content:
 
 <content>
 {content}
 </content>
+
+Additional Context:
+- Customer Tier: {customerTier}
+- Previous Priority: {previousPriority}
 
 Respond with ONLY the priority level (low, normal, high, or urgent) and nothing else.`;
 
@@ -72,6 +85,34 @@ export class TicketSummarizerService {
     this.summaryPrompt = PromptTemplate.fromTemplate(SUMMARY_PROMPT);
     this.priorityPrompt = PromptTemplate.fromTemplate(PRIORITY_PROMPT);
     this.embeddings = new EmbeddingService(supabase, orgId);
+  }
+
+  private async getPriorityCriteria(): Promise<PriorityCriteria> {
+    const { data, error } = await this.supabase
+      .from('organizations')
+      .select('settings')
+      .eq('id', this.orgId)
+      .single();
+
+    if (error) throw error;
+
+    const defaultCriteria: PriorityCriteria = {
+      urgent: 'Critical system outages, security incidents, or issues blocking entire business operations',
+      high: 'Significant business impact, major feature not working, or multiple users affected',
+      normal: 'Standard questions, minor issues, or individual user problems',
+      low: 'Information requests, feature suggestions, or non-critical feedback',
+    };
+
+    const settings = data.settings as any;
+    const orgCriteria = settings?.priorityCriteria || {};
+
+    // Merge with defaults, using org settings when available
+    return {
+      urgent: orgCriteria.urgent || defaultCriteria.urgent,
+      high: orgCriteria.high || defaultCriteria.high,
+      normal: orgCriteria.normal || defaultCriteria.normal,
+      low: orgCriteria.low || defaultCriteria.low,
+    };
   }
 
   // Make this method public for shared data access
@@ -106,13 +147,32 @@ export class TicketSummarizerService {
       .join('\n---\n');
   }
 
-  async classifyPriority(content: string): Promise<TicketPriority> {
+  async classifyPriority(
+    content: string,
+    options?: {
+      customerTier?: string;
+      previousPriority?: TicketPriority;
+    }
+  ): Promise<TicketPriority> {
+    const priorityCriteria = await this.getPriorityCriteria();
+
+    // If no criteria are set, default to normal priority
+    if (!priorityCriteria.urgent && !priorityCriteria.high && !priorityCriteria.normal && !priorityCriteria.low) {
+      return 'normal';
+    }
+
     const chain = this.priorityPrompt
       .pipe(this.llm)
       .pipe(new StringOutputParser());
 
     const result = await chain.invoke({
       content,
+      urgentCriteria: priorityCriteria.urgent,
+      highCriteria: priorityCriteria.high,
+      normalCriteria: priorityCriteria.normal,
+      lowCriteria: priorityCriteria.low,
+      customerTier: options?.customerTier || 'unknown',
+      previousPriority: options?.previousPriority || 'none',
     });
 
     // Parse and validate the priority

@@ -58,7 +58,7 @@ export class EmailProcessingService {
       // Get shared data for all services
       const [notes, orgSettings, existingNote] = await Promise.all([
         this.autoResponder.getRelevantNotes(result.ticket.id, thread),
-        this.autoResponder.getOrgSettings(),
+        this.autoResponder.getAutoResponseSettings(),
         this.summarizer.findExistingSummaryNote(result.ticket.id),
       ]);
 
@@ -67,7 +67,7 @@ export class EmailProcessingService {
       const operations = [
         this.autoResponder.generateDraftResponse(thread, result.ticket.id, {
           notes,
-          orgSettings,
+          settings: orgSettings,
         }),
         this.summarizer.updateTicketSummary(result.ticket.id, thread, {
           existingNote,

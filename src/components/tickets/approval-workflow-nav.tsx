@@ -31,8 +31,6 @@ export function ApprovalWorkflowNav({
     }
   };
 
-  if (!nextTicket) return null;
-
   if (variant === 'list') {
     return (
       <Button variant='outline' onClick={handleStartReview} className='gap-2'>
@@ -41,6 +39,8 @@ export function ApprovalWorkflowNav({
       </Button>
     );
   }
+
+  if (!nextTicket) return null;
 
   return (
     <div className='flex items-center gap-4'>
