@@ -10,7 +10,8 @@ export const approvalQueueKeys = {
 };
 
 export interface ApprovalQueueTicket extends Tables<'tickets'> {
-  latest_draft: Tables<'response_drafts'>;
+  drafts: Tables<'response_drafts'>[];
+  latest_pending_draft: Tables<'response_drafts'>;
 }
 
 export function useApprovalQueue() {
@@ -19,15 +20,14 @@ export function useApprovalQueue() {
   return useQuery({
     queryKey: approvalQueueKeys.queue(),
     queryFn: async () => {
-      // Get tickets with their latest draft that needs approval
+      // Get tickets with all their drafts
       const { data, error } = await supabase
         .from('tickets')
         .select(
           `
           *,
-          latest_draft:response_drafts(
-            *,
-            created_at
+          drafts:response_drafts(
+            *
           )
         `
         )
@@ -36,20 +36,24 @@ export function useApprovalQueue() {
 
       if (error) throw error;
 
-      // Filter to only tickets with drafts awaiting approval
+      // Filter to tickets that have any pending drafts
       const approvalQueue = data
         .filter((ticket) => {
-          const draft = Array.isArray(ticket.latest_draft)
-            ? ticket.latest_draft[0]
-            : ticket.latest_draft;
-          return draft?.status === 'pending';
+          const drafts = Array.isArray(ticket.drafts) ? ticket.drafts : [];
+          return drafts.some(draft => draft.status === 'pending');
         })
-        .map((ticket) => ({
-          ...ticket,
-          latest_draft: Array.isArray(ticket.latest_draft)
-            ? ticket.latest_draft[0]
-            : ticket.latest_draft,
-        }));
+        .map((ticket) => {
+          const drafts = Array.isArray(ticket.drafts) ? ticket.drafts : [];
+          // Get the latest pending draft
+          const latestPendingDraft = drafts
+            .filter(draft => draft.status === 'pending')
+            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+            
+          return {
+            ...ticket,
+            latest_pending_draft: latestPendingDraft,
+          };
+        });
 
       return approvalQueue as ApprovalQueueTicket[];
     },

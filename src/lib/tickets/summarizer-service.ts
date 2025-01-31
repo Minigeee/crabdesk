@@ -97,10 +97,10 @@ export class TicketSummarizerService {
     if (error) throw error;
 
     const defaultCriteria: PriorityCriteria = {
-      urgent: 'Critical system outages, security incidents, or issues blocking entire business operations',
-      high: 'Significant business impact, major feature not working, or multiple users affected',
-      normal: 'Standard questions, minor issues, or individual user problems',
-      low: 'Information requests, feature suggestions, or non-critical feedback',
+      urgent: 'System failures or issues that: (1) affect medical equipment or life-critical systems, (2) cause complete loss of power during emergencies, (3) create immediate safety risks, or (4) leave essential equipment without backup power',
+      high: 'Issues involving: (1) commercial/enterprise-wide impacts, (2) physical system damage, (3) performance degradation >25%, (4) multi-site system failures, (5) complete monitoring/control loss for business customers, or (6) warranty claims for major system defects',
+      normal: 'Standard requests including: (1) sales inquiries, (2) feature upgrades, (3) individual residential support, (4) non-critical software issues, or (5) general information requests without immediate impact',
+      low: 'Minor requests including: (1) general feedback, (2) documentation requests, (3) feature suggestions, or (4) inquiries without current system impact',
     };
 
     const settings = data.settings as any;

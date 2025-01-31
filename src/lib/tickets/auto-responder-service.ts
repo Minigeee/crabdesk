@@ -12,7 +12,7 @@ import { getEmailThread, getSemanticallySimilarNotes, getSemanticallySimilarArti
 const RESPONDER_PROMPT = `You are an expert customer support agent. Your task is to draft a response to a customer email thread.
 Use the provided context to ensure accuracy and alignment with organizational goals.
 
-<context>
+<settings>
 Auto-Response Settings:
 Tone: {tone}
 Language: {language}
@@ -22,26 +22,22 @@ Response Guidelines:
 
 Compliance Requirements:
 {complianceRequirements}
+</settings>
 
 Relevant Notes and Context:
+<context>
 {relevantNotes}
 </context>
 
+Thread:
 <thread>
 {thread}
 </thread>
 
-Draft a response that:
-1. Addresses all questions and concerns
-2. Uses accurate information from the provided context
-3. Aligns with the specified tone and language
-4. Is professional and empathetic
-5. Provides clear next steps or resolution
-6. Follows all response guidelines and compliance requirements
-
 Placeholder Guidelines:
 - Only use placeholders in square brackets when the information is not available in the provided context.
   Ex: "Check out our api documentation at [api documentation link]"
+- If you have access to the required link or contact information, use it rather than using a placeholder.
 
 Response should be in plain text format suitable for email. Do not include subject line or any other metadata.`;
 
@@ -142,12 +138,16 @@ export class AutoResponderService {
 
     // Get semantically similar notes and article chunks
     const [notes, articleChunks] = await Promise.all([
-      getSemanticallySimilarNotes(this.embeddings, searchTexts),
-      getSemanticallySimilarArticleChunks(this.supabase, this.orgId, searchTexts)
+      getSemanticallySimilarNotes(this.embeddings, searchTexts, {
+        threshold: 0.5,
+      }),
+      getSemanticallySimilarArticleChunks(this.supabase, this.orgId, searchTexts, {
+        threshold: 0.5,
+      })
     ]);
 
-    // console.log('notes', notes);
-    // console.log('articleChunks', articleChunks);
+    console.log('notes', notes);
+    console.log('articleChunks', articleChunks);
 
     return {
       notes: notes || [],

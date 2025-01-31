@@ -100,12 +100,7 @@ export function ResponseStatusBadge({ ticket }: { ticket: Tables<'tickets'> }) {
       case 'rejected':
         return 'needs_manual_response';
       case 'modified':
-        return 'response_edited';
       case 'approved':
-        // If approved but not sent yet
-        if (!draft.approved_at) {
-          return 'response_edited';
-        }
         return 'response_sent';
     }
 

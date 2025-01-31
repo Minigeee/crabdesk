@@ -203,14 +203,15 @@ export class EmailProcessingService {
     if (threadError) throw threadError;
 
     // Get the full thread to update summary
-    const thread = await getEmailThread(this.supabase, threadId);
-    if (thread) {
-      try {
-        await this.summarizer.updateTicketSummary(thread.ticket_id, thread);
-      } catch (summaryError) {
-        console.error('Error updating ticket summary:', summaryError);
+    getEmailThread(this.supabase, threadId).then((thread) => {
+      if (thread) {
+        try {
+          this.summarizer.updateTicketSummary(thread.ticket_id, thread);
+        } catch (summaryError) {
+          console.error('Error updating ticket summary:', summaryError);
+        }
       }
-    }
+    });
 
     return message;
   }

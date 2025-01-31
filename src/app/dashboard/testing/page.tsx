@@ -16,7 +16,7 @@ import { EmailTestingForm } from './_components/email-testing-form';
 import { EmailTestingProvider } from './_components/email-testing-provider';
 
 export default function TestingPage() {
-  const [tab, setTab] = useState<string>('email');
+  const [tab, setTab] = useState<string>('templates');
 
   return (
     <EmailTestingProvider tab={tab} setTab={setTab}>
@@ -31,8 +31,8 @@ export default function TestingPage() {
 
           <Tabs value={tab} onValueChange={setTab} className='space-y-4'>
             <TabsList>
-              <TabsTrigger value='email'>Email Testing</TabsTrigger>
-              <TabsTrigger value='templates'>Templates</TabsTrigger>
+            <TabsTrigger value='templates'>Templates</TabsTrigger>
+              <TabsTrigger value='email'>Send Custom</TabsTrigger>
               <TabsTrigger value='history'>History</TabsTrigger>
             </TabsList>
 
