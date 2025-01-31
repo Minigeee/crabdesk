@@ -187,14 +187,14 @@ export class AutoResponderService {
       ? notes
           .map(note => {
             const timestamp = note.created_at ? new Date(note.created_at).toISOString() : new Date().toISOString();
-            return `[Note ${timestamp}] ${note.content}`;
+            return `<note>\n[Note ${timestamp}]\n${note.content}\n</note>`;
           })
           .join('\n\n')
       : 'No relevant notes found.';
 
     const formattedArticles = articleChunks?.length
       ? articleChunks
-          .map(chunk => `[Article: ${chunk.article_title}]\n${chunk.chunk_content}`)
+          .map(chunk => `<article>\n[Article: ${chunk.article_title}]\n${chunk.chunk_content}\n</article>`)
           .join('\n\n')
       : 'No relevant articles found.';
 

@@ -45,7 +45,7 @@ interface AutoResponseSettingsProps {
 }
 
 const DEFAULT_SETTINGS: AutoResponseSettings = {
-  enabled: false,
+  enabled: true,
   tone: 'Professional and friendly',
   language: 'English',
   responseGuidelines:

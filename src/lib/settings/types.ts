@@ -6,6 +6,14 @@ export interface AutoResponseSettings {
   complianceRequirements?: string;
 }
 
+export interface GraderSettings {
+  enabled?: boolean;
+  qualityGuidelines?: string;
+  accuracyGuidelines?: string;
+  minimumQualityScore?: number;
+  minimumAccuracyScore?: number;
+}
+
 export interface PriorityCriteria {
   urgent?: string;
   high?: string;
@@ -15,6 +23,7 @@ export interface PriorityCriteria {
 
 export interface OrganizationSettings {
   autoResponse?: AutoResponseSettings;
+  grader?: GraderSettings;
   priorityCriteria?: PriorityCriteria;
   // ... other settings ...
 }

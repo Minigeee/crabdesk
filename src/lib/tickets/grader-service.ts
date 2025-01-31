@@ -7,6 +7,23 @@ import type { Database } from '@/lib/database.types';
 import { EmailThread } from '../email/types';
 import { getEmailThread, getSemanticallySimilarNotes, getSemanticallySimilarArticleChunks } from './utils';
 import { EmbeddingService } from '../embeddings/service';
+import type { GraderSettings, OrganizationSettings } from '@/lib/settings/types';
+
+const DEFAULT_GRADER_SETTINGS: GraderSettings = {
+  enabled: true,
+  qualityGuidelines: `
+    1. Professional tone and language
+    2. Clear and concise communication
+    3. Proper grammar and formatting
+    4. Appropriate level of detail
+    5. Positive and helpful attitude`,
+  accuracyGuidelines: `
+    1. Information matches knowledge base
+    2. Follows organization policies
+    3. Uses correct technical terminology
+    4. Provides accurate solutions
+    5. Avoids assumptions`
+};
 
 const GRADER_PROMPT = `You are an expert customer support quality analyst. Your task is to quickly assess a customer support response on two key factors:
 
@@ -24,10 +41,14 @@ const GRADER_PROMPT = `You are an expert customer support quality analyst. Your 
    4 - Good: Accurate and well-aligned with guidelines
    5 - Great: Perfect accuracy and alignment with org values
 
-Organization Settings and Guidelines:
-<org_settings>
-{orgSettings}
-</org_settings>
+Organization Grading Guidelines:
+<grading_guidelines>
+Quality Guidelines:
+{qualityGuidelines}
+
+Accuracy Guidelines:
+{accuracyGuidelines}
+</grading_guidelines>
 
 Relevant Context and Notes:
 <context>
@@ -49,7 +70,7 @@ Provide your assessment as a JSON object with the following format:
   "quality_score": <number 1-5>,
   "accuracy_score": <number 1-5>,
   "summary": "<one-line explanation>",
-  "concerns": ["<concern1>", "<concern2>"] // List ONLY if accuracy_score <= 3, otherwise empty array
+  "concerns": ["<concern1>", "<concern2>"] // List ONLY if accuracy_score <= 3 or quality_score <= 3, otherwise empty array
 }}
 
 Respond with ONLY the JSON object and nothing else.`;
@@ -108,21 +129,27 @@ export class ResponseGraderService {
   }
 
   private async getOrgSettings() {
-    // TODO: Implement knowledge base and org settings retrieval
-    // For now, return basic settings
+    const { data, error } = await this.supabase
+      .from('organizations')
+      .select('settings')
+      .eq('id', this.orgId)
+      .single();
+
+    if (error) {
+      console.error('Failed to fetch organization settings:', error);
+      return DEFAULT_GRADER_SETTINGS;
+    }
+
+    const settings = data?.settings as OrganizationSettings;
+    const graderSettings = settings?.grader || {};
+
+    // Merge with defaults, using org settings when available
     return {
-      tone: 'professional and friendly',
-      language: 'en',
-      responseGuidelines: [
-        'Always verify customer identity',
-        'Provide clear next steps',
-        'Include relevant documentation links'
-      ],
-      complianceRequirements: [
-        'Do not share sensitive information',
-        'Include required disclaimers',
-        'Follow data protection guidelines'
-      ]
+      enabled: graderSettings.enabled ?? DEFAULT_GRADER_SETTINGS.enabled,
+      qualityGuidelines: graderSettings.qualityGuidelines || DEFAULT_GRADER_SETTINGS.qualityGuidelines,
+      accuracyGuidelines: graderSettings.accuracyGuidelines || DEFAULT_GRADER_SETTINGS.accuracyGuidelines,
+      minimumQualityScore: graderSettings.minimumQualityScore ?? DEFAULT_GRADER_SETTINGS.minimumQualityScore,
+      minimumAccuracyScore: graderSettings.minimumAccuracyScore ?? DEFAULT_GRADER_SETTINGS.minimumAccuracyScore,
     };
   }
 
@@ -158,14 +185,14 @@ export class ResponseGraderService {
       ? notes
           .map(note => {
             const timestamp = note.created_at ? new Date(note.created_at).toISOString() : new Date().toISOString();
-            return `[Note ${timestamp}] ${note.content}`;
+            return `<note>\n[Note ${timestamp}]\n${note.content}\n</note>`;
           })
           .join('\n\n')
       : 'No relevant notes found.';
 
     const formattedArticles = articleChunks?.length
       ? articleChunks
-          .map(chunk => `[Article: ${chunk.article_title}]\n${chunk.chunk_content}`)
+          .map(chunk => `<article>\n[Article: ${chunk.article_title}]\n${chunk.chunk_content}\n</article>`)
           .join('\n\n')
       : 'No relevant articles found.';
 
@@ -195,12 +222,7 @@ export class ResponseGraderService {
           similarity: number;
         }>;
       };
-      orgSettings?: {
-        tone: string;
-        language: string;
-        responseGuidelines: string[];
-        complianceRequirements: string[];
-      };
+      orgSettings?: GraderSettings;
     }
   ): Promise<ResponseGrade> {
     // Get the thread if not provided
@@ -215,10 +237,20 @@ export class ResponseGraderService {
     // Get org settings
     const orgSettings = options?.orgSettings || await this.getOrgSettings();
 
+    // Check if grading is enabled
+    if (orgSettings.enabled === false) {
+      // Return maximum scores if grading is disabled
+      return {
+        quality_score: 5,
+        accuracy_score: 5,
+        summary: "Grading disabled - automatic approval",
+        concerns: []
+      };
+    }
+
     // Format all context for grading
     const threadText = this.formatThreadForGrading(thread);
     const contextText = this.formatContextForGrading(context.notes, context.articleChunks);
-    const settingsText = JSON.stringify(orgSettings, null, 2);
 
     // Generate grade using LangChain
     const chain = this.graderPrompt
@@ -229,7 +261,10 @@ export class ResponseGraderService {
       thread: threadText,
       response: proposedResponse,
       context: contextText,
-      orgSettings: settingsText,
+      qualityGuidelines: orgSettings.qualityGuidelines,
+      accuracyGuidelines: orgSettings.accuracyGuidelines,
+      minimumQualityScore: orgSettings.minimumQualityScore,
+      minimumAccuracyScore: orgSettings.minimumAccuracyScore,
     });
 
     // Parse and validate the grade

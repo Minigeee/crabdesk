@@ -199,7 +199,7 @@ export function ArticlesSettings({ orgId }: { orgId: string | undefined }) {
               {articles.map((article) => (
                 <div
                   key={article.id}
-                  className='flex items-center justify-between rounded-md p-2 hover:bg-muted'
+                  className='flex items-center justify-between rounded-md px-2 py-0 hover:bg-muted'
                 >
                   <button
                     className='flex-1 text-left'
