@@ -8,7 +8,7 @@ import { ticketKeys } from '@/lib/tickets/use-tickets';
 import { cn } from '@/lib/utils';
 import { useQueryClient } from '@tanstack/react-query';
 import { Plus, RotateCw } from 'lucide-react';
-import { Suspense } from 'react';
+import { Suspense, useState, useCallback, useEffect } from 'react';
 import { TicketBulkActions } from './_components/ticket-bulk-actions';
 import { TicketFilters } from './_components/ticket-filters';
 import { TicketPagination } from './_components/ticket-pagination';
@@ -20,18 +20,41 @@ import { approvalQueueKeys } from '@/lib/tickets/use-approval-queue';
 
 function TicketsPageContent() {
   const queryClient = useQueryClient();
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const queryState = queryClient.getQueryState(ticketKeys.lists());
-  const isFetching = queryState?.status === 'pending';
+  // Reset refreshing state after minimum duration
+  useEffect(() => {
+    if (!isRefreshing) return;
 
-  const handleRefresh = () => {
-    // Invalidate all ticket queries to force a refresh
-    queryClient.invalidateQueries({ queryKey: ticketKeys.lists() });
-    // Invalidate all response draft queries
-    queryClient.invalidateQueries({ queryKey: ['response_draft'] });
-    // Invalidate approval queue
-    queryClient.invalidateQueries({ queryKey: approvalQueueKeys.all });
-  };
+    const timer = setTimeout(() => {
+      setIsRefreshing(false);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [isRefreshing]);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+
+    // Create a promise that resolves after 500ms
+    const minLoadingDuration = new Promise(resolve => setTimeout(resolve, 500));
+
+    try {
+      // Refresh all relevant queries in parallel
+      await Promise.all([
+        // Invalidate ticket-related queries
+        queryClient.invalidateQueries({ queryKey: ticketKeys.all }),
+        // Invalidate response drafts
+        queryClient.invalidateQueries({ queryKey: ['response_draft'] }),
+        // Invalidate approval queue
+        queryClient.invalidateQueries({ queryKey: approvalQueueKeys.all }),
+        // Wait for minimum loading duration
+        minLoadingDuration
+      ]);
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+    }
+  }, [queryClient]);
 
   return (
     <div className='flex h-[calc(100vh-65px)]'>
@@ -54,10 +77,10 @@ function TicketsPageContent() {
                 size='icon'
                 onClick={handleRefresh}
                 title='Refresh tickets'
-                disabled={isFetching}
+                disabled={isRefreshing}
               >
                 <RotateCw
-                  className={cn('h-4 w-4', isFetching && 'animate-spin')}
+                  className={cn('h-4 w-4', isRefreshing && 'animate-spin')}
                 />
               </Button>
               <ApprovalWorkflowNav />
