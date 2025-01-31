@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tables } from '@/lib/database.types';
 import { formatDistanceToNow } from 'date-fns';
-import { Loader2, Mail, MessageCircle, RefreshCcw } from 'lucide-react';
+import { Loader2, Mail, RefreshCcw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useEmailTesting } from './email-testing-provider';
 

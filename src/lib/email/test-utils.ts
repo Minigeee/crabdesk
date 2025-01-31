@@ -1,18 +1,20 @@
 import { faker } from '@faker-js/faker';
 import type { PostmarkWebhookPayload } from './types';
 
-export function generateTestEmailPayload(options: {
-  fromEmail?: string;
-  fromName?: string;
-  toEmail?: string;
-  toName?: string;
-  subject?: string;
-  inReplyTo?: string;
-  references?: string[];
-  includeAttachments?: boolean;
-} = {}): PostmarkWebhookPayload {
+export function generateTestEmailPayload(
+  options: {
+    fromEmail?: string;
+    fromName?: string;
+    toEmail?: string;
+    toName?: string;
+    subject?: string;
+    inReplyTo?: string;
+    references?: string[];
+    includeAttachments?: boolean;
+  } = {}
+): PostmarkWebhookPayload {
   const messageId = `<${faker.string.uuid()}@${faker.internet.domainName()}>`;
-  
+
   const payload: PostmarkWebhookPayload = {
     FromFull: {
       Email: options.fromEmail ?? faker.internet.email(),
@@ -58,14 +60,16 @@ export function generateTestEmailPayload(options: {
   return payload;
 }
 
-export function generateEmailThread(count: number = 3): PostmarkWebhookPayload[] {
+export function generateEmailThread(
+  count: number = 3
+): PostmarkWebhookPayload[] {
   const thread: PostmarkWebhookPayload[] = [];
   const fromEmail = faker.internet.email();
   const fromName = faker.person.fullName();
   const toEmail = faker.internet.email();
   const toName = faker.person.fullName();
   const subject = faker.lorem.sentence();
-  
+
   // Initial email
   thread.push(
     generateTestEmailPayload({
@@ -97,4 +101,4 @@ export function generateEmailThread(count: number = 3): PostmarkWebhookPayload[]
   }
 
   return thread;
-} 
+}

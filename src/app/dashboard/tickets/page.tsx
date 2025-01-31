@@ -1,22 +1,22 @@
 'use client';
 
+import { ApprovalWorkflowNav } from '@/components/tickets/approval-workflow-nav';
 import { CreateTicketDialog } from '@/components/tickets/create-ticket-dialog';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
+import { approvalQueueKeys } from '@/lib/tickets/use-approval-queue';
 import { ticketKeys } from '@/lib/tickets/use-tickets';
 import { cn } from '@/lib/utils';
 import { useQueryClient } from '@tanstack/react-query';
 import { Plus, RotateCw } from 'lucide-react';
-import { Suspense, useState, useCallback, useEffect } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import { TicketBulkActions } from './_components/ticket-bulk-actions';
 import { TicketFilters } from './_components/ticket-filters';
 import { TicketPagination } from './_components/ticket-pagination';
 import { TicketPreview } from './_components/ticket-preview';
 import { TicketQueueProvider } from './_components/ticket-queue-provider';
 import { TicketTable } from './_components/ticket-table';
-import { ApprovalWorkflowNav } from '@/components/tickets/approval-workflow-nav';
-import { approvalQueueKeys } from '@/lib/tickets/use-approval-queue';
 
 function TicketsPageContent() {
   const queryClient = useQueryClient();
@@ -37,7 +37,9 @@ function TicketsPageContent() {
     setIsRefreshing(true);
 
     // Create a promise that resolves after 500ms
-    const minLoadingDuration = new Promise(resolve => setTimeout(resolve, 500));
+    const minLoadingDuration = new Promise((resolve) =>
+      setTimeout(resolve, 500)
+    );
 
     try {
       // Refresh all relevant queries in parallel
@@ -49,7 +51,7 @@ function TicketsPageContent() {
         // Invalidate approval queue
         queryClient.invalidateQueries({ queryKey: approvalQueueKeys.all }),
         // Wait for minimum loading duration
-        minLoadingDuration
+        minLoadingDuration,
       ]);
     } catch (error) {
       console.error('Error refreshing data:', error);

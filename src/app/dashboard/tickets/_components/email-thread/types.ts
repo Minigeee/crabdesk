@@ -54,4 +54,4 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
     description: 'Help with API integration and technical implementation',
     body: "I understand you're working on integrating with our [API/service]. Let me help you with that.\n\nRegarding your implementation:\n1. Documentation reference: [link]\n2. Best practices: [key points]\n3. Common pitfalls: [what to avoid]\n\nWould you like me to clarify any of these points?\n\nBest regards,\n[Your name]",
   },
-]; 
+];

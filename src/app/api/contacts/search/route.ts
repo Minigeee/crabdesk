@@ -1,6 +1,9 @@
-import { createServiceClient } from '@/lib/supabase/service';
 import { getCurrentUser } from '@/lib/auth/session';
-import { ContactService, type ContactSearchParams } from '@/lib/contacts/contact-service';
+import {
+  ContactService,
+  type ContactSearchParams,
+} from '@/lib/contacts/contact-service';
+import { createServiceClient } from '@/lib/supabase/service';
 
 export async function POST(request: Request) {
   try {
@@ -21,9 +24,6 @@ export async function POST(request: Request) {
     return Response.json(result);
   } catch (error) {
     console.error('Error searching contacts:', error);
-    return Response.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
-} 
+}

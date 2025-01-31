@@ -3,6 +3,8 @@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/lib/auth/hooks';
+import type { Tables } from '@/lib/database.types';
+import type { ResponseGrade } from '@/lib/tickets/grader-service';
 import { cn } from '@/lib/utils';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
@@ -16,14 +18,12 @@ import {
   rejectDraft,
   sendEmailReply,
 } from '../actions';
-import { useTicketView } from './ticket-view-provider';
 import { DraftResponse } from './email-thread/draft-response';
 import { EmailMessage } from './email-thread/email-message';
 import { ReplyPanel } from './email-thread/reply-panel';
-import { shouldShowDraft } from './email-thread/utils';
 import type { Draft, EmailThread } from './email-thread/types';
-import type { ResponseGrade } from '@/lib/tickets/grader-service';
-import type { Tables } from '@/lib/database.types';
+import { shouldShowDraft } from './email-thread/utils';
+import { useTicketView } from './ticket-view-provider';
 
 export function EmailThreadView({ ticketId }: { ticketId: string }) {
   const { toast } = useToast();
@@ -39,7 +39,9 @@ export function EmailThreadView({ ticketId }: { ticketId: string }) {
   const { organization } = useAuth();
 
   // Add ref for scroll area viewport
-  const viewportRef = React.useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
+  const viewportRef = React.useRef<HTMLDivElement>(
+    null
+  ) as React.RefObject<HTMLDivElement>;
 
   // Add scroll to bottom effect
   const scrollToBottom = React.useCallback(() => {
@@ -199,24 +201,11 @@ export function EmailThreadView({ ticketId }: { ticketId: string }) {
       toast({
         title: 'Error',
         description:
-          error instanceof Error ? error.message : 'Failed to approve and send draft',
+          error instanceof Error
+            ? error.message
+            : 'Failed to approve and send draft',
         variant: 'destructive',
       });
-    },
-  });
-
-  const { mutate: modifyDraftMutation } = useMutation({
-    mutationFn: async ({
-      draftId,
-      content,
-    }: {
-      draftId: string;
-      content: string;
-    }) => {
-      await modifyDraft(draftId, content);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['email-threads', ticketId] });
     },
   });
 
@@ -270,7 +259,10 @@ export function EmailThreadView({ ticketId }: { ticketId: string }) {
         approveDraftMutation({ draftId: draft.id, content: draft.content });
         break;
       case 'reject':
-        rejectDraftMutation({ draftId: draft.id, feedback: draft.feedback || '' });
+        rejectDraftMutation({
+          draftId: draft.id,
+          feedback: draft.feedback || '',
+        });
         break;
       case 'edit':
         // For edit action, open the reply window
@@ -347,15 +339,17 @@ export function EmailThreadView({ ticketId }: { ticketId: string }) {
                 ))}
 
                 {/* Render auto-generated drafts */}
-                {thread.drafts?.filter(shouldShowDraft).map((draft: Draft) => (
-                  <DraftResponse
-                    key={draft.id}
-                    thread={thread}
-                    draft={draft}
-                    onDraftAction={handleDraftAction}
-                    isApproving={approvingDraftId === draft.id}
-                  />
-                ))}
+                {thread.drafts
+                  ?.filter(shouldShowDraft)
+                  .map((draft: Draft) => (
+                    <DraftResponse
+                      key={draft.id}
+                      thread={thread}
+                      draft={draft}
+                      onDraftAction={handleDraftAction}
+                      isApproving={approvingDraftId === draft.id}
+                    />
+                  ))}
               </div>
             ))}
           </div>

@@ -12,12 +12,11 @@ import {
 } from '@/components/ui/hover-card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
+import type { ResponseGrade } from '@/lib/tickets/grader-service';
 import { cn } from '@/lib/utils';
 import { ChevronDown, ChevronRight, Loader2, Mail, Star } from 'lucide-react';
-import * as React from 'react';
 import { EMAIL_TEMPLATES, type ReplyContext } from './types';
 import { getGradeColor, getGradeLabel } from './utils';
-import type { ResponseGrade } from '@/lib/tickets/grader-service';
 
 interface ReplyPanelProps {
   isOpen: boolean;
@@ -197,4 +196,4 @@ export function ReplyPanel({
       </div>
     </ScrollArea>
   );
-} 
+}

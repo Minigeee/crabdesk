@@ -34,13 +34,14 @@ export function chunkMarkdown(markdown: string, maxTokens = 1000): Chunk[] {
   function shouldStartNewChunk(line: string): boolean {
     // Always keep code blocks together
     if (line.startsWith('```')) return false;
-    
+
     // Start new chunk on h2 if current chunk isn't empty
     if (line.startsWith('## ') && currentChunk.length > 0) return true;
-    
+
     // Start new chunk if we'd exceed token limit
     const newTokens = estimateTokens(line);
-    if (estimatedTokens + newTokens > maxTokens && currentChunk.length > 0) return true;
+    if (estimatedTokens + newTokens > maxTokens && currentChunk.length > 0)
+      return true;
 
     return false;
   }
@@ -83,9 +84,11 @@ export function chunkMarkdown(markdown: string, maxTokens = 1000): Chunk[] {
     if (!inCodeBlock && line.startsWith('#')) {
       const level = line.match(/^#+/)?.[0].length ?? 1;
       const text = line.replace(/^#+\s*/, '');
-      
+
       // Update headings stack based on level
-      currentHeadings = currentHeadings.filter(h => h.split('|')[0].length < level);
+      currentHeadings = currentHeadings.filter(
+        (h) => h.split('|')[0].length < level
+      );
       currentHeadings.push(`${'#'.repeat(level)}|${text}`);
     }
 
@@ -106,4 +109,4 @@ export function chunkMarkdown(markdown: string, maxTokens = 1000): Chunk[] {
   }
 
   return chunks;
-} 
+}

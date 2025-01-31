@@ -1,8 +1,8 @@
 import { Badge } from '@/components/ui/badge';
 import type { Tables } from '@/lib/database.types';
-import { useQuery } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
 
 type ResponseStatus =
   | 'awaiting_auto_response'
@@ -116,4 +116,4 @@ export function ResponseStatusBadge({ ticket }: { ticket: Tables<'tickets'> }) {
       {config.label}
     </Badge>
   );
-} 
+}

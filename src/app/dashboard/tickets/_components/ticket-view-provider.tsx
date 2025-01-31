@@ -1,7 +1,7 @@
 'use client';
 
-import { createContext, useContext, useState } from 'react';
 import type { Tables } from '@/lib/database.types';
+import { createContext, useContext, useState } from 'react';
 
 interface ReplyContext {
   threadId: string;

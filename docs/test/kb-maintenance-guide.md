@@ -5,6 +5,7 @@
 ### Monthly Maintenance
 
 #### Visual Inspections
+
 - Panel surface condition
 - Mounting system integrity
 - Wiring and connections
@@ -13,6 +14,7 @@
 - Weather station sensors
 
 #### Performance Monitoring
+
 - Energy production levels
 - Efficiency metrics
 - Error messages
@@ -23,6 +25,7 @@
 ### Quarterly Maintenance
 
 #### Physical System Check
+
 - Panel cleaning
 - Connection tightness
 - Mounting system torque
@@ -31,6 +34,7 @@
 - Ground connections
 
 #### System Testing
+
 - Inverter efficiency
 - Battery capacity
 - Communication reliability
@@ -41,6 +45,7 @@
 ### Annual Maintenance
 
 #### Comprehensive Inspection
+
 - Detailed panel examination
 - Infrared scanning
 - Mounting system assessment
@@ -49,6 +54,7 @@
 - Site condition evaluation
 
 #### Professional Service
+
 - Calibration verification
 - Software updates
 - Security assessment
@@ -61,13 +67,16 @@
 ### Panel Issues
 
 #### Low Production
+
 1. **Symptoms**
+
    - Decreased output
    - Inconsistent performance
    - Error messages
    - Efficiency alerts
 
 2. **Possible Causes**
+
    - Dirt/debris accumulation
    - Shading changes
    - Panel degradation
@@ -82,7 +91,9 @@
    - Professional inspection
 
 #### Physical Damage
+
 1. **Symptoms**
+
    - Visible cracks
    - Water infiltration
    - Hot spots
@@ -98,7 +109,9 @@
 ### Inverter Problems
 
 #### Communication Errors
+
 1. **Symptoms**
+
    - No data transmission
    - Intermittent connection
    - Error codes
@@ -112,7 +125,9 @@
    - Contact support
 
 #### Performance Issues
+
 1. **Symptoms**
+
    - Reduced efficiency
    - Unusual noise
    - Error messages
@@ -128,7 +143,9 @@
 ### Battery System Issues
 
 #### Capacity Problems
+
 1. **Symptoms**
+
    - Reduced backup time
    - Poor charging
    - Discharge issues
@@ -142,7 +159,9 @@
    - Professional assessment
 
 #### System Integration
+
 1. **Symptoms**
+
    - Charging errors
    - Grid switching issues
    - Communication problems
@@ -160,6 +179,7 @@
 ### System Shutdown
 
 #### Emergency Shutdown Steps
+
 1. Activate emergency stop
 2. Disconnect AC power
 3. Disconnect DC isolators
@@ -168,6 +188,7 @@
 6. Contact support
 
 #### Safety Measures
+
 - Use proper PPE
 - Follow lockout procedures
 - Verify power status
@@ -178,6 +199,7 @@
 ### Weather Events
 
 #### Storm Preparation
+
 - Monitor forecasts
 - Secure loose items
 - Check drainage
@@ -186,6 +208,7 @@
 - Emergency contacts ready
 
 #### Post-Storm Inspection
+
 - Visual assessment
 - System testing
 - Damage documentation
@@ -198,6 +221,7 @@
 ### System Efficiency
 
 #### Optimization Steps
+
 1. Performance analysis
 2. Shading assessment
 3. Cleaning schedule
@@ -206,6 +230,7 @@
 6. Professional tuning
 
 #### Monitoring Points
+
 - Production metrics
 - Efficiency ratios
 - Temperature data
@@ -216,6 +241,7 @@
 ### Advanced Optimization
 
 #### Data Analysis
+
 - Historical performance
 - Weather patterns
 - Consumption trends
@@ -224,6 +250,7 @@
 - ROI calculations
 
 #### System Updates
+
 - Software upgrades
 - Parameter tuning
 - Algorithm updates
@@ -236,7 +263,9 @@
 ### Inverter Codes
 
 #### Error Categories
+
 1. **Grid Errors**
+
    - Voltage issues
    - Frequency problems
    - Connection faults
@@ -244,6 +273,7 @@
    - Synchronization errors
 
 2. **System Errors**
+
    - Internal faults
    - Temperature issues
    - Communication problems
@@ -260,7 +290,9 @@
 ### Battery System Codes
 
 #### Error Types
+
 1. **Battery Errors**
+
    - Voltage issues
    - Temperature problems
    - Capacity errors
@@ -279,6 +311,7 @@
 ### Weather Conditions
 
 #### Temperature Effects
+
 - Production impact
 - Efficiency changes
 - Component stress
@@ -286,6 +319,7 @@
 - Performance adjustments
 
 #### Severe Weather
+
 - Storm protection
 - Lightning safety
 - Wind considerations
@@ -295,6 +329,7 @@
 ### Seasonal Maintenance
 
 #### Summer Care
+
 - Cooling system check
 - Production optimization
 - Temperature monitoring
@@ -302,6 +337,7 @@
 - Performance tracking
 
 #### Winter Preparation
+
 - Snow removal plan
 - Freeze protection
 - Battery care
@@ -313,6 +349,7 @@
 ### Maintenance Records
 
 #### Required Documentation
+
 - Service history
 - Performance data
 - Error logs
@@ -321,6 +358,7 @@
 - Inspection reports
 
 #### Reporting Requirements
+
 - Monthly summaries
 - Quarterly reviews
 - Annual assessments
@@ -331,6 +369,7 @@
 ### System Updates
 
 #### Update Documentation
+
 - Software versions
 - Parameter changes
 - Hardware upgrades
@@ -339,9 +378,10 @@
 - Performance improvements
 
 #### Change Management
+
 - Update planning
 - Risk assessment
 - Implementation steps
 - Testing procedures
 - Rollback plans
-- Documentation updates 
+- Documentation updates

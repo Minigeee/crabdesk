@@ -1,12 +1,12 @@
 'use client';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AutoResponseSettings } from './auto-response-settings';
-import { PriorityCriteriaSettings } from './priority-criteria-settings';
-import { ArticlesSettings } from './articles-settings';
-import { GraderSettings } from './grader-settings';
-import type { OrganizationSettings } from '@/lib/settings/types';
 import { useAuth } from '@/lib/auth/hooks';
+import type { OrganizationSettings } from '@/lib/settings/types';
+import { ArticlesSettings } from './articles-settings';
+import { AutoResponseSettings } from './auto-response-settings';
+import { GraderSettings } from './grader-settings';
+import { PriorityCriteriaSettings } from './priority-criteria-settings';
 
 interface SettingsContentProps {
   initialSettings: OrganizationSettings;
@@ -21,7 +21,7 @@ export function SettingsContent({ initialSettings }: SettingsContentProps) {
         <div>
           <h2 className='text-2xl font-bold tracking-tight'>Settings</h2>
           <p className='text-muted-foreground'>
-            Configure your organization's settings for auto-response, response grading, and priority criteria
+            {`Configure your organization's settings for auto-response, response grading, and priority criteria`}
           </p>
         </div>
 
@@ -34,7 +34,9 @@ export function SettingsContent({ initialSettings }: SettingsContentProps) {
           </TabsList>
 
           <TabsContent value='auto-response' className='space-y-4'>
-            <AutoResponseSettings initialSettings={initialSettings?.autoResponse} />
+            <AutoResponseSettings
+              initialSettings={initialSettings?.autoResponse}
+            />
           </TabsContent>
 
           <TabsContent value='grader' className='space-y-4'>
@@ -42,7 +44,9 @@ export function SettingsContent({ initialSettings }: SettingsContentProps) {
           </TabsContent>
 
           <TabsContent value='priority' className='space-y-4'>
-            <PriorityCriteriaSettings initialSettings={initialSettings?.priorityCriteria} />
+            <PriorityCriteriaSettings
+              initialSettings={initialSettings?.priorityCriteria}
+            />
           </TabsContent>
 
           <TabsContent value='articles' className='space-y-4'>
@@ -50,7 +54,6 @@ export function SettingsContent({ initialSettings }: SettingsContentProps) {
           </TabsContent>
         </Tabs>
       </div>
-
     </div>
   );
-} 
+}

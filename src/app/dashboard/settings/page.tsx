@@ -1,8 +1,8 @@
-import { Metadata } from 'next';
-import { createClient } from '@/lib/supabase/server';
-import { SettingsContent } from './_components/settings-content';
 import { requireUser } from '@/lib/auth/session';
 import type { OrganizationSettings } from '@/lib/settings/types';
+import { createClient } from '@/lib/supabase/server';
+import { Metadata } from 'next';
+import { SettingsContent } from './_components/settings-content';
 
 export const metadata: Metadata = {
   title: 'Settings | CrabDesk',

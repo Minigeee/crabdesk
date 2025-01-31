@@ -1,6 +1,10 @@
-import { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/database.types';
-import type { AutoResponseSettings, PriorityCriteria, OrganizationSettings } from './types';
+import { SupabaseClient } from '@supabase/supabase-js';
+import type {
+  AutoResponseSettings,
+  OrganizationSettings,
+  PriorityCriteria,
+} from './types';
 
 export class SettingsService {
   constructor(
@@ -16,17 +20,20 @@ export class SettingsService {
       .single();
 
     if (error) throw error;
-    
+
     const defaultSettings: OrganizationSettings = {
       autoResponse: {
         enabled: false,
         tone: 'Professional and friendly',
         language: 'English',
-        responseGuidelines: 'Begin with a greeting, acknowledge the issue, provide clear next steps or solutions, and end with a professional closing.',
-        complianceRequirements: 'Include data privacy disclaimer when discussing sensitive information.',
+        responseGuidelines:
+          'Begin with a greeting, acknowledge the issue, provide clear next steps or solutions, and end with a professional closing.',
+        complianceRequirements:
+          'Include data privacy disclaimer when discussing sensitive information.',
       },
       priorityCriteria: {
-        urgent: 'Critical system outages, security incidents, or issues blocking entire business operations',
+        urgent:
+          'Critical system outages, security incidents, or issues blocking entire business operations',
         high: 'Significant business impact, major feature not working, or multiple users affected',
         normal: 'Standard questions, minor issues, or individual user problems',
         low: 'Information requests, feature suggestions, or non-critical feedback',
@@ -46,14 +53,16 @@ export class SettingsService {
     };
   }
 
-  async updateAutoResponseSettings(settings: AutoResponseSettings): Promise<void> {
+  async updateAutoResponseSettings(
+    settings: AutoResponseSettings
+  ): Promise<void> {
     const { data: current } = await this.supabase
       .from('organizations')
       .select('settings')
       .eq('id', this.orgId)
       .single();
 
-    const currentSettings = current?.settings as OrganizationSettings || {};
+    const currentSettings = (current?.settings as OrganizationSettings) || {};
 
     const updatedSettings: OrganizationSettings = {
       ...currentSettings,
@@ -75,7 +84,7 @@ export class SettingsService {
       .eq('id', this.orgId)
       .single();
 
-    const currentSettings = current?.settings as OrganizationSettings || {};
+    const currentSettings = (current?.settings as OrganizationSettings) || {};
 
     const updatedSettings: OrganizationSettings = {
       ...currentSettings,
@@ -89,4 +98,4 @@ export class SettingsService {
 
     if (error) throw error;
   }
-} 
+}

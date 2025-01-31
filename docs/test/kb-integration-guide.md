@@ -5,7 +5,9 @@
 ### System Overview
 
 #### Available Battery Solutions
+
 1. **SolarTech Basic Storage**
+
    - Capacity: 10kWh
    - Peak Output: 5kW
    - Basic backup functionality
@@ -14,6 +16,7 @@
    - Standard warranty
 
 2. **SolarTech Advanced Storage**
+
    - Capacity: 15-30kWh
    - Peak Output: 7.5kW
    - Advanced backup capabilities
@@ -32,6 +35,7 @@
 ### Technical Specifications
 
 #### Performance Metrics
+
 - Depth of discharge
 - Round-trip efficiency
 - Response time
@@ -40,6 +44,7 @@
 - Warranty period
 
 #### Safety Features
+
 - Temperature monitoring
 - Voltage protection
 - Current limiting
@@ -50,6 +55,7 @@
 ### Installation Requirements
 
 #### Physical Installation
+
 - Location requirements
 - Ventilation needs
 - Temperature control
@@ -58,6 +64,7 @@
 - Mounting specifications
 
 #### Electrical Integration
+
 - Main panel connection
 - Critical load panel
 - Transfer switch
@@ -70,6 +77,7 @@
 ### Compatible Systems
 
 #### Home Automation Platforms
+
 - Google Home
 - Amazon Alexa
 - Apple HomeKit
@@ -78,7 +86,9 @@
 - OpenHAB
 
 #### Smart Device Categories
+
 1. **Energy Management**
+
    - Smart thermostats
    - Smart plugs
    - Energy monitors
@@ -87,6 +97,7 @@
    - EV chargers
 
 2. **Home Security**
+
    - Smart cameras
    - Door locks
    - Motion sensors
@@ -105,7 +116,9 @@
 ### Integration Procedures
 
 #### Initial Setup
+
 1. **Network Configuration**
+
    - WiFi setup
    - Gateway installation
    - Device pairing
@@ -122,7 +135,9 @@
    - Automation rules
 
 #### Advanced Configuration
+
 1. **Energy Management**
+
    - Load prioritization
    - Schedule creation
    - Peak avoidance
@@ -143,6 +158,7 @@
 ### Energy Management
 
 #### Battery Optimization
+
 - Charge scheduling
 - Discharge management
 - Grid interaction
@@ -151,6 +167,7 @@
 - Backup reserve
 
 #### Load Management
+
 - Priority settings
 - Schedule optimization
 - Demand response
@@ -161,6 +178,7 @@
 ### Smart Home Optimization
 
 #### Device Coordination
+
 - Energy usage patterns
 - Occupancy detection
 - Weather integration
@@ -169,6 +187,7 @@
 - User preferences
 
 #### Automation Rules
+
 - Energy saving modes
 - Comfort settings
 - Security protocols
@@ -181,7 +200,9 @@
 ### System Setup
 
 #### Backup Loads
+
 1. **Essential Circuits**
+
    - Critical equipment
    - Safety systems
    - Communication devices
@@ -198,6 +219,7 @@
    - Charging stations
 
 #### Transfer Configuration
+
 - Automatic switching
 - Manual override
 - Grid synchronization
@@ -208,6 +230,7 @@
 ### Operation Modes
 
 #### Normal Operation
+
 - Grid-connected mode
 - Self-consumption
 - Battery charging
@@ -216,6 +239,7 @@
 - Grid support
 
 #### Backup Operation
+
 - Islanding mode
 - Load prioritization
 - Battery management
@@ -228,6 +252,7 @@
 ### Hardware Integration
 
 #### Physical Connections
+
 - Power connections
 - Communication wiring
 - Network setup
@@ -236,6 +261,7 @@
 - Safety systems
 
 #### Control Systems
+
 - Main controller
 - Subcontrollers
 - User interfaces
@@ -246,6 +272,7 @@
 ### Software Integration
 
 #### Platform Integration
+
 - API configuration
 - Data exchange
 - Authentication
@@ -254,6 +281,7 @@
 - Backup systems
 
 #### User Interface
+
 - Mobile app setup
 - Web interface
 - Control panels
@@ -266,6 +294,7 @@
 ### System Metrics
 
 #### Energy Metrics
+
 - Power flow
 - Battery status
 - Solar production
@@ -274,6 +303,7 @@
 - System efficiency
 
 #### Smart Home Metrics
+
 - Device status
 - Automation performance
 - Energy savings
@@ -284,6 +314,7 @@
 ### Reporting
 
 #### System Reports
+
 - Performance summaries
 - Energy analysis
 - Cost savings
@@ -292,6 +323,7 @@
 - Maintenance needs
 
 #### Smart Home Reports
+
 - Device usage
 - Automation efficiency
 - Energy optimization
@@ -304,7 +336,9 @@
 ### Common Issues
 
 #### Integration Problems
+
 1. **Communication Issues**
+
    - Network connectivity
    - Device pairing
    - Protocol conflicts
@@ -323,6 +357,7 @@
 ### Resolution Steps
 
 #### Basic Troubleshooting
+
 1. System check
 2. Network verification
 3. Device reset
@@ -331,9 +366,10 @@
 6. Professional support
 
 #### Advanced Diagnostics
+
 - Log analysis
 - Performance testing
 - Network diagnostics
 - Security audit
 - System calibration
-- Integration verification 
+- Integration verification

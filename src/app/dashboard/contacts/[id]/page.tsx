@@ -1,11 +1,11 @@
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 
+import { NotesList } from '@/components/notes/notes-list';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { getCurrentUser } from '@/lib/auth/session';
 import { ContactService } from '@/lib/contacts/contact-service';
 import { createClient } from '@/lib/supabase/server';
-import { NotesList } from '@/components/notes/notes-list';
 import { ContactActions } from './_components/contact-actions';
 import { ContactDetailsSkeleton } from './_components/contact-details-skeleton';
 import { ContactProfile } from './_components/contact-profile';
@@ -58,7 +58,11 @@ export default async function ContactDetailsPage({
 
         <div className='flex-1 p-6'>
           <Suspense fallback={<ContactDetailsSkeleton />}>
-            <NotesList entityType="contact" entityId={contactId} title="Contact Notes" />
+            <NotesList
+              entityType='contact'
+              entityId={contactId}
+              title='Contact Notes'
+            />
           </Suspense>
         </div>
       </div>

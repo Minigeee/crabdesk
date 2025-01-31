@@ -1,10 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { useContact } from '@/lib/contacts/use-contacts';
-import { Mail, MessageSquarePlus, Trash } from 'lucide-react';
+import { CreateTicketDialog } from '@/components/tickets/create-ticket-dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,9 +12,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { createClient } from '@/lib/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { CreateTicketDialog } from '@/components/tickets/create-ticket-dialog';
+import { useContact } from '@/lib/contacts/use-contacts';
+import { createClient } from '@/lib/supabase/client';
+import { Mail, MessageSquarePlus, Trash } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export function ContactActions({ contactId }: { contactId: string }) {
   const router = useRouter();
@@ -41,6 +41,7 @@ export function ContactActions({ contactId }: { contactId: string }) {
       });
       router.push('/dashboard/contacts');
     } catch (error) {
+      console.error('Error deleting contact', error);
       toast({
         title: 'Error',
         description: 'Failed to delete contact. Please try again.',
@@ -70,7 +71,9 @@ export function ContactActions({ contactId }: { contactId: string }) {
         <Button
           variant='secondary'
           className='w-full justify-start'
-          onClick={() => router.push(`/dashboard/email/compose?to=${contact.email}`)}
+          onClick={() =>
+            router.push(`/dashboard/email/compose?to=${contact.email}`)
+          }
         >
           <Mail className='mr-2 h-4 w-4' />
           Send Email
@@ -78,10 +81,7 @@ export function ContactActions({ contactId }: { contactId: string }) {
 
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button
-              variant='destructive'
-              className='w-full justify-start'
-            >
+            <Button variant='destructive' className='w-full justify-start'>
               <Trash className='mr-2 h-4 w-4' />
               Delete Contact
             </Button>

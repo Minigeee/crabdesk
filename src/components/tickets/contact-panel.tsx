@@ -34,16 +34,18 @@ export function ContactPanel({
         <Link href={`/dashboard/contacts/${contact.id}`} passHref>
           <Button
             variant='outline'
-            className='mb-4 flex items-center justify-start text-left gap-3 w-full h-fit'
-        >
-          <Avatar>
-            <AvatarFallback>
-              {contact.name?.[0] ?? contact.email[0].toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <div className='font-medium'>{contact.name ?? 'No Name'}</div>
-              <div className='text-sm text-muted-foreground'>{contact.email}</div>
+            className='mb-4 flex h-fit w-full items-center justify-start gap-3 text-left'
+          >
+            <Avatar>
+              <AvatarFallback>
+                {contact.name?.[0] ?? contact.email[0].toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <div className='font-medium'>{contact.name ?? 'No Name'}</div>
+              <div className='text-sm text-muted-foreground'>
+                {contact.email}
+              </div>
             </div>
           </Button>
         </Link>

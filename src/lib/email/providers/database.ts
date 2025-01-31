@@ -65,6 +65,7 @@ export class DatabaseEmailProvider implements EmailProvider {
   }
 
   async sendMessage(content: EmailContent): Promise<void> {
+    console.log('Sending message through database provider', content);
     throw new Error(
       'Sending messages through database provider is not supported'
     );

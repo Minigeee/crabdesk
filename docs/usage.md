@@ -353,9 +353,12 @@ import { EmailProcessingService } from '@/lib/email/service';
 import { createClient } from '@/lib/supabase/server';
 
 // Process incoming email
-async function handleIncomingEmail(orgId: string, emailData: ProcessedEmailData) {
+async function handleIncomingEmail(
+  orgId: string,
+  emailData: ProcessedEmailData
+) {
   const emailService = new EmailProcessingService(orgId);
-  
+
   try {
     const result = await emailService.processEmail(emailData);
     // result contains created/updated thread, ticket, message, and contact
@@ -370,7 +373,10 @@ async function handleIncomingEmail(orgId: string, emailData: ProcessedEmailData)
 ### Testing Email Processing
 
 ```typescript
-import { generateTestEmailPayload, generateEmailThread } from '@/lib/email/test-utils';
+import {
+  generateTestEmailPayload,
+  generateEmailThread,
+} from '@/lib/email/test-utils';
 
 // Generate single test email
 const testEmail = generateTestEmailPayload({
@@ -408,7 +414,7 @@ const service = new ContactService(supabase, organizationId);
 // Search contacts
 const { data, count } = await service.searchContacts({
   query: 'john@example',
-  orderBy: { column: 'last_seen_at', ascending: false }
+  orderBy: { column: 'last_seen_at', ascending: false },
 });
 
 // Get single contact
@@ -417,7 +423,7 @@ const contact = await service.getContactByEmail('john@example.com');
 // Create contact
 const newContact = await service.createContact({
   email: 'jane@example.com',
-  name: 'Jane Doe'
+  name: 'Jane Doe',
 });
 
 // Update contact
@@ -431,7 +437,7 @@ const updated = await service.updateContact(contactId, { name: 'Jane Smith' });
 const { data } = useContacts({
   query: 'john',
   limit: 20,
-  orderBy: { column: 'name', ascending: true }
+  orderBy: { column: 'name', ascending: true },
 });
 
 // Get single contact
@@ -443,13 +449,13 @@ const { createContact, updateContact } = useContactMutations();
 // Create new contact
 await createContact.mutateAsync({
   email: 'john@example.com',
-  name: 'John Doe'
+  name: 'John Doe',
 });
 
 // Update contact
 await updateContact.mutateAsync({
   id: contactId,
-  updates: { name: 'John Smith' }
+  updates: { name: 'John Smith' },
 });
 ```
 
@@ -500,4 +506,3 @@ select * from search_notes(
   p_org_id := 'org-id-here'
 );
 ```
-

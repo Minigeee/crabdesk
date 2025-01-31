@@ -1,10 +1,4 @@
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { formatDistanceToNow } from 'date-fns';
-import { ChevronDown, ChevronRight, Loader2, Star } from 'lucide-react';
-import * as React from 'react';
-import { type Draft, type EmailThread } from './types';
-import { getGradeColor, getGradeLabel } from './utils';
 import {
   Dialog,
   DialogContent,
@@ -14,18 +8,35 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { PlaceholderEditor } from './placeholder-editor';
 import { useAuth } from '@/lib/auth/hooks';
+import { cn } from '@/lib/utils';
+import { formatDistanceToNow } from 'date-fns';
+import { ChevronDown, ChevronRight, Loader2, Star } from 'lucide-react';
+import * as React from 'react';
+import { PlaceholderEditor } from './placeholder-editor';
+import { type Draft, type EmailThread } from './types';
+import { getGradeColor, getGradeLabel } from './utils';
 
 interface DraftResponseProps {
   thread: EmailThread;
   draft: Draft;
-  onDraftAction: (thread: EmailThread, draft: Draft, action: 'edit' | 'approve' | 'reject') => void;
+  onDraftAction: (
+    thread: EmailThread,
+    draft: Draft,
+    action: 'edit' | 'approve' | 'reject'
+  ) => void;
   isApproving: boolean;
 }
 
-export function DraftResponse({ thread, draft, onDraftAction, isApproving }: DraftResponseProps) {
-  const [isExpanded, setIsExpanded] = React.useState(draft.status === 'pending');
+export function DraftResponse({
+  thread,
+  draft,
+  onDraftAction,
+  isApproving,
+}: DraftResponseProps) {
+  const [isExpanded, setIsExpanded] = React.useState(
+    draft.status === 'pending'
+  );
   const [isRejectDialogOpen, setIsRejectDialogOpen] = React.useState(false);
   const [rejectFeedback, setRejectFeedback] = React.useState('');
   const [draftContent, setDraftContent] = React.useState(draft.content);
@@ -51,9 +62,10 @@ export function DraftResponse({ thread, draft, onDraftAction, isApproving }: Dra
       className={cn(
         'w-full space-y-2 rounded-md border p-4 transition-colors duration-200',
         // Light mode - warmer sand color for pending, keep primary for rejected
-        draft.status === 'pending' && 'border-[hsl(60,20%,75%)] bg-[hsl(60,20%,95%)] dark:border-[hsl(60,25%,45%)]/30 dark:bg-[hsl(60,25%,45%)]/10',
-        draft.status === 'rejected' && 'border-primary/30 bg-primary/5 dark:border-primary/20 dark:bg-primary/10'
-
+        draft.status === 'pending' &&
+          'border-[hsl(60,20%,75%)] bg-[hsl(60,20%,95%)] dark:border-[hsl(60,25%,45%)]/30 dark:bg-[hsl(60,25%,45%)]/10',
+        draft.status === 'rejected' &&
+          'border-primary/30 bg-primary/5 dark:border-primary/20 dark:bg-primary/10'
       )}
     >
       <div className='flex items-center justify-between'>
@@ -62,12 +74,12 @@ export function DraftResponse({ thread, draft, onDraftAction, isApproving }: Dra
             variant='ghost'
             size='icon'
             className={cn(
-              "hover:bg-secondary/10 dark:hover:bg-secondary/20",
-              draft.status === 'pending' && "hover:bg-[hsl(60,20%,75%)]/20 dark:hover:bg-[hsl(60,25%,45%)]/20"
+              'hover:bg-secondary/10 dark:hover:bg-secondary/20',
+              draft.status === 'pending' &&
+                'hover:bg-[hsl(60,20%,75%)]/20 dark:hover:bg-[hsl(60,25%,45%)]/20'
             )}
             onClick={() => setIsExpanded(!isExpanded)}
           >
-
             {isExpanded ? (
               <ChevronDown className='h-4 w-4' />
             ) : (
@@ -122,12 +134,14 @@ export function DraftResponse({ thread, draft, onDraftAction, isApproving }: Dra
 
       {isExpanded && (
         <>
-          <div className={cn(
-            'border-l-2 pl-4',
-            draft.status === 'pending' 
-              ? 'border-[hsl(35,30%,75%)] dark:border-[hsl(35,30%,45%)]/50' 
-              : 'border-secondary/30 dark:border-secondary/20'
-          )}>
+          <div
+            className={cn(
+              'border-l-2 pl-4',
+              draft.status === 'pending'
+                ? 'border-[hsl(35,30%,75%)] dark:border-[hsl(35,30%,45%)]/50'
+                : 'border-secondary/30 dark:border-secondary/20'
+            )}
+          >
             <div className='whitespace-pre-wrap rounded-md bg-background/80 p-3 text-sm shadow-sm'>
               <div className='max-w-[65ch]'>{draftContent}</div>
             </div>
@@ -180,9 +194,13 @@ export function DraftResponse({ thread, draft, onDraftAction, isApproving }: Dra
           )}
 
           {draft.status === 'rejected' && draft.feedback && (
-            <div className='mt-2 rounded-md bg-primary/5 dark:bg-primary/10 border border-primary/20 p-3 text-sm'>
-              <div className='font-medium text-primary dark:text-primary/90'>Rejection Feedback:</div>
-              <div className='mt-1 text-primary/80 dark:text-primary/70'>{draft.feedback}</div>
+            <div className='mt-2 rounded-md border border-primary/20 bg-primary/5 p-3 text-sm dark:bg-primary/10'>
+              <div className='font-medium text-primary dark:text-primary/90'>
+                Rejection Feedback:
+              </div>
+              <div className='mt-1 text-primary/80 dark:text-primary/70'>
+                {draft.feedback}
+              </div>
             </div>
           )}
         </>
@@ -193,7 +211,8 @@ export function DraftResponse({ thread, draft, onDraftAction, isApproving }: Dra
           <DialogHeader>
             <DialogTitle>Reject Draft Response</DialogTitle>
             <DialogDescription>
-              Please provide feedback on why this draft response is being rejected.
+              Please provide feedback on why this draft response is being
+              rejected.
             </DialogDescription>
           </DialogHeader>
           <Textarea
@@ -221,4 +240,4 @@ export function DraftResponse({ thread, draft, onDraftAction, isApproving }: Dra
       </Dialog>
     </div>
   );
-} 
+}

@@ -18,11 +18,12 @@ import { useState } from 'react';
 import { useTicketQueue } from './ticket-queue-provider';
 
 // Separate closed status for special handling
-const OPEN_STATUS_OPTIONS: { label: string; value: Enums<'ticket_status'> }[] = [
-  { label: 'Open', value: 'open' },
-  { label: 'Pending', value: 'pending' },
-  { label: 'Resolved', value: 'resolved' },
-];
+const OPEN_STATUS_OPTIONS: { label: string; value: Enums<'ticket_status'> }[] =
+  [
+    { label: 'Open', value: 'open' },
+    { label: 'Pending', value: 'pending' },
+    { label: 'Resolved', value: 'resolved' },
+  ];
 
 const PRIORITY_OPTIONS: { label: string; value: Enums<'ticket_priority'> }[] = [
   { label: 'Low', value: 'low' },

@@ -31,7 +31,7 @@ export default function TestingPage() {
 
           <Tabs value={tab} onValueChange={setTab} className='space-y-4'>
             <TabsList>
-            <TabsTrigger value='templates'>Templates</TabsTrigger>
+              <TabsTrigger value='templates'>Templates</TabsTrigger>
               <TabsTrigger value='email'>Send Custom</TabsTrigger>
               <TabsTrigger value='history'>History</TabsTrigger>
             </TabsList>

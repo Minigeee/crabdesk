@@ -34,11 +34,15 @@ export const postmarkWebhookSchema = z.object({
   Attachments: z.array(attachmentSchema).optional(),
 });
 
-export function validatePostmarkPayload(payload: unknown): PostmarkWebhookPayload {
+export function validatePostmarkPayload(
+  payload: unknown
+): PostmarkWebhookPayload {
   return postmarkWebhookSchema.parse(payload);
 }
 
-export function processEmailPayload(payload: PostmarkWebhookPayload): ProcessedEmailData {
+export function processEmailPayload(
+  payload: PostmarkWebhookPayload
+): ProcessedEmailData {
   const headers: Record<string, string> = {};
   for (const header of payload.Headers) {
     headers[header.Name.toLowerCase()] = header.Value;
@@ -54,15 +58,15 @@ export function processEmailPayload(payload: PostmarkWebhookPayload): ProcessedE
       email: payload.FromFull.Email,
       name: payload.FromFull.Name,
     },
-    to: payload.ToFull.map(to => ({
+    to: payload.ToFull.map((to) => ({
       email: to.Email,
       name: to.Name,
     })),
-    cc: payload.CcFull?.map(cc => ({
+    cc: payload.CcFull?.map((cc) => ({
       email: cc.Email,
       name: cc.Name,
     })),
-    bcc: payload.BccFull?.map(bcc => ({
+    bcc: payload.BccFull?.map((bcc) => ({
       email: bcc.Email,
       name: bcc.Name,
     })),
@@ -73,11 +77,11 @@ export function processEmailPayload(payload: PostmarkWebhookPayload): ProcessedE
     inReplyTo: payload.InReplyTo,
     referenceIds: references,
     headers,
-    attachments: payload.Attachments?.map(att => ({
+    attachments: payload.Attachments?.map((att) => ({
       name: att.Name,
       content: att.Content,
       contentType: att.ContentType,
       size: att.ContentLength,
     })),
   };
-} 
+}

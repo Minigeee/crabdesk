@@ -1,7 +1,7 @@
-import { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/database.types';
-import { EmbeddingService } from '../embeddings/service';
+import { SupabaseClient } from '@supabase/supabase-js';
 import { EmailThread } from '../email/types';
+import { EmbeddingService } from '../embeddings/service';
 
 /**
  * Retrieves an email thread with all its messages
@@ -12,7 +12,8 @@ export async function getEmailThread(
 ): Promise<EmailThread | null> {
   const { data: thread, error } = await supabase
     .from('email_threads')
-    .select(`
+    .select(
+      `
       *,
       messages: email_messages (
         message_id,
@@ -21,7 +22,8 @@ export async function getEmailThread(
         text_body,
         created_at
       )
-    `)
+    `
+    )
     .eq('id', threadId)
     .order('created_at', { ascending: true })
     .single();
@@ -62,7 +64,7 @@ export async function getSemanticallySimilarNotes(
 
   return embeddings.searchNotes(combinedText, {
     threshold: options.threshold ?? 0.6,
-    limit: options.limit ?? 5
+    limit: options.limit ?? 5,
   });
 }
 
@@ -89,10 +91,10 @@ export async function getSemanticallySimilarArticleChunks(
     query_embedding: embeddings.embedToString(embedding),
     match_threshold: options.threshold ?? 0.6,
     match_count: options.limit ?? 5,
-    p_org_id: orgId
+    p_org_id: orgId,
   });
   // console.log('getSemanticallySimilarArticleChunks', data, options, orgId, embedding.length, error);
 
   if (error) throw error;
   return data || [];
-} 
+}

@@ -3,6 +3,7 @@
 ## Financing Options
 
 ### Direct Purchase
+
 - Full system ownership
 - Maximum long-term savings
 - Eligible for all tax incentives
@@ -10,6 +11,7 @@
 - Best for: Homeowners planning long-term residence
 
 ### Solar Loan
+
 - $0 down payment options
 - Terms: 5, 10, 15, or 20 years
 - Interest rates from 2.99% APR
@@ -17,6 +19,7 @@
 - Best for: Homeowners wanting ownership with monthly payments
 
 ### Solar Lease
+
 - No upfront costs
 - Fixed monthly payments
 - Includes maintenance and monitoring
@@ -24,6 +27,7 @@
 - Best for: Homeowners wanting predictable payments
 
 ### Power Purchase Agreement (PPA)
+
 - $0 down payment
 - Pay only for power produced
 - Includes maintenance and monitoring
@@ -33,19 +37,23 @@
 ## ROI Assessment
 
 ### Residential ROI Factors
+
 1. **Current Energy Costs**
+
    - Average monthly bill
    - Historical usage patterns
    - Rate escalation projections
    - Time-of-use considerations
 
 2. **System Costs**
+
    - Equipment and installation
    - Maintenance and insurance
    - Financing costs
    - Warranty coverage
 
 3. **Energy Production**
+
    - System size and efficiency
    - Local solar irradiance
    - Shading analysis
@@ -58,13 +66,16 @@
    - Property value increase
 
 ### Commercial ROI Factors
+
 1. **Business Energy Profile**
+
    - Peak demand charges
    - Load profile analysis
    - Seasonal variations
    - Growth projections
 
 2. **Investment Metrics**
+
    - Internal Rate of Return (IRR)
    - Net Present Value (NPV)
    - Payback period
@@ -79,24 +90,28 @@
 ## Tax Incentives
 
 ### Federal Incentives
+
 - 30% Federal Solar Tax Credit
 - Accelerated depreciation (MACRS)
 - Business energy investment credits
 - Non-profit grant programs
 
 ### State Incentives
+
 - State tax credits
 - Property tax exemptions
 - Sales tax exemptions
 - Performance-based incentives
 
 ### Local Incentives
+
 - Municipal rebates
 - Utility company incentives
 - Community solar programs
 - Green energy credits
 
 ### Claiming Process
+
 1. Documentation requirements
 2. Filing deadlines
 3. Qualification criteria
@@ -105,7 +120,9 @@
 ## Environmental Impact
 
 ### Carbon Footprint Reduction
+
 1. **Direct Impact**
+
    - Annual CO2 reduction
    - Equivalent trees planted
    - Carbon offset value
@@ -118,7 +135,9 @@
    - Local air quality improvement
 
 ### Sustainability Metrics
+
 1. **Energy Production**
+
    - Annual kWh generation
    - Peak production periods
    - Seasonal variations
@@ -131,7 +150,9 @@
    - Material sustainability
 
 ### Environmental Reporting
+
 1. **Personal Impact**
+
    - Monthly environmental benefits
    - Annual impact statement
    - Cumulative effect tracking
@@ -146,80 +167,92 @@
 ## Energy Savings Calculations
 
 ### Residential Calculations
+
 1. **Monthly Savings**
+
    ```
-   Monthly Savings = 
-   (Monthly kWh Production × Utility Rate) 
-   + Net Metering Credits 
+   Monthly Savings =
+   (Monthly kWh Production × Utility Rate)
+   + Net Metering Credits
    - Monthly Payment
    ```
 
 2. **Annual Savings**
+
    ```
-   Annual Savings = 
-   Σ(Monthly Savings) 
-   + Tax Incentives 
+   Annual Savings =
+   Σ(Monthly Savings)
+   + Tax Incentives
    + Utility Incentives
    ```
 
 3. **Lifetime Savings**
    ```
-   Lifetime Savings = 
-   (Annual Savings × System Life) 
-   + Property Value Increase 
+   Lifetime Savings =
+   (Annual Savings × System Life)
+   + Property Value Increase
    - Maintenance Costs
    ```
 
 ### Commercial Calculations
+
 1. **Energy Cost Savings**
+
    ```
-   Energy Savings = 
-   (Annual kWh Production × Blended Rate) 
+   Energy Savings =
+   (Annual kWh Production × Blended Rate)
    + Demand Charge Reduction
    ```
 
 2. **Tax Benefit Calculations**
+
    ```
-   Tax Benefits = 
-   Federal ITC 
-   + Depreciation Benefits 
+   Tax Benefits =
+   Federal ITC
+   + Depreciation Benefits
    + State/Local Incentives
    ```
 
 3. **Net Present Value**
    ```
-   NPV = 
-   Initial Investment 
+   NPV =
+   Initial Investment
    + Σ(Annual Cash Flows / (1 + Discount Rate)^Year)
    ```
 
 ### Performance Metrics
+
 1. **System Efficiency**
+
    ```
-   System Efficiency = 
+   System Efficiency =
    Actual Production / Expected Production
    ```
 
 2. **Financial Performance**
+
    ```
-   ROI = 
+   ROI =
    (Total Benefits - Total Costs) / Total Costs × 100
    ```
 
 3. **Environmental Impact**
    ```
-   CO2 Reduction = 
+   CO2 Reduction =
    Annual kWh × Grid Carbon Factor
    ```
 
 ### Monitoring and Verification
+
 1. **Real-time Monitoring**
+
    - Production tracking
    - Consumption analysis
    - Performance alerts
    - Weather normalization
 
 2. **Financial Tracking**
+
    - Savings verification
    - ROI monitoring
    - Incentive tracking
@@ -229,4 +262,4 @@
    - Carbon offset tracking
    - Environmental benefits
    - Sustainability metrics
-   - Impact visualization 
+   - Impact visualization

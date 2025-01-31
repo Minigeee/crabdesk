@@ -232,15 +232,22 @@ export function TicketTable() {
                 key={column.id}
                 style={{ width: column.width }}
                 className={cn(column.sortable && 'cursor-pointer select-none')}
-                onClick={() => column.sortable && handleSort(column.id as keyof Tables<'tickets'>)}
+                onClick={() =>
+                  column.sortable &&
+                  handleSort(column.id as keyof Tables<'tickets'>)
+                }
               >
                 <div className='flex items-center space-x-2'>
                   <span>{column.label}</span>
                   {column.sortable && (
                     <SortButton
-                      active={sort.column === column.id as keyof Tables<'tickets'>}
+                      active={
+                        sort.column === (column.id as keyof Tables<'tickets'>)
+                      }
                       ascending={sort.ascending}
-                      onSort={() => handleSort(column.id as keyof Tables<'tickets'>)}
+                      onSort={() =>
+                        handleSort(column.id as keyof Tables<'tickets'>)
+                      }
                     />
                   )}
                 </div>

@@ -1,13 +1,16 @@
-import { SupabaseClient } from '@supabase/supabase-js';
-import { ChatOpenAI } from '@langchain/openai';
-import { PromptTemplate } from '@langchain/core/prompts';
-import { StringOutputParser } from '@langchain/core/output_parsers';
-import { ResponseGraderService } from './grader-service';
 import type { Database } from '@/lib/database.types';
+import type { AutoResponseSettings } from '@/lib/settings/types';
+import { StringOutputParser } from '@langchain/core/output_parsers';
+import { PromptTemplate } from '@langchain/core/prompts';
+import { ChatOpenAI } from '@langchain/openai';
+import { SupabaseClient } from '@supabase/supabase-js';
 import { EmailThread } from '../email/types';
 import { EmbeddingService } from '../embeddings/service';
-import type { AutoResponseSettings } from '@/lib/settings/types';
-import { getEmailThread, getSemanticallySimilarNotes, getSemanticallySimilarArticleChunks } from './utils';
+import { ResponseGraderService } from './grader-service';
+import {
+  getSemanticallySimilarArticleChunks,
+  getSemanticallySimilarNotes,
+} from './utils';
 
 const RESPONDER_PROMPT = `You are an expert customer support agent. Your task is to draft a response to a customer email thread.
 Use the provided context to ensure accuracy and alignment with organizational goals.
@@ -75,8 +78,10 @@ export class AutoResponderService {
       enabled: true,
       tone: 'Professional and friendly',
       language: 'English',
-      responseGuidelines: 'Begin with a greeting, acknowledge the issue, provide clear next steps or solutions, and end with a professional closing.',
-      complianceRequirements: 'Include data privacy disclaimer when discussing sensitive information. Never share customer data or internal system details.',
+      responseGuidelines:
+        'Begin with a greeting, acknowledge the issue, provide clear next steps or solutions, and end with a professional closing.',
+      complianceRequirements:
+        'Include data privacy disclaimer when discussing sensitive information. Never share customer data or internal system details.',
     };
 
     const settings = data.settings as any;
@@ -87,8 +92,11 @@ export class AutoResponderService {
       enabled: orgSettings.enabled ?? defaultSettings.enabled,
       tone: orgSettings.tone || defaultSettings.tone,
       language: orgSettings.language || defaultSettings.language,
-      responseGuidelines: orgSettings.responseGuidelines || defaultSettings.responseGuidelines,
-      complianceRequirements: orgSettings.complianceRequirements || defaultSettings.complianceRequirements,
+      responseGuidelines:
+        orgSettings.responseGuidelines || defaultSettings.responseGuidelines,
+      complianceRequirements:
+        orgSettings.complianceRequirements ||
+        defaultSettings.complianceRequirements,
     };
   }
 
@@ -118,7 +126,7 @@ export class AutoResponderService {
       if (error) throw error;
       return {
         notes: notes || [],
-        articleChunks: []
+        articleChunks: [],
       };
     }
 
@@ -126,13 +134,13 @@ export class AutoResponderService {
     // Combine the last few messages to create a meaningful search context
     const messages = thread.messages.slice(-2); // Use last 2 messages
     const searchTexts = messages
-      .map(msg => msg.text_body)
+      .map((msg) => msg.text_body)
       .filter(Boolean) as string[];
 
     if (!searchTexts.length) {
       return {
         notes: [],
-        articleChunks: []
+        articleChunks: [],
       };
     }
 
@@ -141,9 +149,14 @@ export class AutoResponderService {
       getSemanticallySimilarNotes(this.embeddings, searchTexts, {
         threshold: 0.5,
       }),
-      getSemanticallySimilarArticleChunks(this.supabase, this.orgId, searchTexts, {
-        threshold: 0.5,
-      })
+      getSemanticallySimilarArticleChunks(
+        this.supabase,
+        this.orgId,
+        searchTexts,
+        {
+          threshold: 0.5,
+        }
+      ),
     ]);
 
     console.log('notes', notes);
@@ -151,7 +164,7 @@ export class AutoResponderService {
 
     return {
       notes: notes || [],
-      articleChunks: articleChunks || []
+      articleChunks: articleChunks || [],
     };
   }
 
@@ -159,7 +172,9 @@ export class AutoResponderService {
     return (thread.messages || [])
       .map((msg) => {
         const sender = msg.from_name || msg.from_email;
-        const timestamp = msg.created_at ? new Date(msg.created_at).toISOString() : new Date().toISOString();
+        const timestamp = msg.created_at
+          ? new Date(msg.created_at).toISOString()
+          : new Date().toISOString();
         return `[${timestamp}] ${sender}:\n${msg.text_body}\n`;
       })
       .join('\n---\n');
@@ -185,8 +200,10 @@ export class AutoResponderService {
   ) {
     const formattedNotes = notes?.length
       ? notes
-          .map(note => {
-            const timestamp = note.created_at ? new Date(note.created_at).toISOString() : new Date().toISOString();
+          .map((note) => {
+            const timestamp = note.created_at
+              ? new Date(note.created_at).toISOString()
+              : new Date().toISOString();
             return `<note>\n[Note ${timestamp}]\n${note.content}\n</note>`;
           })
           .join('\n\n')
@@ -194,7 +211,10 @@ export class AutoResponderService {
 
     const formattedArticles = articleChunks?.length
       ? articleChunks
-          .map(chunk => `<article>\n[Article: ${chunk.article_title}]\n${chunk.chunk_content}\n</article>`)
+          .map(
+            (chunk) =>
+              `<article>\n[Article: ${chunk.article_title}]\n${chunk.chunk_content}\n</article>`
+          )
           .join('\n\n')
       : 'No relevant articles found.';
 
@@ -231,7 +251,8 @@ export class AutoResponderService {
     }
 
     // Get auto-response settings
-    const settings = options?.settings || await this.getAutoResponseSettings();
+    const settings =
+      options?.settings || (await this.getAutoResponseSettings());
 
     // Check if auto-response is enabled
     if (!settings.enabled) {
@@ -239,11 +260,15 @@ export class AutoResponderService {
     }
 
     // Get relevant context if not provided
-    const context = options?.context || await this.getRelevantContext(ticketId, thread);
+    const context =
+      options?.context || (await this.getRelevantContext(ticketId, thread));
 
     // Format all context for the prompt
     const threadText = this.formatThreadForResponse(thread);
-    const contextText = this.formatContextForResponse(context.notes, context.articleChunks);
+    const contextText = this.formatContextForResponse(
+      context.notes,
+      context.articleChunks
+    );
 
     // Generate response using LangChain
     const chain = this.responderPrompt
@@ -260,29 +285,31 @@ export class AutoResponderService {
     });
 
     // Grade the response
-    const grade = await this.graderService.gradeResponse(thread.id, draftResponse, {
-      thread,
-      context,
-    });
+    const grade = await this.graderService.gradeResponse(
+      thread.id,
+      draftResponse,
+      {
+        thread,
+        context,
+      }
+    );
 
     // Store the draft and grade
-    const { error } = await this.supabase
-      .from('response_drafts')
-      .insert({
-        org_id: this.orgId,
-        thread_id: thread.id,
-        ticket_id: ticketId,
-        content: draftResponse,
-        grade,
-        status: 'pending',
-        metadata: {
-          context_used: {
-            had_notes: context.notes.length > 0,
-            had_articles: context.articleChunks.length > 0,
-            message_count: thread.messages.length,
-          }
-        }
-      });
+    const { error } = await this.supabase.from('response_drafts').insert({
+      org_id: this.orgId,
+      thread_id: thread.id,
+      ticket_id: ticketId,
+      content: draftResponse,
+      grade,
+      status: 'pending',
+      metadata: {
+        context_used: {
+          had_notes: context.notes.length > 0,
+          had_articles: context.articleChunks.length > 0,
+          message_count: thread.messages.length,
+        },
+      },
+    });
 
     if (error) throw error;
 
@@ -306,20 +333,24 @@ export class AutoResponderService {
       .update({
         status: 'approved',
         approved_at: new Date().toISOString(),
-        approved_by: userId
+        approved_by: userId,
       })
       .eq('id', draftId);
 
     if (error) throw error;
   }
 
-  async modifyDraft(draftId: string, modifiedContent: string, feedback?: string) {
+  async modifyDraft(
+    draftId: string,
+    modifiedContent: string,
+    feedback?: string
+  ) {
     const { error } = await this.supabase
       .from('response_drafts')
       .update({
         status: 'modified',
         modified_content: modifiedContent,
-        feedback
+        feedback,
       })
       .eq('id', draftId);
 
@@ -331,10 +362,10 @@ export class AutoResponderService {
       .from('response_drafts')
       .update({
         status: 'rejected',
-        feedback
+        feedback,
       })
       .eq('id', draftId);
 
     if (error) throw error;
   }
-} 
+}

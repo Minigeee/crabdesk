@@ -1,12 +1,11 @@
 'use server';
 
 import { getCurrentUser } from '@/lib/auth/session';
-import { createServiceClient } from '@/lib/supabase/service';
 import { EmailProcessingService } from '@/lib/email/service';
-import { revalidatePath } from 'next/cache';
-import { ResponseGraderService } from '@/lib/tickets/grader-service';
 import { createClient } from '@/lib/supabase/server';
-import { AutoResponderService } from '@/lib/tickets/auto-responder-service';
+import { createServiceClient } from '@/lib/supabase/service';
+import { ResponseGraderService } from '@/lib/tickets/grader-service';
+import { revalidatePath } from 'next/cache';
 
 /**
  * NOTE: In production, these actions would interact with a real email service API.
@@ -23,7 +22,7 @@ export async function getEmailThreads(ticketId: string) {
   // In production, we would check permissions against the email service
   // For now, we'll do a basic check that the user has access to the organization
   const supabase = createServiceClient();
-  
+
   // Verify ticket belongs to user's organization
   const { data: ticket } = await supabase
     .from('tickets')
@@ -111,12 +110,15 @@ export async function sendEmailReply({
 export async function gradeEmailResponse(threadId: string, response: string) {
   const supabase = createServiceClient();
   const userData = await getCurrentUser();
-  
+
   if (!userData) {
     throw new Error('Not authenticated');
   }
-  
-  const graderService = new ResponseGraderService(supabase, userData.organization.id);
+
+  const graderService = new ResponseGraderService(
+    supabase,
+    userData.organization.id
+  );
   return graderService.gradeResponse(threadId, response);
 }
 
@@ -142,7 +144,7 @@ export async function approveDraft(draftId: string) {
     .update({
       status: 'approved',
       approved_at: new Date().toISOString(),
-      approved_by: userData.user.id
+      approved_by: userData.user.id,
     })
     .eq('id', draftId);
 
@@ -155,7 +157,7 @@ export async function modifyDraft(draftId: string, modifiedContent: string) {
     .from('response_drafts')
     .update({
       status: 'modified',
-      modified_content: modifiedContent
+      modified_content: modifiedContent,
     })
     .eq('id', draftId);
 
@@ -168,9 +170,9 @@ export async function rejectDraft(draftId: string, feedback: string) {
     .from('response_drafts')
     .update({
       status: 'rejected',
-      feedback
+      feedback,
     })
     .eq('id', draftId);
 
   if (error) throw error;
-} 
+}

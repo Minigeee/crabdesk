@@ -9,12 +9,12 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
+import { useContact } from '@/lib/contacts/use-contacts';
 import { ArrowLeft, Home } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import * as React from 'react';
 import { useMemo } from 'react';
-import { useContact } from '@/lib/contacts/use-contacts';
 
 const pathToLabel: Record<string, string> = {
   dashboard: 'Dashboard',
@@ -35,12 +35,22 @@ function getBreadcrumbs(pathname: string) {
   }));
 }
 
-function BreadcrumbLabel({ item }: { item: ReturnType<typeof getBreadcrumbs>[0] }) {
+function BreadcrumbLabel({
+  item,
+}: {
+  item: ReturnType<typeof getBreadcrumbs>[0];
+}) {
+  const isContactRoute = useMemo(
+    () =>
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        item.path
+      ),
+    [item.path]
+  );
+  const { data: contact } = useContact(isContactRoute ? item.path : '');
+
   // If this is a contact ID, fetch the contact name
   if (item.path === 'contacts') return <>{item.label}</>;
-  
-  const isContactRoute = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item.path);
-  const { data: contact } = useContact(isContactRoute ? item.path : '');
 
   if (isContactRoute && contact) {
     return <>{contact.name || contact.email}</>;

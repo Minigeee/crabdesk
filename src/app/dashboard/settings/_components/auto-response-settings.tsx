@@ -81,7 +81,9 @@ async function updateAutoResponseSettings(
   return { success: true };
 }
 
-export function AutoResponseSettings({ initialSettings }: AutoResponseSettingsProps) {
+export function AutoResponseSettings({
+  initialSettings,
+}: AutoResponseSettingsProps) {
   const { organization } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -121,7 +123,9 @@ export function AutoResponseSettings({ initialSettings }: AutoResponseSettingsPr
     },
     onSuccess: () => {
       if (organization?.id) {
-        queryClient.invalidateQueries({ queryKey: ['settings', organization.id] });
+        queryClient.invalidateQueries({
+          queryKey: ['settings', organization.id],
+        });
       }
       toast({
         title: 'Settings saved',

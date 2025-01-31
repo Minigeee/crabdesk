@@ -1,6 +1,5 @@
 'use client';
 
-import { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -11,6 +10,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { useCallback, useState } from 'react';
 import { sendTestEmail } from '../actions';
 
 const templates = [
@@ -33,7 +33,7 @@ const templates = [
       fromEmail: 'robert.chen@email.com',
       fromName: 'Robert Chen',
       subject: 'URGENT - Complete System Failure - Medical Equipment at Risk',
-      body: "Our entire solar system and battery backup installed last month has stopped working. We have medical equipment that requires constant power. Need immediate help.\n\nAddress: 1234 Oak Street, Houston.",
+      body: 'Our entire solar system and battery backup installed last month has stopped working. We have medical equipment that requires constant power. Need immediate help.\n\nAddress: 1234 Oak Street, Houston.',
     },
   },
   {
@@ -55,7 +55,7 @@ const templates = [
       fromEmail: 'david.smith@email.com',
       fromName: 'David Smith',
       subject: 'Damage to Solar Panels After Storm',
-      body: "We had a severe storm last night and I noticed some panels appear to be damaged. System is showing reduced output. Need someone to check ASAP. Installation was done 6 months ago.",
+      body: 'We had a severe storm last night and I noticed some panels appear to be damaged. System is showing reduced output. Need someone to check ASAP. Installation was done 6 months ago.',
     },
   },
   {
@@ -66,7 +66,7 @@ const templates = [
       fromEmail: 'lisa.wong@email.com',
       fromName: 'Lisa Wong',
       subject: 'Smart Home Integration with Existing System',
-      body: "We have your basic solar system installed last year. Interested in upgrading to the smart home features. Can you tell me about compatibility with Nest and Ring devices? Also interested in battery storage options.",
+      body: 'We have your basic solar system installed last year. Interested in upgrading to the smart home features. Can you tell me about compatibility with Nest and Ring devices? Also interested in battery storage options.',
     },
   },
   {
@@ -130,30 +130,34 @@ export function EmailTemplates() {
   const { toast } = useToast();
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
-  const sendTemplate = useCallback(async (template: (typeof templates)[0]) => {
-    setLoadingId(template.id);
-    try {
-      const result = await sendTestEmail({
-        ...template.scenario,
-        toEmail: 'support@acme.com',
-        toName: 'Support Team',
-        includeAttachments: false,
-      });
+  const sendTemplate = useCallback(
+    async (template: (typeof templates)[0]) => {
+      setLoadingId(template.id);
+      try {
+        const result = await sendTestEmail({
+          ...template.scenario,
+          toEmail: 'support@acme.com',
+          toName: 'Support Team',
+          includeAttachments: false,
+        });
 
-      toast({
-        title: 'Template Sent',
-        description: `Sent "${template.title}" (Message ID: ${result.messageId})`,
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to send template',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoadingId(null);
-    }
-  }, [toast]);
+        toast({
+          title: 'Template Sent',
+          description: `Sent "${template.title}" (Message ID: ${result.messageId})`,
+        });
+      } catch (error) {
+        toast({
+          title: 'Error',
+          description:
+            error instanceof Error ? error.message : 'Failed to send template',
+          variant: 'destructive',
+        });
+      } finally {
+        setLoadingId(null);
+      }
+    },
+    [toast]
+  );
 
   return (
     <div className='grid gap-6 md:grid-cols-2'>

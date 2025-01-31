@@ -6,7 +6,7 @@ export default function LandingPage() {
   return (
     <div className='flex min-h-screen flex-col'>
       <header className='sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
-        <div className='container flex h-14 items-center justify-between max-w-screen-xl mx-auto px-4'>
+        <div className='container mx-auto flex h-14 max-w-screen-xl items-center justify-between px-4'>
           <div className='flex items-center'>
             <Link href='/' className='flex items-center space-x-2'>
               <span className='bg-gradient-to-r from-secondary to-primary bg-clip-text text-xl font-bold text-transparent'>
@@ -31,9 +31,9 @@ export default function LandingPage() {
       <main className='flex-1'>
         {/* Hero Section */}
         <section className='relative overflow-hidden bg-gradient-to-b from-background to-secondary/5 pb-16 pt-24 md:pb-24 md:pt-32 lg:pb-32 lg:pt-40'>
-          <div className='absolute inset-0 bg-grid-slate-50/[0.05] bg-[center_top_-1px] [mask-image:linear-gradient(0deg,transparent,black)]' />
-          <div className='container relative flex max-w-screen-xl mx-auto px-4'>
-            <div className='flex max-w-[64rem] flex-col items-center gap-4 text-center mx-auto'>
+          <div className='bg-grid-slate-50/[0.05] absolute inset-0 bg-[center_top_-1px] [mask-image:linear-gradient(0deg,transparent,black)]' />
+          <div className='container relative mx-auto flex max-w-screen-xl px-4'>
+            <div className='mx-auto flex max-w-[64rem] flex-col items-center gap-4 text-center'>
               <div className='inline-flex items-center rounded-2xl bg-gradient-to-r from-secondary/20 via-primary/20 to-secondary/20 px-6 py-2 text-sm font-medium'>
                 🦀 Modern Email Support for Modern Teams
               </div>
@@ -58,7 +58,7 @@ export default function LandingPage() {
 
         {/* Features Section */}
         <section className='relative bg-secondary/[0.02] py-16 md:py-24 lg:py-32'>
-          <div className='container max-w-screen-xl mx-auto px-4'>
+          <div className='container mx-auto max-w-screen-xl px-4'>
             <div className='mx-auto grid justify-center gap-8 sm:grid-cols-2 md:max-w-[64rem] lg:grid-cols-4'>
               <div className='relative overflow-hidden rounded-lg border bg-background p-2'>
                 <div className='flex h-[180px] flex-col justify-between rounded-md p-6'>
@@ -111,8 +111,8 @@ export default function LandingPage() {
 
         {/* CTA Section */}
         <section className='relative overflow-hidden bg-gradient-to-b from-secondary/5 to-background py-16 md:py-24 lg:py-32'>
-          <div className='absolute inset-0 bg-grid-slate-50/[0.05] bg-[center_top_-1px] [mask-image:linear-gradient(180deg,transparent,black,transparent)]' />
-          <div className='container relative max-w-screen-xl mx-auto px-4'>
+          <div className='bg-grid-slate-50/[0.05] absolute inset-0 bg-[center_top_-1px] [mask-image:linear-gradient(180deg,transparent,black,transparent)]' />
+          <div className='container relative mx-auto max-w-screen-xl px-4'>
             <div className='mx-auto flex max-w-[58rem] flex-col items-center justify-center gap-4 text-center'>
               <h2 className='font-heading text-3xl font-bold leading-[1.1] sm:text-4xl md:text-5xl lg:text-6xl'>
                 Ready to dive in?
@@ -134,7 +134,7 @@ export default function LandingPage() {
       </main>
 
       <footer className='border-t py-8 md:py-12'>
-        <div className='container max-w-screen-xl mx-auto px-4'>
+        <div className='container mx-auto max-w-screen-xl px-4'>
           <div className='flex flex-col items-center justify-between gap-4 md:flex-row'>
             <p className='text-center text-sm leading-loose text-muted-foreground md:text-left'>
               Built with ❤️ for customer support teams everywhere

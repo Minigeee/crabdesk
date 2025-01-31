@@ -9,6 +9,7 @@ This comprehensive guide outlines the complete installation and setup process fo
 ### 1. Pre-Installation Assessment
 
 #### Site Evaluation
+
 - Roof condition and structural integrity
 - Solar exposure and shading analysis
 - Available roof/ground space
@@ -17,6 +18,7 @@ This comprehensive guide outlines the complete installation and setup process fo
 - Local weather patterns review
 
 #### Documentation Requirements
+
 - Property ownership verification
 - HOA approval (if applicable)
 - Historical district restrictions
@@ -27,6 +29,7 @@ This comprehensive guide outlines the complete installation and setup process fo
 ### 2. System Design
 
 #### Technical Planning
+
 - System size calculation
 - Panel layout optimization
 - Inverter placement
@@ -35,6 +38,7 @@ This comprehensive guide outlines the complete installation and setup process fo
 - Internet connection planning
 
 #### Safety Considerations
+
 - Roof load capacity
 - Wind resistance requirements
 - Fire safety compliance
@@ -45,6 +49,7 @@ This comprehensive guide outlines the complete installation and setup process fo
 ### 3. Permitting Process
 
 #### Required Permits
+
 - Building permit
 - Electrical permit
 - Solar installation permit
@@ -53,6 +58,7 @@ This comprehensive guide outlines the complete installation and setup process fo
 - City/County specific permits
 
 #### Documentation Package
+
 - Detailed system design
 - Structural calculations
 - Electrical diagrams
@@ -63,6 +69,7 @@ This comprehensive guide outlines the complete installation and setup process fo
 ### 4. Installation Execution
 
 #### Site Preparation
+
 - Equipment staging area setup
 - Safety barrier installation
 - Roof protection measures
@@ -71,7 +78,9 @@ This comprehensive guide outlines the complete installation and setup process fo
 - Weather monitoring
 
 #### Mounting System Installation
+
 1. Roof preparation
+
    - Locate rafters
    - Mark mounting points
    - Install flashing
@@ -84,7 +93,9 @@ This comprehensive guide outlines the complete installation and setup process fo
    - Weather sealing
 
 #### Solar Panel Installation
+
 1. Panel placement
+
    - Optimization for sunlight
    - Gap specifications
    - Alignment requirements
@@ -97,7 +108,9 @@ This comprehensive guide outlines the complete installation and setup process fo
    - Junction box setup
 
 #### Electrical Integration
+
 1. Inverter installation
+
    - Location preparation
    - Mounting
    - Ventilation verification
@@ -114,6 +127,7 @@ This comprehensive guide outlines the complete installation and setup process fo
 ### 1. Project Planning
 
 #### Site Analysis
+
 - Structural engineering assessment
 - Electrical infrastructure review
 - Space utilization planning
@@ -122,6 +136,7 @@ This comprehensive guide outlines the complete installation and setup process fo
 - Grid connection points
 
 #### Resource Planning
+
 - Equipment procurement schedule
 - Labor requirements
 - Timeline development
@@ -132,6 +147,7 @@ This comprehensive guide outlines the complete installation and setup process fo
 ### 2. Technical Design
 
 #### System Engineering
+
 - Load calculation
 - System sizing
 - Equipment specification
@@ -140,6 +156,7 @@ This comprehensive guide outlines the complete installation and setup process fo
 - Backup power planning
 
 #### Safety Systems
+
 - Fall protection
 - Fire suppression
 - Emergency shutoff
@@ -150,7 +167,9 @@ This comprehensive guide outlines the complete installation and setup process fo
 ### 3. Implementation
 
 #### Site Preparation
+
 1. Infrastructure
+
    - Access roads
    - Equipment pads
    - Drainage systems
@@ -164,7 +183,9 @@ This comprehensive guide outlines the complete installation and setup process fo
    - Alignment verification
 
 #### System Installation
+
 1. Array Installation
+
    - Panel mounting
    - Wiring harnesses
    - Junction boxes
@@ -181,6 +202,7 @@ This comprehensive guide outlines the complete installation and setup process fo
 ### Physical Assessment
 
 #### Structural Evaluation
+
 - Load-bearing capacity
 - Structural integrity
 - Material condition
@@ -189,6 +211,7 @@ This comprehensive guide outlines the complete installation and setup process fo
 - Support requirements
 
 #### Environmental Factors
+
 - Solar exposure
 - Shading analysis
 - Wind patterns
@@ -199,6 +222,7 @@ This comprehensive guide outlines the complete installation and setup process fo
 ### Technical Assessment
 
 #### Electrical Evaluation
+
 - Service capacity
 - Panel condition
 - Grounding system
@@ -207,6 +231,7 @@ This comprehensive guide outlines the complete installation and setup process fo
 - Safety systems
 
 #### Network Infrastructure
+
 - Internet availability
 - Signal strength
 - Router location
@@ -219,6 +244,7 @@ This comprehensive guide outlines the complete installation and setup process fo
 ### Local Permits
 
 #### Building Department
+
 - Construction permits
 - Electrical permits
 - Structural certification
@@ -227,6 +253,7 @@ This comprehensive guide outlines the complete installation and setup process fo
 - Inspection requirements
 
 #### Utility Requirements
+
 - Interconnection agreement
 - Equipment certification
 - Protection settings
@@ -239,6 +266,7 @@ This comprehensive guide outlines the complete installation and setup process fo
 ### System Network
 
 #### Hardware Setup
+
 - Gateway installation
 - Router configuration
 - Signal verification
@@ -247,7 +275,9 @@ This comprehensive guide outlines the complete installation and setup process fo
 - Firmware updates
 
 #### Software Configuration
+
 1. Monitoring System
+
    - Account creation
    - Device registration
    - Network connection
@@ -265,6 +295,7 @@ This comprehensive guide outlines the complete installation and setup process fo
 ### Pre-Activation Checklist
 
 #### System Verification
+
 - All connections secure
 - Proper polarity
 - Ground continuity
@@ -273,6 +304,7 @@ This comprehensive guide outlines the complete installation and setup process fo
 - Safety systems
 
 #### Documentation
+
 - As-built drawings
 - Equipment warranties
 - Operation manuals
@@ -283,6 +315,7 @@ This comprehensive guide outlines the complete installation and setup process fo
 ### Activation Process
 
 #### Startup Sequence
+
 1. Safety check
 2. DC activation
 3. Inverter startup
@@ -291,6 +324,7 @@ This comprehensive guide outlines the complete installation and setup process fo
 6. Performance verification
 
 #### Testing Protocol
+
 - Voltage testing
 - Current measurements
 - Performance ratio
@@ -301,6 +335,7 @@ This comprehensive guide outlines the complete installation and setup process fo
 ### Post-Activation
 
 #### System Validation
+
 - Production verification
 - Monitoring setup
 - Alert testing
@@ -309,6 +344,7 @@ This comprehensive guide outlines the complete installation and setup process fo
 - Emergency shutdown
 
 #### Customer Training
+
 - System overview
 - Basic operation
 - Monitoring access
@@ -319,6 +355,7 @@ This comprehensive guide outlines the complete installation and setup process fo
 ## Quality Control
 
 ### Installation Standards
+
 - Workmanship requirements
 - Material specifications
 - Safety compliance
@@ -327,6 +364,7 @@ This comprehensive guide outlines the complete installation and setup process fo
 - Documentation standards
 
 ### Testing and Verification
+
 - Equipment testing
 - Performance validation
 - Safety verification
@@ -337,6 +375,7 @@ This comprehensive guide outlines the complete installation and setup process fo
 ## Emergency Procedures
 
 ### Emergency Response
+
 - Shutdown procedures
 - Emergency contacts
 - First responder info
@@ -345,9 +384,10 @@ This comprehensive guide outlines the complete installation and setup process fo
 - Recovery procedures
 
 ### Safety Systems
+
 - Fire safety
 - Electrical safety
 - Fall protection
 - Weather protection
 - Security systems
-- Emergency access 
+- Emergency access

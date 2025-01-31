@@ -40,15 +40,19 @@ export function useApprovalQueue() {
       const approvalQueue = data
         .filter((ticket) => {
           const drafts = Array.isArray(ticket.drafts) ? ticket.drafts : [];
-          return drafts.some(draft => draft.status === 'pending');
+          return drafts.some((draft) => draft.status === 'pending');
         })
         .map((ticket) => {
           const drafts = Array.isArray(ticket.drafts) ? ticket.drafts : [];
           // Get the latest pending draft
           const latestPendingDraft = drafts
-            .filter(draft => draft.status === 'pending')
-            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
-            
+            .filter((draft) => draft.status === 'pending')
+            .sort(
+              (a, b) =>
+                new Date(b.created_at).getTime() -
+                new Date(a.created_at).getTime()
+            )[0];
+
           return {
             ...ticket,
             latest_pending_draft: latestPendingDraft,

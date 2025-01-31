@@ -1,7 +1,7 @@
 import { useAuth } from '@/lib/auth/hooks';
 import { Tables } from '@/lib/database.types';
 import { createClient } from '@/lib/supabase/client';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export type Note = Tables<'notes'> & {
   author?: {
@@ -68,4 +68,4 @@ export function useNotes(entityType: EntityType, entityId: string) {
     addNote,
     deleteNote,
   };
-} 
+}

@@ -1,4 +1,4 @@
-import { type Tables, type Json } from '../database.types';
+import { type Tables } from '../database.types';
 
 // Provider-agnostic email interfaces
 export interface EmailAddress {
@@ -65,14 +65,14 @@ export interface PostmarkWebhookPayload {
   }>;
 }
 
-export interface ProcessedEmailData extends EmailContent {}
+export type ProcessedEmailData = EmailContent;
 
 export interface EmailThread extends Tables<'email_threads'> {
   ticket?: Tables<'tickets'>;
   messages?: Partial<Tables<'email_messages'>>[];
 }
 
-export interface EmailMessage extends Tables<'email_messages'> {}
+export type EmailMessage = Tables<'email_messages'>;
 
 export interface EmailProcessingResult {
   thread: EmailThread;
@@ -87,4 +87,4 @@ export interface EmailProvider {
   fetchMessage(messageId: string): Promise<EmailContent>;
   fetchThread(threadId: string): Promise<EmailContent[]>;
   sendMessage(content: EmailContent): Promise<void>;
-} 
+}

@@ -1,9 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -15,12 +12,15 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { useEmailTesting } from './email-testing-provider';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 import { sendTestEmail } from '../actions';
+import { useEmailTesting } from './email-testing-provider';
 
 const formSchema = z.object({
   fromEmail: z.string().email(),
@@ -58,7 +58,9 @@ export function EmailTestingForm() {
       const result = await sendTestEmail({
         ...data,
         toName: data.toName ?? '',
-        inReplyTo: selectedThread?.messages[selectedThread.messages.length - 1]?.message_id,
+        inReplyTo:
+          selectedThread?.messages[selectedThread.messages.length - 1]
+            ?.message_id,
       });
 
       if (selectedThread) {
@@ -73,7 +75,8 @@ export function EmailTestingForm() {
     } catch (error) {
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to send test email',
+        description:
+          error instanceof Error ? error.message : 'Failed to send test email',
         variant: 'destructive',
       });
     } finally {
@@ -84,7 +87,7 @@ export function EmailTestingForm() {
   return (
     <Form {...form}>
       {selectedThread && (
-        <Alert className="mb-6">
+        <Alert className='mb-6'>
           <AlertDescription>
             Replying to thread: {selectedThread.subject}
           </AlertDescription>
@@ -193,7 +196,10 @@ export function EmailTestingForm() {
                 </FormDescription>
               </div>
               <FormControl>
-                <Switch checked={field.value} onCheckedChange={field.onChange} />
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
               </FormControl>
             </FormItem>
           )}

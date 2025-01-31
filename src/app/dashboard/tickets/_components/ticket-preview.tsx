@@ -7,11 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Clock, Users } from 'lucide-react';
-import { ArrowUpRight } from 'lucide-react';
-import Link from 'next/link';
-import { formatDistanceToNow } from 'date-fns';
 import { useTicket } from '@/lib/tickets/use-tickets';
+import { formatDistanceToNow } from 'date-fns';
+import { ArrowUpRight, Clock } from 'lucide-react';
+import Link from 'next/link';
 import { useTicketQueue } from './ticket-queue-provider';
 
 export function TicketPreview() {

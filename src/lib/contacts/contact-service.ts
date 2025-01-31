@@ -1,7 +1,5 @@
-import { SupabaseClient } from '@supabase/supabase-js';
 import { Tables, TablesInsert } from '@/lib/database.types';
-import { createClient } from '@/lib/supabase/server';
-import { createServiceClient } from '../supabase/service';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 export type Contact = Tables<'contacts'> & {
   open_tickets_count: number;
@@ -26,7 +24,10 @@ export type ContactSearchResult = {
 };
 
 export class ContactError extends Error {
-  constructor(message: string, public cause?: unknown) {
+  constructor(
+    message: string,
+    public cause?: unknown
+  ) {
     super(message);
     this.name = 'ContactError';
   }
@@ -51,7 +52,7 @@ export class ContactService {
         p_limit: limit,
         p_offset: offset,
         p_order_by: orderBy.column,
-        p_ascending: orderBy.ascending
+        p_ascending: orderBy.ascending,
       });
 
       if (error) throw error;
@@ -59,7 +60,7 @@ export class ContactService {
 
       return {
         data: (data[0].contacts || []) as Contact[],
-        count: data[0].total_count || 0
+        count: data[0].total_count || 0,
       };
     } catch (error) {
       throw new ContactError('Failed to search contacts', error);
@@ -83,7 +84,9 @@ export class ContactService {
     }
   }
 
-  async createContact(contact: Omit<ContactInsert, 'org_id'>): Promise<Contact> {
+  async createContact(
+    contact: Omit<ContactInsert, 'org_id'>
+  ): Promise<Contact> {
     try {
       const { data, error } = await this.supabase
         .from('contacts')
@@ -136,4 +139,4 @@ export class ContactService {
       throw new ContactError('Failed to get contact by id', error);
     }
   }
-} 
+}

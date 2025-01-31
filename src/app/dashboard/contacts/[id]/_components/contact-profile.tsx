@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { useContact, useContactMutations } from '@/lib/contacts/use-contacts';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Pencil, Save, X } from 'lucide-react';
+import { useContact, useContactMutations } from '@/lib/contacts/use-contacts';
 import { formatDistanceToNow } from 'date-fns';
+import { Pencil, Save, X } from 'lucide-react';
+import { useState } from 'react';
 
 export function ContactProfile({ contactId }: { contactId: string }) {
   const { data: contact } = useContact(contactId);
@@ -35,11 +35,7 @@ export function ContactProfile({ contactId }: { contactId: string }) {
       <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
         <CardTitle>Contact Profile</CardTitle>
         {!isEditing ? (
-          <Button
-            variant='ghost'
-            size='sm'
-            onClick={() => setIsEditing(true)}
-          >
+          <Button variant='ghost' size='sm' onClick={() => setIsEditing(true)}>
             <Pencil className='h-4 w-4' />
           </Button>
         ) : (
@@ -114,4 +110,4 @@ export function ContactProfile({ contactId }: { contactId: string }) {
       </CardContent>
     </Card>
   );
-} 
+}

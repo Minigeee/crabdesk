@@ -60,13 +60,11 @@ export async function signup(formData: FormData, next: string) {
   }
 
   // Create a new user in the organization
-  await serviceClient
-    .from('users')
-    .insert({
-      auth_user_id: userData.user.id,
-      name,
-      org_id: organizations[0].id,
-    });
+  await serviceClient.from('users').insert({
+    auth_user_id: userData.user.id,
+    name,
+    org_id: organizations[0].id,
+  });
 
   redirect(next);
 }

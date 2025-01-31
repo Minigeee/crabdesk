@@ -2,7 +2,6 @@ import { Button } from '@/components/ui/button';
 import { Tables } from '@/lib/database.types';
 import { formatDistanceToNow } from 'date-fns';
 import { Reply } from 'lucide-react';
-import * as React from 'react';
 import { type EmailThread } from './types';
 
 interface EmailMessageProps {
@@ -45,4 +44,4 @@ export function EmailMessage({ thread, message, onReply }: EmailMessageProps) {
       </div>
     </div>
   );
-} 
+}

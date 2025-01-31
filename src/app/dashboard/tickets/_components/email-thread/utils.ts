@@ -83,9 +83,13 @@ export const replacePlaceholders = (
   // Process placeholders from end to start to maintain correct indices
   for (const placeholder of placeholders) {
     if (replacements[placeholder.text]) {
-      result = replacePlaceholder(result, placeholder, replacements[placeholder.text]);
+      result = replacePlaceholder(
+        result,
+        placeholder,
+        replacements[placeholder.text]
+      );
     }
   }
 
   return result;
-}; 
+};

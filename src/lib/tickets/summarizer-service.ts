@@ -1,12 +1,12 @@
-import { SupabaseClient } from '@supabase/supabase-js';
-import { ChatOpenAI } from '@langchain/openai';
-import { PromptTemplate } from '@langchain/core/prompts';
-import { StringOutputParser } from '@langchain/core/output_parsers';
-import { z } from 'zod';
 import type { Database } from '@/lib/database.types';
 import { EmbeddingService } from '@/lib/embeddings/service';
-import { EmailThread } from '../email/types';
 import type { PriorityCriteria } from '@/lib/settings/types';
+import { StringOutputParser } from '@langchain/core/output_parsers';
+import { PromptTemplate } from '@langchain/core/prompts';
+import { ChatOpenAI } from '@langchain/openai';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { z } from 'zod';
+import { EmailThread } from '../email/types';
 
 const SUMMARY_PROMPT = `You are a helpful assistant that summarizes customer support ticket threads.
 Your summaries should be concise but informative, following the following format:
@@ -74,7 +74,7 @@ export class TicketSummarizerService {
 
   constructor(
     private readonly supabase: SupabaseClient<Database>,
-    private readonly orgId: string,
+    private readonly orgId: string
   ) {
     this.llm = new ChatOpenAI({
       modelName: 'gpt-4o-mini', // Do not change this
@@ -97,9 +97,11 @@ export class TicketSummarizerService {
     if (error) throw error;
 
     const defaultCriteria: PriorityCriteria = {
-      urgent: 'System failures or issues that: (1) affect medical equipment or life-critical systems, (2) cause complete loss of power during emergencies, (3) create immediate safety risks, or (4) leave essential equipment without backup power',
+      urgent:
+        'System failures or issues that: (1) affect medical equipment or life-critical systems, (2) cause complete loss of power during emergencies, (3) create immediate safety risks, or (4) leave essential equipment without backup power',
       high: 'Issues involving: (1) commercial/enterprise-wide impacts, (2) physical system damage, (3) performance degradation >25%, (4) multi-site system failures, (5) complete monitoring/control loss for business customers, or (6) warranty claims for major system defects',
-      normal: 'Standard requests including: (1) sales inquiries, (2) feature upgrades, (3) individual residential support, (4) non-critical software issues, or (5) general information requests without immediate impact',
+      normal:
+        'Standard requests including: (1) sales inquiries, (2) feature upgrades, (3) individual residential support, (4) non-critical software issues, or (5) general information requests without immediate impact',
       low: 'Minor requests including: (1) general feedback, (2) documentation requests, (3) feature suggestions, or (4) inquiries without current system impact',
     };
 
@@ -116,7 +118,11 @@ export class TicketSummarizerService {
   }
 
   // Make this method public for shared data access
-  async findExistingSummaryNote(ticketId: string): Promise<{ id: string; content: string; content_embedding: string; } | undefined> {
+  async findExistingSummaryNote(
+    ticketId: string
+  ): Promise<
+    { id: string; content: string; content_embedding: string } | undefined
+  > {
     const { data: note, error } = await this.supabase
       .from('notes')
       .select('id, content, content_embedding')
@@ -126,14 +132,14 @@ export class TicketSummarizerService {
       .single();
 
     if (error && error.code !== 'PGRST116') throw error; // Ignore not found error
-    
+
     // Return undefined if note is null or content_embedding is null
     if (!note || !note.content_embedding) return undefined;
-    
+
     return {
       id: note.id,
       content: note.content,
-      content_embedding: note.content_embedding
+      content_embedding: note.content_embedding,
     };
   }
 
@@ -157,7 +163,12 @@ export class TicketSummarizerService {
     const priorityCriteria = await this.getPriorityCriteria();
 
     // If no criteria are set, default to normal priority
-    if (!priorityCriteria.urgent && !priorityCriteria.high && !priorityCriteria.normal && !priorityCriteria.low) {
+    if (
+      !priorityCriteria.urgent &&
+      !priorityCriteria.high &&
+      !priorityCriteria.normal &&
+      !priorityCriteria.low
+    ) {
       return 'normal';
     }
 
@@ -179,7 +190,7 @@ export class TicketSummarizerService {
     try {
       return prioritySchema.parse(result.toLowerCase().trim());
     } catch (error) {
-      console.warn('Invalid priority classification:', result);
+      console.warn('Invalid priority classification:', result, error);
       return 'normal'; // Default to normal if parsing fails
     }
   }
@@ -188,7 +199,7 @@ export class TicketSummarizerService {
     ticketId: string,
     thread: EmailThread,
     options?: {
-      existingNote?: { id: string; content: string; content_embedding: string; };
+      existingNote?: { id: string; content: string; content_embedding: string };
     }
   ) {
     if (!thread || !thread.messages || !thread.messages.length) return;
@@ -209,7 +220,8 @@ export class TicketSummarizerService {
     const embedding = await this.embeddings.generateEmbedding(summary);
 
     // Find existing summary note or create new one if not provided
-    const existingNote = options?.existingNote || await this.findExistingSummaryNote(ticketId);
+    const existingNote =
+      options?.existingNote || (await this.findExistingSummaryNote(ticketId));
 
     if (existingNote) {
       // Update existing note
@@ -240,4 +252,4 @@ export class TicketSummarizerService {
       if (error) throw error;
     }
   }
-} 
+}

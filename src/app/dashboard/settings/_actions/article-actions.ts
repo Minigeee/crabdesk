@@ -1,14 +1,17 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
 import { ArticleService } from '@/lib/articles/article-service';
+import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
-export async function createArticle(orgId: string, data: {
-  title: string;
-  content: string;
-  authorId: string;
-}) {
+export async function createArticle(
+  orgId: string,
+  data: {
+    title: string;
+    content: string;
+    authorId: string;
+  }
+) {
   const supabase = await createClient();
   const articleService = new ArticleService(supabase, orgId);
 
@@ -28,10 +31,14 @@ export async function createArticle(orgId: string, data: {
   return article;
 }
 
-export async function updateArticle(orgId: string, articleId: string, data: {
-  title: string;
-  content: string;
-}) {
+export async function updateArticle(
+  orgId: string,
+  articleId: string,
+  data: {
+    title: string;
+    content: string;
+  }
+) {
   const supabase = await createClient();
   const articleService = new ArticleService(supabase, orgId);
 
@@ -57,4 +64,4 @@ export async function getArticles(orgId: string) {
   const articleService = new ArticleService(supabase, orgId);
 
   return articleService.getArticles();
-} 
+}

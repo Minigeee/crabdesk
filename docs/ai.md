@@ -25,6 +25,7 @@ In summary, the key is to enhance the existing ideas with deeper integration int
 Here's a refined approach with strategic AI integration points that build on your ideas while maintaining focus:
 
 ### 1. **AI-Coordinated Ticket Resolution Flow** (Your Second Idea Enhanced)
+
 **Problem**: Agents waste time on routine ticket triage and response drafting
 **Solution**: End-to-end AI orchestration with human validation
 
@@ -43,6 +44,7 @@ flowchart TD
 ```
 
 Key enhancements:
+
 - **Context-Aware Response Generation**:
   - Combine RAG with:
     - Customer interaction history
@@ -52,10 +54,10 @@ Key enhancements:
 - **Confidence Scoring**:
   ```typescript
   interface AutoResponse {
-    content: string
-    confidence: number // 0-100 scale
-    sources: string[] // KB articles used
-    alternativeApproaches: string[]
+    content: string;
+    confidence: number; // 0-100 scale
+    sources: string[]; // KB articles used
+    alternativeApproaches: string[];
   }
   ```
 - **Agent Experience**:
@@ -64,26 +66,27 @@ Key enhancements:
   - Automated response versioning
 
 ### 2. **Predictive Customer Advocacy System** (Building on Your First Idea)
+
 **Problem**: Reactive support misses opportunities for customer retention
 **Solution**: AI-driven preemptive engagement
 
 ```typescript
 // Example type structure for customer insights
 interface CustomerHealthScore {
-  sentimentTrend: number
-  interactionFrequency: number
-  issueSeverityHistory: number[]
-  potentialChurnRisk: number
-  upsellOpportunities: string[]
+  sentimentTrend: number;
+  interactionFrequency: number;
+  issueSeverityHistory: number[];
+  potentialChurnRisk: number;
+  upsellOpportunities: string[];
 }
 
 // Sample implementation pattern
 export async function generateHealthScore(
   customerId: string
 ): Promise<CustomerHealthScore> {
-  const interactions = await getCustomerInteractions(customerId)
-  const tickets = await getResolvedTickets(customerId)
-  
+  const interactions = await getCustomerInteractions(customerId);
+  const tickets = await getResolvedTickets(customerId);
+
   return llmAnalyze({
     systemPrompt: `
       Analyze customer interactions and tickets to:
@@ -92,47 +95,52 @@ export async function generateHealthScore(
       3. Flag potential churn risks
       4. Surface upsell opportunities
     `,
-    data: { interactions, tickets }
-  })
+    data: { interactions, tickets },
+  });
 }
 ```
 
 Agent-facing features:
+
 - **Health Dashboard**: Visualize customer portfolios with risk scores
 - **Automated Playbooks**: Suggest proactive check-ins for at-risk accounts
 - **Escalation Predictor**: Flag tickets likely to require supervisor attention
 
 ### 3. **AI-Assisted Quality Assurance** (New Idea)
+
 **Problem**: Inconsistent support quality and missed improvement opportunities
 **Solution**: Real-time conversation coaching
 
 Key components:
-- **Live Tone Analysis**: 
+
+- **Live Tone Analysis**:
+
   ```typescript
   const toneGuidelines = {
     professionalism: 0.8,
     empathy: 0.7,
-    clarity: 0.9
-  } as const
-  
-  export function analyzeResponseQuality(
-    draft: string
-  ): ToneAssessment {
+    clarity: 0.9,
+  } as const;
+
+  export function analyzeResponseQuality(draft: string): ToneAssessment {
     return llmClassify({
       systemPrompt: 'Assess response against quality guidelines',
-      data: { draft, guidelines: toneGuidelines }
-    })
+      data: { draft, guidelines: toneGuidelines },
+    });
   }
   ```
+
 - **Regulatory Compliance Check**: Automatic flagging of risky language
 - **Knowledge Gap Detection**: Identify unanswered questions in thread
 
 ### Implementation Strategy
 
 1. **Phased Rollout**:
+
    - Start with email automation → Add predictive features → Implement QA system
 
 2. **Architecture Considerations**:
+
    ```mermaid
    flowchart LR
      A[Email Ingestion] --> B[AI Orchestrator]

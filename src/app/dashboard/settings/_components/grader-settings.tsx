@@ -17,7 +17,6 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -60,10 +59,7 @@ const DEFAULT_SETTINGS: GraderSettings = {
   minimumAccuracyScore: 3,
 };
 
-async function updateGraderSettings(
-  settings: GraderSettings,
-  orgId: string
-) {
+async function updateGraderSettings(settings: GraderSettings, orgId: string) {
   const supabase = createClient();
   const { data: current } = await supabase
     .from('organizations')
@@ -127,7 +123,9 @@ export function GraderSettings({ initialSettings }: GraderSettingsProps) {
     },
     onSuccess: () => {
       if (organization?.id) {
-        queryClient.invalidateQueries({ queryKey: ['settings', organization.id] });
+        queryClient.invalidateQueries({
+          queryKey: ['settings', organization.id],
+        });
       }
       toast({
         title: 'Settings saved',
@@ -193,7 +191,8 @@ export function GraderSettings({ initialSettings }: GraderSettingsProps) {
                 <FormItem>
                   <FormLabel>Quality Guidelines</FormLabel>
                   <FormDescription>
-                    Define criteria for evaluating response quality and professionalism
+                    Define criteria for evaluating response quality and
+                    professionalism
                   </FormDescription>
                   <FormControl>
                     <Textarea
@@ -214,7 +213,8 @@ export function GraderSettings({ initialSettings }: GraderSettingsProps) {
                 <FormItem>
                   <FormLabel>Accuracy Guidelines</FormLabel>
                   <FormDescription>
-                    Define criteria for evaluating response accuracy and alignment with policies
+                    Define criteria for evaluating response accuracy and
+                    alignment with policies
                   </FormDescription>
                   <FormControl>
                     <Textarea
@@ -236,4 +236,4 @@ export function GraderSettings({ initialSettings }: GraderSettingsProps) {
       </CardContent>
     </Card>
   );
-} 
+}

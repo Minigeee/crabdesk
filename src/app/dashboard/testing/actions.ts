@@ -1,9 +1,9 @@
 'use server';
 
 import { getCurrentUser } from '@/lib/auth/session';
-import { createServiceClient } from '@/lib/supabase/service';
-import { generateTestEmailPayload } from '@/lib/email/test-utils';
 import type { Tables } from '@/lib/database.types';
+import { generateTestEmailPayload } from '@/lib/email/test-utils';
+import { createServiceClient } from '@/lib/supabase/service';
 
 type EmailThread = Tables<'email_threads'> & {
   messages: Tables<'email_messages'>[];
@@ -22,12 +22,14 @@ export async function getEmailThreads() {
     // Fetch threads with messages
     const { data: threads, error } = await supabase
       .from('email_threads')
-      .select(`
+      .select(
+        `
         *,
         messages: email_messages (
           *
         )
-      `)
+      `
+      )
       .eq('org_id', userData.organization.id)
       .order('last_message_at', { ascending: false });
 
@@ -102,4 +104,4 @@ export async function sendTestEmail(data: {
     console.error('Error sending test email:', error);
     throw error;
   }
-} 
+}

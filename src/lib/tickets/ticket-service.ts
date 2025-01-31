@@ -59,7 +59,15 @@ export class TicketService {
 
     // Apply filters
     if (filters) {
-      const { status, priority, assignee_id, team_id, contact_id, search, includeClosed } = filters;
+      const {
+        status,
+        priority,
+        assignee_id,
+        team_id,
+        contact_id,
+        search,
+        includeClosed,
+      } = filters;
 
       // Handle status filter with closed tickets logic
       if (status?.length) {

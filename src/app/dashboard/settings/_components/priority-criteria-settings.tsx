@@ -42,13 +42,18 @@ interface PriorityCriteriaSettingsProps {
 }
 
 const DEFAULT_CRITERIA: PriorityCriteria = {
-  urgent: 'System failures or issues that: (1) affect medical equipment or life-critical systems, (2) cause complete loss of power during emergencies, (3) create immediate safety risks, or (4) leave essential equipment without backup power',
+  urgent:
+    'System failures or issues that: (1) affect medical equipment or life-critical systems, (2) cause complete loss of power during emergencies, (3) create immediate safety risks, or (4) leave essential equipment without backup power',
   high: 'Issues involving: (1) commercial/enterprise-wide impacts, (2) physical system damage, (3) performance degradation >25%, (4) multi-site system failures, (5) complete monitoring/control loss for business customers, or (6) warranty claims for major system defects',
-  normal: 'Standard requests including: (1) sales inquiries, (2) feature upgrades, (3) individual residential support, (4) non-critical software issues, or (5) general information requests without immediate impact',
+  normal:
+    'Standard requests including: (1) sales inquiries, (2) feature upgrades, (3) individual residential support, (4) non-critical software issues, or (5) general information requests without immediate impact',
   low: 'Minor requests including: (1) general feedback, (2) documentation requests, (3) feature suggestions, or (4) inquiries without current system impact',
 };
 
-async function updatePriorityCriteria(criteria: PriorityCriteria, orgId: string) {
+async function updatePriorityCriteria(
+  criteria: PriorityCriteria,
+  orgId: string
+) {
   const supabase = createClient();
   const { data: current } = await supabase
     .from('organizations')
@@ -72,7 +77,9 @@ async function updatePriorityCriteria(criteria: PriorityCriteria, orgId: string)
   return { success: true };
 }
 
-export function PriorityCriteriaSettings({ initialSettings }: PriorityCriteriaSettingsProps) {
+export function PriorityCriteriaSettings({
+  initialSettings,
+}: PriorityCriteriaSettingsProps) {
   const { organization } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -112,7 +119,9 @@ export function PriorityCriteriaSettings({ initialSettings }: PriorityCriteriaSe
     },
     onSuccess: () => {
       if (organization?.id) {
-        queryClient.invalidateQueries({ queryKey: ['settings', organization.id] });
+        queryClient.invalidateQueries({
+          queryKey: ['settings', organization.id],
+        });
       }
       toast({
         title: 'Settings saved',

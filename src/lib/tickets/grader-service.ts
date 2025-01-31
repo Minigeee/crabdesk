@@ -1,13 +1,20 @@
-import { SupabaseClient } from '@supabase/supabase-js';
-import { ChatOpenAI } from '@langchain/openai';
-import { PromptTemplate } from '@langchain/core/prompts';
-import { StringOutputParser } from '@langchain/core/output_parsers';
-import { z } from 'zod';
 import type { Database } from '@/lib/database.types';
+import type {
+  GraderSettings,
+  OrganizationSettings,
+} from '@/lib/settings/types';
+import { StringOutputParser } from '@langchain/core/output_parsers';
+import { PromptTemplate } from '@langchain/core/prompts';
+import { ChatOpenAI } from '@langchain/openai';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { z } from 'zod';
 import { EmailThread } from '../email/types';
-import { getEmailThread, getSemanticallySimilarNotes, getSemanticallySimilarArticleChunks } from './utils';
 import { EmbeddingService } from '../embeddings/service';
-import type { GraderSettings, OrganizationSettings } from '@/lib/settings/types';
+import {
+  getEmailThread,
+  getSemanticallySimilarArticleChunks,
+  getSemanticallySimilarNotes,
+} from './utils';
 
 const DEFAULT_GRADER_SETTINGS: GraderSettings = {
   enabled: true,
@@ -22,7 +29,7 @@ const DEFAULT_GRADER_SETTINGS: GraderSettings = {
     2. Follows organization policies
     3. Uses correct technical terminology
     4. Provides accurate solutions
-    5. Avoids assumptions`
+    5. Avoids assumptions`,
 };
 
 const GRADER_PROMPT = `You are an expert customer support quality analyst. Your task is to quickly assess a customer support response on two key factors:
@@ -79,7 +86,7 @@ const gradeSchema = z.object({
   quality_score: z.number().min(1).max(5),
   accuracy_score: z.number().min(1).max(5),
   summary: z.string(),
-  concerns: z.array(z.string())
+  concerns: z.array(z.string()),
 });
 
 export type ResponseGrade = z.infer<typeof gradeSchema>;
@@ -103,28 +110,38 @@ export class ResponseGraderService {
     this.embeddings = new EmbeddingService(supabase, orgId);
   }
 
-  private async getRelevantContext(ticketId: string, thread: EmailThread, proposedResponse: string) {
+  private async getRelevantContext(
+    ticketId: string,
+    thread: EmailThread,
+    proposedResponse: string
+  ) {
     // Get the latest message and proposed response for semantic search
     const messages = thread.messages || [];
     const latestMessage = messages[messages.length - 1];
     if (!latestMessage?.text_body) {
       return {
         notes: [],
-        articleChunks: []
+        articleChunks: [],
       };
     }
 
-    const searchTexts = [latestMessage.text_body, proposedResponse].filter(Boolean) as string[];
+    const searchTexts = [latestMessage.text_body, proposedResponse].filter(
+      Boolean
+    ) as string[];
 
     // Get semantically similar notes and article chunks in parallel
     const [notes, articleChunks] = await Promise.all([
       getSemanticallySimilarNotes(this.embeddings, searchTexts),
-      getSemanticallySimilarArticleChunks(this.supabase, this.orgId, searchTexts)
+      getSemanticallySimilarArticleChunks(
+        this.supabase,
+        this.orgId,
+        searchTexts
+      ),
     ]);
 
     return {
       notes,
-      articleChunks
+      articleChunks,
     };
   }
 
@@ -146,10 +163,18 @@ export class ResponseGraderService {
     // Merge with defaults, using org settings when available
     return {
       enabled: graderSettings.enabled ?? DEFAULT_GRADER_SETTINGS.enabled,
-      qualityGuidelines: graderSettings.qualityGuidelines || DEFAULT_GRADER_SETTINGS.qualityGuidelines,
-      accuracyGuidelines: graderSettings.accuracyGuidelines || DEFAULT_GRADER_SETTINGS.accuracyGuidelines,
-      minimumQualityScore: graderSettings.minimumQualityScore ?? DEFAULT_GRADER_SETTINGS.minimumQualityScore,
-      minimumAccuracyScore: graderSettings.minimumAccuracyScore ?? DEFAULT_GRADER_SETTINGS.minimumAccuracyScore,
+      qualityGuidelines:
+        graderSettings.qualityGuidelines ||
+        DEFAULT_GRADER_SETTINGS.qualityGuidelines,
+      accuracyGuidelines:
+        graderSettings.accuracyGuidelines ||
+        DEFAULT_GRADER_SETTINGS.accuracyGuidelines,
+      minimumQualityScore:
+        graderSettings.minimumQualityScore ??
+        DEFAULT_GRADER_SETTINGS.minimumQualityScore,
+      minimumAccuracyScore:
+        graderSettings.minimumAccuracyScore ??
+        DEFAULT_GRADER_SETTINGS.minimumAccuracyScore,
     };
   }
 
@@ -183,8 +208,10 @@ export class ResponseGraderService {
   ) {
     const formattedNotes = notes?.length
       ? notes
-          .map(note => {
-            const timestamp = note.created_at ? new Date(note.created_at).toISOString() : new Date().toISOString();
+          .map((note) => {
+            const timestamp = note.created_at
+              ? new Date(note.created_at).toISOString()
+              : new Date().toISOString();
             return `<note>\n[Note ${timestamp}]\n${note.content}\n</note>`;
           })
           .join('\n\n')
@@ -192,7 +219,10 @@ export class ResponseGraderService {
 
     const formattedArticles = articleChunks?.length
       ? articleChunks
-          .map(chunk => `<article>\n[Article: ${chunk.article_title}]\n${chunk.chunk_content}\n</article>`)
+          .map(
+            (chunk) =>
+              `<article>\n[Article: ${chunk.article_title}]\n${chunk.chunk_content}\n</article>`
+          )
           .join('\n\n')
       : 'No relevant articles found.';
 
@@ -226,16 +256,23 @@ export class ResponseGraderService {
     }
   ): Promise<ResponseGrade> {
     // Get the thread if not provided
-    const thread = options?.thread || await getEmailThread(this.supabase, threadId);
+    const thread =
+      options?.thread || (await getEmailThread(this.supabase, threadId));
     if (!thread || !thread.messages || !thread.messages.length) {
       throw new Error('Thread not found or empty');
     }
 
     // Get additional context using semantic search if not provided
-    const context = options?.context || await this.getRelevantContext(thread.ticket_id, thread, proposedResponse);
+    const context =
+      options?.context ||
+      (await this.getRelevantContext(
+        thread.ticket_id,
+        thread,
+        proposedResponse
+      ));
 
     // Get org settings
-    const orgSettings = options?.orgSettings || await this.getOrgSettings();
+    const orgSettings = options?.orgSettings || (await this.getOrgSettings());
 
     // Check if grading is enabled
     if (orgSettings.enabled === false) {
@@ -243,14 +280,17 @@ export class ResponseGraderService {
       return {
         quality_score: 5,
         accuracy_score: 5,
-        summary: "Grading disabled - automatic approval",
-        concerns: []
+        summary: 'Grading disabled - automatic approval',
+        concerns: [],
       };
     }
 
     // Format all context for grading
     const threadText = this.formatThreadForGrading(thread);
-    const contextText = this.formatContextForGrading(context.notes, context.articleChunks);
+    const contextText = this.formatContextForGrading(
+      context.notes,
+      context.articleChunks
+    );
 
     // Generate grade using LangChain
     const chain = this.graderPrompt
@@ -276,4 +316,4 @@ export class ResponseGraderService {
       throw new Error('Failed to grade response');
     }
   }
-} 
+}

@@ -7,7 +7,7 @@ import { createServiceClient } from '@/lib/supabase/service';
 import { headers } from 'next/headers';
 
 // TODO: Implement proper webhook signature verification
-const WEBHOOK_SECRET = process.env.POSTMARK_WEBHOOK_SECRET;
+// const WEBHOOK_SECRET = process.env.POSTMARK_WEBHOOK_SECRET;
 
 export async function POST(request: Request) {
   try {

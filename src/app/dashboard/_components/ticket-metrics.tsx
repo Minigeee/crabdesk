@@ -34,7 +34,7 @@ function TicketMetricsSkeleton() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <Skeleton className='h-7 w-16 mb-4' />
+              <Skeleton className='mb-4 h-7 w-16' />
               <div className='space-y-2'>
                 <Skeleton className='h-5 w-full' />
                 <Skeleton className='h-5 w-full' />
@@ -97,7 +97,9 @@ export function TicketMetrics() {
   if (!data) {
     return (
       <div className='flex h-[500px] w-full items-center justify-center'>
-        <p className='text-lg text-muted-foreground'>Error loading dashboard data</p>
+        <p className='text-lg text-muted-foreground'>
+          Error loading dashboard data
+        </p>
       </div>
     );
   }
